@@ -8,10 +8,7 @@ export interface WebGPUDeviceOptions {
 }
 
 export class WebGPUDeviceContribution implements DeviceContribution {
-  constructor(
-    private pluginOptions: Partial<WebGPUDeviceOptions>,
-    private runtime: GlobalRuntime,
-  ) {}
+  constructor(private pluginOptions: Partial<WebGPUDeviceOptions>) {}
 
   async createSwapChain($canvas: HTMLCanvasElement) {
     // eslint-disable-next-line
