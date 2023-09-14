@@ -26,7 +26,9 @@ jobs:
           cache: 'pnpm'
 
       - name: Install headless-gl dependencies
-        run: sudo apt-get install -y mesa-utils xvfb libgl1-mesa-dri libglapi-mesa libosmesa6
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mesa-utils xvfb libgl1-mesa-dri libglapi-mesa libosmesa6
 
       - name: Install dependencies
         run: pnpm install
@@ -35,7 +37,7 @@ jobs:
         run: pnpm build
 
       - name: Test
-        run: pnpm test
+        run: xvfb-run -s "-ac -screen 0 1280x1024x16" pnpm test
 
       - name: Cov
         run: |
