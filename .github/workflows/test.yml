@@ -26,7 +26,7 @@ jobs:
           cache: 'pnpm'
 
       - name: Install headless-gl dependencies
-        run: sudo apt-get install -y build-essential libglew-dev libglu1-mesa-dev libxi-dev pkg-config
+        run: sudo apt-get install -y mesa-utils xvfb libgl1-mesa-dri libglapi-mesa libosmesa6
 
       - name: Install dependencies
         run: pnpm install
