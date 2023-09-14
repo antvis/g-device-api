@@ -16,7 +16,8 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "downlevelIteration": true,
-    "importHelpers": true
+    "importHelpers": true,
+    "types": ["@webgpu/types"],
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "lib", "es"]

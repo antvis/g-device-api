@@ -33,3 +33,10 @@ jobs:
 
       - name: Build
         run: pnpm build
+
+      - name: Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          npm_config_legacy_peer_deps: true
+        run: pnpm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN} & pnpm release

@@ -176,6 +176,7 @@ export class Buffer_GL extends ResourceBase_GL implements Buffer {
         this.device.gl.deleteBuffer(this.gl_buffer_pages[i]);
       }
     }
+    this.gl_buffer_pages = [];
   }
 
   private createBufferPage(

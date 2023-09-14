@@ -340,18 +340,18 @@ export class Device_GL implements SwapChain, Device {
     });
 
     if (isWebGL2(gl)) {
-      // this.fallbackTexture2DArray = this.createFallbackTexture(
-      //   TextureDimension.n2DArray,
-      //   SamplerFormatKind.Float,
-      // );
-      // this.fallbackTexture3D = this.createFallbackTexture(
-      //   TextureDimension.n3D,
-      //   SamplerFormatKind.Float,
-      // );
-      // this.fallbackTextureCube = this.createFallbackTexture(
-      //   TextureDimension.Cube,
-      //   SamplerFormatKind.Float,
-      // );
+      this.fallbackTexture2DArray = this.createFallbackTexture(
+        TextureDimension.TEXTURE_2D_ARRAY,
+        SamplerFormatKind.Float,
+      );
+      this.fallbackTexture3D = this.createFallbackTexture(
+        TextureDimension.TEXTURE_3D,
+        SamplerFormatKind.Float,
+      );
+      this.fallbackTextureCube = this.createFallbackTexture(
+        TextureDimension.TEXTURE_CUBE_MAP,
+        SamplerFormatKind.Float,
+      );
     }
 
     // Adjust for GL defaults.
@@ -805,14 +805,14 @@ export class Device_GL implements SwapChain, Device {
   createProgram(descriptor: ProgramDescriptor): Program_GL {
     const rawVertexGLSL = descriptor.vertex?.glsl;
     // preprocess GLSL first
-    if (descriptor.vertex.glsl) {
+    if (descriptor.vertex?.glsl) {
       descriptor.vertex.glsl = preprocessShader_GLSL(
         this.queryVendorInfo(),
         'vert',
         descriptor.vertex.glsl,
       );
     }
-    if (descriptor.fragment.glsl) {
+    if (descriptor.fragment?.glsl) {
       descriptor.fragment.glsl = preprocessShader_GLSL(
         this.queryVendorInfo(),
         'frag',
@@ -975,7 +975,7 @@ export class Device_GL implements SwapChain, Device {
     return this;
   }
 
-  submitPass(pass: RenderPass): void {
+  submitPass(pass: RenderPass | ComputePass): void {
     assert(this.currentRenderPassDescriptor !== null);
     this.endPass();
     this.currentRenderPassDescriptor = null;
@@ -1389,8 +1389,6 @@ export class Device_GL implements SwapChain, Device {
     if (this.currentDepthStencilAttachment) {
       if (sampleCount === -1) {
         sampleCount = this.currentDepthStencilAttachment.sampleCount;
-        width = this.currentDepthStencilAttachment.width;
-        height = this.currentDepthStencilAttachment.height;
       } else {
         assert(sampleCount === this.currentDepthStencilAttachment.sampleCount);
         assert(width === this.currentDepthStencilAttachment.width);
