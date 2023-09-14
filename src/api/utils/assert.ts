@@ -1,6 +1,6 @@
 export function assert(b: boolean, message = ''): asserts b {
   if (!b) {
-    console.error(new Error().stack);
+    // console.error(new Error().stack);
     throw new Error(`Assert fail: ${message}`);
   }
 }

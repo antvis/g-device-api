@@ -140,12 +140,12 @@ function parseBinding(layout: string | undefined): number | null {
 function getSeparateSamplerTypes(
   combinedSamplerType: string,
 ): [string, string] {
-  let samplerType = ``,
-    textureType = combinedSamplerType;
-  if (combinedSamplerType.endsWith(`Shadow`)) {
-    textureType = textureType.slice(0, -6);
-    samplerType = `Shadow`;
-  }
+  const samplerType = '';
+  const textureType = combinedSamplerType;
+  // if (combinedSamplerType.endsWith(`Shadow`)) {
+  //   textureType = textureType.slice(0, -6);
+  //   samplerType = `Shadow`;
+  // }
   return [textureType, samplerType];
 }
 
@@ -299,21 +299,19 @@ layout(set = ${set}, binding = ${
   // headless-gl will throw the following error if we prepend `#version 100`:
   // #version directive must occur before anything else, except for comments and white space
   let concat = `${isGLSL100 ? '' : vendorInfo.glslVersion}
-${isGLSL100 && supportMRT ? '#extension GL_EXT_draw_buffers : require' : ''}
+${isGLSL100 && supportMRT ? '#extension GL_EXT_draw_buffers : require\n' : ''}
 ${
   isGLSL100 && type === 'frag'
-    ? '#extension GL_OES_standard_derivatives : enable'
+    ? '#extension GL_OES_standard_derivatives : enable\n'
     : ''
-}
-${precision}
-${extraDefines}
-${definesString}
+}${precision}
+${extraDefines ? extraDefines : ''}${definesString ? definesString + '\n' : ''}
 ${rest}
 `.trim();
 
   // out vec4 outputColor; -> layout(location = 0) out vec4 outputColor;
   if (vendorInfo.explicitBindingLocations && type === 'frag') {
-    concat = concat.replace(/^\b(out)\b/gm, (substr, tok) => {
+    concat = concat.replace(/^\b(out)\b/g, (substr, tok) => {
       return `layout(location = 0) ${tok}`;
     });
   }

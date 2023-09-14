@@ -2,6 +2,10 @@
 
 A set of Device API which implements with WebGL1/2 & WebGPU.
 
+![CI](https://github.com/strawberry-vis/g-device-api/workflows/CI/badge.svg) [![Coverage Status](https://coveralls.io/repos/github/strawberry-vis/g-device-api/badge.svg?branch=next)](https://coveralls.io/github/strawberry-vis/g-device-api?branch=next)
+
+![TypeScript](https://img.shields.io/badge/language-typescript-blue.svg) ![License](https://img.shields.io/badge/license-MIT-000000.svg)
+
 ## Installing
 
 ```bash

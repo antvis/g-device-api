@@ -14,23 +14,6 @@ export class ComputePass_GL implements ComputePass {
 
   dispatchWorkgroupsIndirect(indirectBuffer: Buffer, indirectOffset: number) {}
 
-  finish() {
-    // this.gpuComputePassEncoder.end();
-    // this.gpuComputePassEncoder = null;
-    // return this.commandEncoder.finish();
-  }
-
-  /**
-   * @see https://www.w3.org/TR/webgpu/#dom-gpucommandencoder-begincomputepass
-   */
-  beginComputePass(): void {
-    // assert(this.gpuComputePassEncoder === null);
-    // this.setComputePassDescriptor(computePassDescriptor);
-    // this.gpuComputePassEncoder = this.commandEncoder.beginComputePass(
-    //   this.gpuComputePassDescriptor,
-    // );
-  }
-
   setPipeline(pipeline_: ComputePipeline): void {
     // const pipeline = pipeline_ as ComputePipeline_WebGPU;
     // const gpuComputePipeline = assertExists(pipeline.gpuComputePipeline);
