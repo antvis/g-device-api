@@ -1389,8 +1389,6 @@ export class Device_GL implements SwapChain, Device {
     if (this.currentDepthStencilAttachment) {
       if (sampleCount === -1) {
         sampleCount = this.currentDepthStencilAttachment.sampleCount;
-        width = this.currentDepthStencilAttachment.width;
-        height = this.currentDepthStencilAttachment.height;
       } else {
         assert(sampleCount === this.currentDepthStencilAttachment.sampleCount);
         assert(width === this.currentDepthStencilAttachment.width);
