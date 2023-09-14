@@ -1,8 +1,8 @@
 import _gl from 'gl';
-import { Device_GL } from '../src/webgl/Device';
-import { Program_GL } from '../src/webgl/Program';
-import { getWebGLDevice } from './utils';
-import { Format, TextureUsage } from '../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { Program_GL } from '../../src/webgl/Program';
+import { getWebGLDevice } from '../utils';
+import { Format, TextureUsage } from '../../src';
 
 let device: Device_GL;
 describe('Program', () => {

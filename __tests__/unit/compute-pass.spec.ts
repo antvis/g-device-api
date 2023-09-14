@@ -1,11 +1,11 @@
 import _gl from 'gl';
-import { BufferUsage, ResourceType } from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { getWebGLDevice } from './utils';
-import { ComputePipeline_GL } from '../src/webgl/ComputePipeline';
-import { Program_GL } from '../src/webgl/Program';
-import { Buffer_GL } from '../src/webgl/Buffer';
-import { Bindings_GL } from '../src/webgl/Bindings';
+import { BufferUsage, ResourceType } from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { getWebGLDevice } from '../utils';
+import { ComputePipeline_GL } from '../../src/webgl/ComputePipeline';
+import { Program_GL } from '../../src/webgl/Program';
+import { Buffer_GL } from '../../src/webgl/Buffer';
+import { Bindings_GL } from '../../src/webgl/Bindings';
 
 let device: Device_GL;
 describe('ComputePass', () => {

@@ -1,8 +1,8 @@
 import _gl from 'gl';
-import { QueryPoolType } from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { getWebGLDevice } from './utils';
-import { QueryPool_GL } from '../src/webgl/QueryPool';
+import { QueryPoolType } from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { getWebGLDevice } from '../utils';
+import { QueryPool_GL } from '../../src/webgl/QueryPool';
 
 let device: Device_GL;
 describe('QueryPool', () => {

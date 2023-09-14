@@ -1,9 +1,9 @@
 import _gl from 'gl';
-import { ResourceType } from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { getWebGLDevice } from './utils';
-import { ComputePipeline_GL } from '../src/webgl/ComputePipeline';
-import { Program_GL } from '../src/webgl/Program';
+import { ResourceType } from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { getWebGLDevice } from '../utils';
+import { ComputePipeline_GL } from '../../src/webgl/ComputePipeline';
+import { Program_GL } from '../../src/webgl/Program';
 
 let device: Device_GL;
 describe('ComputePipeline', () => {

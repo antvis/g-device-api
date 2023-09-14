@@ -1,16 +1,8 @@
 import _gl from 'gl';
-import {
-  ResourceType,
-  WrapMode,
-  TexFilterMode,
-  MipFilterMode,
-  Format,
-  TextureUsage,
-} from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { Sampler_GL } from '../src/webgl/Sampler';
-import { getWebGLDevice } from './utils';
-import { RenderTarget_GL } from '../src/webgl/RenderTarget';
+import { Format, TextureUsage } from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { getWebGLDevice } from '../utils';
+import { RenderTarget_GL } from '../../src/webgl/RenderTarget';
 
 let device: Device_GL;
 describe('RenderTarget', () => {

@@ -1,8 +1,8 @@
 import _gl from 'gl';
-import { BufferUsage, ResourceType, GL } from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { Buffer_GL } from '../src/webgl/Buffer';
-import { getWebGLDevice } from './utils';
+import { BufferUsage, ResourceType, GL } from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { Buffer_GL } from '../../src/webgl/Buffer';
+import { getWebGLDevice } from '../utils';
 
 let device: Device_GL;
 describe('Buffer', () => {

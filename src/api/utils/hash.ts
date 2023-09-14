@@ -59,19 +59,18 @@ function samplerBindingEquals(
 }
 
 export function bindingsDescriptorEquals(
-  a: Readonly<BindingsDescriptor>,
-  b: Readonly<BindingsDescriptor>,
+  a: BindingsDescriptor,
+  b: BindingsDescriptor,
 ): boolean {
-  if (a.samplerBindings?.length !== b.samplerBindings?.length) return false;
-  if (
-    a.samplerBindings &&
-    b.samplerBindings &&
-    !arrayEqual(a.samplerBindings, b.samplerBindings, samplerBindingEquals)
-  )
+  a.samplerBindings = a.samplerBindings || [];
+  a.uniformBufferBindings = a.uniformBufferBindings || [];
+  b.samplerBindings = b.samplerBindings || [];
+  b.uniformBufferBindings = b.uniformBufferBindings || [];
+
+  if (a.samplerBindings.length !== b.samplerBindings.length) return false;
+  if (!arrayEqual(a.samplerBindings, b.samplerBindings, samplerBindingEquals))
     return false;
   if (
-    a.uniformBufferBindings &&
-    b.uniformBufferBindings &&
     !arrayEqual(
       a.uniformBufferBindings,
       b.uniformBufferBindings,

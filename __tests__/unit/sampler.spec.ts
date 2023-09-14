@@ -1,8 +1,13 @@
 import _gl from 'gl';
-import { ResourceType, WrapMode, TexFilterMode, MipFilterMode } from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { Sampler_GL } from '../src/webgl/Sampler';
-import { getWebGLDevice } from './utils';
+import {
+  ResourceType,
+  WrapMode,
+  TexFilterMode,
+  MipFilterMode,
+} from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { Sampler_GL } from '../../src/webgl/Sampler';
+import { getWebGLDevice } from '../utils';
 
 let device: Device_GL;
 describe('Sampler', () => {

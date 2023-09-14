@@ -36,6 +36,12 @@ devDependencies:
   '@types/offscreencanvas':
     specifier: ^2019.6.4
     version: 2019.6.4
+  '@types/pixelmatch':
+    specifier: ^5.2.4
+    version: 5.2.4
+  '@types/pngjs':
+    specifier: ^6.0.1
+    version: 6.0.1
   '@typescript-eslint/eslint-plugin':
     specifier: ^6.0.0
     version: 6.0.0(@typescript-eslint/parser@6.0.0)(eslint@7.32.0)(typescript@5.2.2)
@@ -66,6 +72,12 @@ devDependencies:
   markdownlint-cli:
     specifier: ^0.32.2
     version: 0.32.2
+  pixelmatch:
+    specifier: 5.3.0
+    version: 5.3.0
+  pngjs:
+    specifier: ^6.0.0
+    version: 6.0.0
   prettier:
     specifier: ^2.8.8
     version: 2.8.8
@@ -1466,6 +1478,18 @@ packages:
 
   /@types/parse-json@4.0.0:
     resolution: {integrity: sha512-//oorEZjL6sbPcKUaCdIGlIUeH26mgzimjBB77G6XRgnDl/L5wOnpyBGRe/Mmf5CVW3PwEBE1NjiMZ/ssFh4wA==}
+    dev: true
+
+  /@types/pixelmatch@5.2.4:
+    resolution: {integrity: sha512-HDaSHIAv9kwpMN7zlmwfTv6gax0PiporJOipcrGsVNF3Ba+kryOZc0Pio5pn6NhisgWr7TaajlPEKTbTAypIBQ==}
+    dependencies:
+      '@types/node': 12.20.55
+    dev: true
+
+  /@types/pngjs@6.0.1:
+    resolution: {integrity: sha512-J39njbdW1U/6YyVXvC9+1iflZghP8jgRf2ndYghdJb5xL49LYDB+1EuAxfbuJ2IBbWIL3AjHPQhgaTxT3YaYeg==}
+    dependencies:
+      '@types/node': 12.20.55
     dev: true
 
   /@types/semver@7.5.1:
@@ -5200,6 +5224,13 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
+  /pixelmatch@5.3.0:
+    resolution: {integrity: sha512-o8mkY4E/+LNUf6LzX96ht6k6CEDi65k9G2rjMtBe9Oo+VPKSvl+0GKHuH/AlG+GA5LPG/i5hrekkxUc3s2HU+Q==}
+    hasBin: true
+    dependencies:
+      pngjs: 6.0.0
+    dev: true
+
   /pkg-dir@4.2.0:
     resolution: {integrity: sha512-HRDzbaKjC+AOWVXxAU/x54COGeIv9eb+6CkDSQoNTt4XyWoIJvuPsXizxu/Fr23EiekbtZwmh1IcIG/l/a10GQ==}
     engines: {node: '>=8'}
@@ -5211,6 +5242,11 @@ packages:
     resolution: {integrity: sha512-gQR3WpIgNIKwBMVLkpMUeR3e1/E1y42bqDQZfql+kDeXd8COYfM8PQA4X6y7a8u9Ua9FHmsrrmirW2vHs45hWg==}
     dependencies:
       semver-compare: 1.0.0
+    dev: true
+
+  /pngjs@6.0.0:
+    resolution: {integrity: sha512-TRzzuFRRmEoSW/p1KVAmiOgPco2Irlah+bGFCeNfJXxxYGwSw7YwAOAcd7X28K/m5bjBWKsC29KyoMfHbypayg==}
+    engines: {node: '>=12.13.0'}
     dev: true
 
   /postcss@8.4.29:

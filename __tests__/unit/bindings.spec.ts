@@ -14,10 +14,10 @@ import {
   TransparentBlack,
   CompareMode,
   CullMode,
-} from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { getWebGLDevice } from './utils';
-import { Bindings_GL } from '../src/webgl/Bindings';
+} from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { getWebGLDevice } from '../utils';
+import { Bindings_GL } from '../../src/webgl/Bindings';
 
 let device: Device_GL;
 describe('Bindings', () => {

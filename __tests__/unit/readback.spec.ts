@@ -1,8 +1,8 @@
 import _gl from 'gl';
-import { BufferUsage, Format, TextureUsage } from '../src';
-import { Device_GL } from '../src/webgl/Device';
-import { Buffer_GL } from '../src/webgl/Buffer';
-import { getWebGLDevice } from './utils';
+import { BufferUsage, Format, TextureUsage } from '../../src';
+import { Device_GL } from '../../src/webgl/Device';
+import { Buffer_GL } from '../../src/webgl/Buffer';
+import { getWebGLDevice } from '../utils';
 
 let device: Device_GL;
 describe('Readback', () => {
