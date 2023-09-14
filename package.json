@@ -1,6 +1,6 @@
 {
   "name": "@strawberry-vis/g-device-api",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "description": "A G plugin of renderer implementation with GPUDevice",
   "keywords": [
     "antv",
