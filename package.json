@@ -42,6 +42,7 @@
     "version": "changeset version",
     "release": "changeset publish",
     "test": "jest",
+    "cov": "jest --coverage",
     "wasm": "wasm-pack build ./rust --target web"
   },
   "sideEffects": false,

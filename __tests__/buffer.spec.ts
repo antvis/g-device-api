@@ -1,57 +1,66 @@
-import {
-  Device,
-  BufferUsage,
-  ResourceType,
-  WebGLDeviceContribution,
-  GL,
-} from '../src';
 import _gl from 'gl';
+import { BufferUsage, ResourceType, GL } from '../src';
+import { Device_GL } from '../src/webgl/Device';
 import { Buffer_GL } from '../src/webgl/Buffer';
+import { getWebGLDevice } from './utils';
 
-let device: Device;
+let device: Device_GL;
 describe('Buffer', () => {
   beforeAll(async () => {
-    const deviceContribution = new WebGLDeviceContribution({
-      targets: ['webgl1'],
-    });
-
-    const width = 100;
-    const height = 100;
-    const gl = _gl(width, height, {
-      antialias: false,
-      preserveDrawingBuffer: true,
-      stencil: true,
-    });
-    const mockCanvas: HTMLCanvasElement = {
-      width,
-      height,
-      // @ts-ignore
-      getContext: () => {
-        // @ts-ignore
-        gl.canvas = mockCanvas;
-        // 模拟 DOM API，返回小程序 context，它应当和 CanvasRenderingContext2D 一致
-        // @see https://developer.mozilla.org/zh-CN/docs/Web/API/HTMLCanvasElement/getContext
-        return gl;
-      },
-    };
-    // create swap chain and get device
-    const swapChain = await deviceContribution.createSwapChain(mockCanvas);
-    swapChain.configureSwapChain(width, height);
-    device = swapChain.getDevice();
+    device = await getWebGLDevice();
   });
 
   afterAll(() => {
     device.destroy();
   });
 
-  it('should create Vertex WebGLBuffer correctly.', () => {
+  it('should create Vertex WebGLBuffer and destroy correctly.', () => {
     const buffer = device.createBuffer({
       viewOrSize: 8,
       usage: BufferUsage.VERTEX,
     }) as Buffer_GL;
     expect(buffer.type).toBe(ResourceType.Buffer);
     expect(buffer.byteSize).toBe(8);
+    expect(buffer.usage).toBe(BufferUsage.VERTEX);
     expect(buffer.gl_target).toBe(GL.ARRAY_BUFFER);
     expect(buffer.gl_buffer_pages.length).toBe(1);
+
+    buffer.destroy();
+    expect(buffer.gl_buffer_pages.length).toBe(0);
+  });
+
+  it('should create Uniform WebGLBuffer and destroy correctly.', () => {
+    const buffer = device.createBuffer({
+      viewOrSize: 8,
+      usage: BufferUsage.UNIFORM,
+    }) as Buffer_GL;
+    expect(buffer.type).toBe(ResourceType.Buffer);
+    expect(buffer.byteSize).toBe(8);
+    expect(buffer.usage).toBe(BufferUsage.UNIFORM);
+    expect(buffer.gl_target).toBe(GL.UNIFORM_BUFFER);
+    expect(buffer.gl_buffer_pages.length).toBe(1);
+
+    buffer.destroy();
+    expect(buffer.gl_buffer_pages.length).toBe(0);
+  });
+
+  it('should setSubData correctly.', () => {
+    const buffer = device.createBuffer({
+      viewOrSize: new Float32Array([0, 0, 0, 0]),
+      usage: BufferUsage.VERTEX,
+    }) as Buffer_GL;
+
+    buffer.setSubData(0, new Uint8Array(new Float32Array([1, 2, 3, 4]).buffer));
+    buffer.setSubData(
+      0,
+      new Uint8Array(new Float32Array([1, 2, 3, 4]).buffer),
+      4,
+    );
+    buffer.setSubData(
+      0,
+      new Uint8Array(new Float32Array([1, 2, 3, 4]).buffer),
+      4,
+      8,
+    );
   });
 });

@@ -90,40 +90,31 @@ export class Program_GL extends ResourceBase_GL implements Program {
     const descriptor = this.descriptor;
 
     const gl = this.device.gl;
-    if (this.gl_shader_vert !== null) gl.deleteShader(this.gl_shader_vert);
-    if (this.gl_shader_frag !== null) gl.deleteShader(this.gl_shader_frag);
+    // if (this.gl_shader_vert !== null) gl.deleteShader(this.gl_shader_vert);
+    // if (this.gl_shader_frag !== null) gl.deleteShader(this.gl_shader_frag);
 
-    // if (descriptor.compute) {
-    //   this.gl_shader_vert = this.compileShader(
-    //     preprocessShader_GLSL(this.device.queryVendorInfo(), 'vert', quadVert),
-    //     gl.VERTEX_SHADER,
-    //   );
-    //   this.gl_shader_frag = this.compileShader(
-    //     descriptor.preprocessedCompute,
-    //     gl.FRAGMENT_SHADER,
-    //   );
-    // } else {
-    this.gl_shader_vert = this.compileShader(
-      descriptor.vertex.glsl,
-      gl.VERTEX_SHADER,
-    );
-    this.gl_shader_frag = this.compileShader(
-      descriptor.fragment.glsl,
-      gl.FRAGMENT_SHADER,
-    );
-    // }
+    if (descriptor.vertex?.glsl && descriptor.fragment?.glsl) {
+      this.gl_shader_vert = this.compileShader(
+        descriptor.vertex.glsl,
+        gl.VERTEX_SHADER,
+      );
+      this.gl_shader_frag = this.compileShader(
+        descriptor.fragment.glsl,
+        gl.FRAGMENT_SHADER,
+      );
 
-    gl.attachShader(this.gl_program, this.gl_shader_vert);
-    gl.attachShader(this.gl_program, this.gl_shader_frag);
-    gl.linkProgram(this.gl_program);
+      gl.attachShader(this.gl_program, this.gl_shader_vert);
+      gl.attachShader(this.gl_program, this.gl_shader_frag);
+      gl.linkProgram(this.gl_program);
 
-    this.compileState = ProgramCompileState_GL.Compiling;
+      this.compileState = ProgramCompileState_GL.Compiling;
 
-    if (!isWebGL2(gl)) {
-      // extract uniforms
-      this.readUniformLocationsFromLinkedProgram();
-      // extract attributes
-      this.readAttributesFromLinkedProgram();
+      if (!isWebGL2(gl)) {
+        // extract uniforms
+        this.readUniformLocationsFromLinkedProgram();
+        // extract attributes
+        this.readAttributesFromLinkedProgram();
+      }
     }
   }
 

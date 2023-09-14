@@ -33,9 +33,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
 
-      - name: Build
-        run: pnpm build
-
       - name: Test
         run: xvfb-run -s "-ac -screen 0 1280x1024x16" pnpm test
 
