@@ -1,10 +1,10 @@
 import _gl from 'gl';
 import { getWebGLDeviceContributionAndCanvas } from '../utils';
-import { render } from '../../test/demos/primitive-topology-points';
+import { render } from '../../examples/demos/primitive-topology-points';
 import '../useSnapshotMatchers';
 
-describe('Primitive topology triangles', () => {
-  it('should render triangles correctly.', async () => {
+describe('Primitive Topology Points', () => {
+  it('should render correctly.', async () => {
     const [webGLDeviceContribution, $canvas] =
       getWebGLDeviceContributionAndCanvas();
 
