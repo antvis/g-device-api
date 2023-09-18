@@ -1,5 +1,11 @@
 # @strawberry-vis/g-device-api
 
+## 1.0.1
+
+### Patch Changes
+
+-   8f5c332: Add UMD bundle.
+
 ## 1.0.0
 
 ### Major Changes
