@@ -1,5 +1,11 @@
 # @strawberry-vis/g-device-api
 
+## 1.0.3
+
+### Patch Changes
+
+-   6143192: Generate mipmap for 3D texture.
+
 ## 1.0.2
 
 ### Patch Changes
