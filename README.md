@@ -1,6 +1,7 @@
 # @strawberry-vis/g-device-api
 
-A set of Device API which implements with WebGL1/2 & WebGPU.
+This is a set of Device API also known as the hardware adaptation layer(HAL).
+It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](https://github.com/magcius/noclip.website).
 
 -   [API](#api)
 -   [Shader Language](#shader-language)
@@ -41,10 +42,44 @@ npm install @strawberry-vis/g-device-api
     -   [queryPlatformAvailable](#queryPlatformAvailable)
     -   [queryVendorInfo](#queryVendorInfo)
 -   Debug
+
     -   [setResourceName](#setResourceName)
     -   [checkForLeaks](#checkForLeaks)
     -   [pushDebugGroup](#pushDebugGroup)
     -   [popDebugGroup](#popDebugGroup)
+
+-   GPU Resources
+    -   [Buffer](#buffer)
+        -   [setSubData](#setSubData)
+    -   [Texture](#texture)
+        -   [setImageData](#setImageData)
+    -   Sampler
+    -   RenderTarget
+    -   RenderPass
+        -   setViewport
+        -   setScissor
+        -   setPipeline
+        -   setBindings
+        -   setVertexInput
+        -   setStencilRef
+        -   draw
+        -   drawIndexed
+        -   drawIndirect
+        -   beginOcclusionQuery
+        -   endOcclusionQuery
+    -   ComputePass
+        -   setPipeline
+        -   setBindings
+        -   dispatchWorkgroups
+        -   dispatchWorkgroupsIndirect
+    -   Program
+        -   setUniformsLegacy
+    -   QueryPool
+        -   queryResultOcclusion
+    -   Readback
+        -   readTexture
+        -   readTextureSync
+        -   readBuffer
 
 ### <a id='createDevice' />Create Device
 
@@ -74,25 +109,47 @@ const device = swapChain.getDevice();
 
 ### <a id="createBuffer" />createBuffer
 
-<https://www.w3.org/TR/webgpu/#dom-gpudevice-createbuffer>
+A [Buffer](#buffer) represents a block of memory that can be used in GPU operations. Data is stored in linear layout.
+
+We references the [WebGPU design](https://www.w3.org/TR/webgpu/#dom-gpudevice-createbuffer):
 
 ```ts
 createBuffer: (descriptor: BufferDescriptor) => Buffer;
 ```
 
+The parameters are as follows, references the [WebGPU design](https://www.w3.org/TR/webgpu/#GPUBufferDescriptor):
+
+-   viewOrSize `required` Set buffer data directly or allocate fixed length(in bytes).
+-   usage `required` The allowed usage for this buffer.
+-   hint `optional` Known as hint when calling [bufferData](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData#usage) in WebGL.
+
 ```ts
-/**
- * @see https://www.w3.org/TR/webgpu/#GPUBufferDescriptor
- */
 export interface BufferDescriptor {
     viewOrSize: ArrayBufferView | number;
     usage: BufferUsage;
     hint?: BufferFrequencyHint;
 }
+```
 
-/**
- * @see https://www.w3.org/TR/webgpu/#buffer-usage
- */
+We can set buffer data directly, or allocate fixed length for later use e.g. calling [setSubData](#setSubData):
+
+```ts
+const buffer = device.createBuffer({
+    viewOrSize: new Float32Array([1, 2, 3, 4]),
+    usage: BufferUsage.VERTEX,
+});
+
+// or
+const buffer = device.createBuffer({
+    viewOrSize: 4 * Float32Array.BYTES_PER_ELEMENT, // in bytes
+    usage: BufferUsage.VERTEX,
+});
+buffer.setSubData(0, new Uint8Array(new Float32Array([1, 2, 3, 4]).buffer));
+```
+
+The allowed [usage](https://www.w3.org/TR/webgpu/#dom-gpubuffer-usage) for buffer:
+
+```ts
 export enum BufferUsage {
     MAP_READ = 0x0001,
     MAP_WRITE = 0x0002,
@@ -105,7 +162,11 @@ export enum BufferUsage {
     INDIRECT = 0x0100,
     QUERY_RESOLVE = 0x0200,
 }
+```
 
+This param is called [usage](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData#usage) in WebGL. We change its name to `hint` avoiding duplicate naming.
+
+```ts
 export enum BufferFrequencyHint {
     Static = 0x01,
     Dynamic = 0x02,
@@ -456,6 +517,32 @@ interface DebugGroup {
     triangleCount: number;
 }
 ```
+
+## <a id="buffer" />Buffer
+
+A Buffer represents a block of memory that can be used in GPU operations. Data is stored in linear layout.
+
+### <a id="setSubData" />setSubData
+
+We can set data in buffer with this method:
+
+-   dstByteOffset `required` Offset of dest buffer in bytes.
+-   src `required` Source buffer data, must use Uint8Array.
+-   srcByteOffset `optional` Offset of src buffer in bytes. Default to `0`.
+-   byteLength `optional` Default to the whole length of the src buffer.
+
+```ts
+setSubData: (
+  dstByteOffset: number,
+  src: Uint8Array,
+  srcByteOffset?: number,
+  byteLength?: number,
+) => void;
+```
+
+## <a id="texture" />Texture
+
+### <a id="setImageData" />setImageData
 
 ### <a id="popDebugGroup" />popDebugGroup
 
