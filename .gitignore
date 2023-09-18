@@ -2,5 +2,6 @@
 node_modules
 es
 lib
+dist
 rust/target
 coverage
