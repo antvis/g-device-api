@@ -81,6 +81,9 @@ devDependencies:
   jest:
     specifier: ^29.0.0
     version: 29.0.0
+  lil-gui:
+    specifier: ^0.16.0
+    version: 0.16.0
   lint-staged:
     specifier: ^10.5.4
     version: 10.5.4
@@ -4652,6 +4655,10 @@ packages:
     dependencies:
       prelude-ls: 1.2.1
       type-check: 0.4.0
+    dev: true
+
+  /lil-gui@0.16.0:
+    resolution: {integrity: sha512-wDySFozDfOed8UymoMprgQ+xuEZhbOP9h6cagszu/gIRpGjfoo8lHPYXXJN5OluHoM1Z4Y2ac0FJhiMQC5Ac0Q==}
     dev: true
 
   /lines-and-columns@1.2.4:
