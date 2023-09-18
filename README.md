@@ -4,7 +4,7 @@ A set of Device API which implements with WebGL1/2 & WebGPU.
 
 -   [API](#api)
 -   [Shader Language](#shader-language)
--   [Examples](#examples)
+-   [Observable Examples](https://observablehq.com/@strawberry-vis/gallery)
 
 ## Installing
 
