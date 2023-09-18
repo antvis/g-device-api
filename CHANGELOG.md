@@ -1,5 +1,11 @@
 # @strawberry-vis/g-device-api
 
+## 1.0.2
+
+### Patch Changes
+
+-   8a03cab: Add naga wasm to dist.
+
 ## 1.0.1
 
 ### Patch Changes
