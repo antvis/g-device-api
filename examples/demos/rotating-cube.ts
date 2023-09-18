@@ -190,7 +190,7 @@ void main() {
     const viewMatrix = mat4.identity(mat4.create());
     const modelViewProjectionMatrix = mat4.create();
     mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(0, 0, -4));
-    const now = Date.now() / 1000;
+    const now = useRAF ? Date.now() / 1000 : 0;
     mat4.rotate(
       viewMatrix,
       viewMatrix,
@@ -236,13 +236,15 @@ void main() {
     renderPass.draw(cubeVertexCount);
 
     device.submitPass(renderPass);
-    id = requestAnimationFrame(frame);
+    if (useRAF) {
+      id = requestAnimationFrame(frame);
+    }
   };
 
   frame();
 
   return () => {
-    if (id) {
+    if (useRAF && id) {
       cancelAnimationFrame(id);
     }
     program.destroy();

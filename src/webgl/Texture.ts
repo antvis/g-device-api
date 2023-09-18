@@ -219,9 +219,10 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
   setImageData(levelDatas: (TexImageSource | ArrayBufferView)[], lod = 0) {
     const gl = this.device.gl;
     const isCompressed = isTextureFormatCompressed(this.pixelFormat);
-    // const is3D =
-    //   this.gl_target === GL.TEXTURE_3D ||
-    //   this.gl_target === GL.TEXTURE_2D_ARRAY;
+    // @see https://github.com/shrekshao/MoveWebGL1EngineToWebGL2/blob/master/Move-a-WebGL-1-Engine-To-WebGL-2-Blog-2.md#3d-texture
+    const is3D =
+      this.gl_target === GL.TEXTURE_3D ||
+      this.gl_target === GL.TEXTURE_2D_ARRAY;
     const isCube = this.gl_target === GL.TEXTURE_CUBE_MAP;
     // @ts-ignore
     const isTypedArray = levelDatas[0].buffer;
@@ -283,18 +284,33 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
         );
       } else {
         if (isWebGL2(gl)) {
-          // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
-          gl.texImage2D(
-            gl_target,
-            lod,
-            gl_format,
-            width,
-            height,
-            0, // border must be 0
-            gl_format, // TODO: can be different with gl_format
-            gl_type,
-            levelData as ArrayBufferView,
-          );
+          if (is3D) {
+            gl.texImage3D(
+              gl_target,
+              lod,
+              gl_format,
+              width,
+              height,
+              this.depth,
+              0, // border must be 0
+              gl_format, // TODO: can be different with gl_format
+              gl_type,
+              levelData as ArrayBufferView,
+            );
+          } else {
+            // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/texImage2D
+            gl.texImage2D(
+              gl_target,
+              lod,
+              gl_format,
+              width,
+              height,
+              0, // border must be 0
+              gl_format, // TODO: can be different with gl_format
+              gl_type,
+              levelData as ArrayBufferView,
+            );
+          }
         } else {
           // WebGL1: upload Array & Image separately
           if (isTypedArray) {
@@ -324,7 +340,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
     }
 
     if (this.mipmaps) {
-      this.generateMipmap();
+      this.generateMipmap(is3D);
     }
   }
 
@@ -373,7 +389,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
     }
   }
 
-  private generateMipmap(): this {
+  private generateMipmap(is3D = false): this {
     const gl = this.device.gl;
     if (!isWebGL2(gl) && this.isNPOT()) {
       return this;
@@ -381,12 +397,29 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
 
     if (this.gl_texture && this.gl_target) {
       gl.bindTexture(this.gl_target, this.gl_texture);
+
+      if (is3D) {
+        gl.texParameteri(this.gl_target, GL.TEXTURE_BASE_LEVEL, 0);
+        gl.texParameteri(
+          this.gl_target,
+          GL.TEXTURE_MAX_LEVEL,
+          Math.log2(this.width),
+        );
+        gl.texParameteri(
+          this.gl_target,
+          GL.TEXTURE_MIN_FILTER,
+          GL.LINEAR_MIPMAP_LINEAR,
+        );
+        gl.texParameteri(this.gl_target, GL.TEXTURE_MAG_FILTER, GL.LINEAR);
+      } else {
+        gl.texParameteri(
+          GL.TEXTURE_2D,
+          GL.TEXTURE_MIN_FILTER,
+          GL.NEAREST_MIPMAP_LINEAR,
+        );
+      }
+
       gl.generateMipmap(this.gl_target);
-      gl.texParameteri(
-        GL.TEXTURE_2D,
-        GL.TEXTURE_MIN_FILTER,
-        GL.NEAREST_MIPMAP_LINEAR,
-      );
       gl.bindTexture(this.gl_target, null);
     }
     return this;
