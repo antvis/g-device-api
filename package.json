@@ -1,6 +1,6 @@
 {
   "name": "@strawberry-vis/g-device-api",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "A G plugin of renderer implementation with GPUDevice",
   "keywords": [
     "antv",
@@ -75,6 +75,7 @@
     "eslint": "^7.32.0",
     "eslint-plugin-jest": "24.3.6",
     "gl": "^6.0.2",
+    "get-pixels": "3.3.3",
     "pixelmatch": "5.3.0",
     "pngjs": "^6.0.0",
     "husky": "^7.0.4",

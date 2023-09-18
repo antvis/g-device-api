@@ -415,20 +415,6 @@ export class Device_GL implements SwapChain, Device {
       numLevels: 1,
     });
 
-    // this.blackTexture = this.ensureResourceExists(gl.createTexture());
-    // gl.bindTexture(GL.TEXTURE_2D, this.blackTexture);
-    // gl.texImage2D(
-    //   GL.TEXTURE_2D,
-    //   0,
-    //   isWebGL2(gl) ? gl.RGBA8 : gl.RGBA,
-    //   1,
-    //   1,
-    //   0,
-    //   gl.RGBA,
-    //   gl.UNSIGNED_BYTE,
-    //   new Uint8Array(4),
-    // )
-
     if (formatKind === SamplerFormatKind.Float) {
       texture.setImageData([new Uint8Array(4 * depth)]);
     }
