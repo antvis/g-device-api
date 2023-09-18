@@ -1,13 +1,14 @@
-import * as demos from "./demos";
+import * as demos from './demos';
 
-const select = document.createElement("select");
-select.style.margin = "1em";
+const select = document.createElement('select');
+select.id = 'example-select';
+select.style.margin = '1em';
 select.onchange = onChange;
-select.style.display = "block";
+select.style.display = 'block';
 document.body.append(select);
 
 const options = Object.keys(demos).map((d) => {
-  const option = document.createElement("option");
+  const option = document.createElement('option');
   option.textContent = d;
   option.value = d;
   return option;
@@ -15,22 +16,27 @@ const options = Object.keys(demos).map((d) => {
 options.forEach((d) => select.append(d));
 
 const initialValue = new URL(location as any).searchParams.get(
-  "name"
+  'name',
 ) as string;
 if (demos[initialValue]) select.value = initialValue;
 
-let node;
+const $container = document.getElementById('container')!;
+
+let callback: () => void;
 render();
 
-function render() {
-  if (node) node.remove();
+async function render() {
+  if (callback) {
+    callback();
+  }
+  $container.innerHTML = '';
+
   const demo = demos[select.value];
-  node = demo();
-  document.body.append(node);
+  callback = await demo($container);
 }
 
 function onChange() {
   const { value } = select;
-  history.pushState({ value }, "", `?name=${value}`);
+  history.pushState({ value }, '', `?name=${value}`);
   render();
 }

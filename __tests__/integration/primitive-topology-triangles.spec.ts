@@ -1,6 +1,6 @@
 import _gl from 'gl';
 import { getWebGLDeviceContributionAndCanvas } from '../utils';
-import { render } from '../../test/demos/primitive-topology-points';
+import { render } from '../../test/demos/primitive-topology-triangles';
 import '../useSnapshotMatchers';
 
 describe('Primitive topology triangles', () => {
@@ -18,7 +18,7 @@ describe('Primitive topology triangles', () => {
 
     expect($canvas.getContext('webgl1')).toMatchWebGLSnapshot(
       dir,
-      'primitive-topology-points',
+      'primitive-topology-triangles',
     );
 
     disposeCallback();
