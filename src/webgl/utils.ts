@@ -11,12 +11,12 @@ import {
   BlendMode,
   BufferFrequencyHint,
   BufferUsage,
-  MipFilterMode,
+  MipmapFilterMode,
   PrimitiveTopology,
   QueryPoolType,
-  TexFilterMode,
+  FilterMode,
   TextureDimension,
-  WrapMode,
+  AddressMode,
 } from '../api';
 import type { Buffer, ChannelBlendState, Sampler, Texture } from '../api';
 import type { Buffer_GL } from './Buffer';
@@ -178,13 +178,13 @@ export function translateIndexFormat(format: Format): GLenum {
   }
 }
 
-export function translateWrapMode(wrapMode: WrapMode): GLenum {
+export function translateAddressMode(wrapMode: AddressMode): GLenum {
   switch (wrapMode) {
-    case WrapMode.CLAMP:
+    case AddressMode.CLAMP_TO_EDGE:
       return GL.CLAMP_TO_EDGE;
-    case WrapMode.REPEAT:
+    case AddressMode.REPEAT:
       return GL.REPEAT;
-    case WrapMode.MIRROR:
+    case AddressMode.MIRRORED_REPEAT:
       return GL.MIRRORED_REPEAT;
     default:
       throw new Error('whoops');
@@ -192,28 +192,37 @@ export function translateWrapMode(wrapMode: WrapMode): GLenum {
 }
 
 export function translateFilterMode(
-  filter: TexFilterMode,
-  mipFilter: MipFilterMode,
+  filter: FilterMode,
+  mipmapFilter: MipmapFilterMode,
 ): GLenum {
-  if (mipFilter === MipFilterMode.LINEAR && filter === TexFilterMode.BILINEAR) {
+  if (
+    mipmapFilter === MipmapFilterMode.LINEAR &&
+    filter === FilterMode.BILINEAR
+  ) {
     return GL.LINEAR_MIPMAP_LINEAR;
   }
-  if (mipFilter === MipFilterMode.LINEAR && filter === TexFilterMode.POINT) {
+  if (mipmapFilter === MipmapFilterMode.LINEAR && filter === FilterMode.POINT) {
     return GL.NEAREST_MIPMAP_LINEAR;
   }
   if (
-    mipFilter === MipFilterMode.NEAREST &&
-    filter === TexFilterMode.BILINEAR
+    mipmapFilter === MipmapFilterMode.NEAREST &&
+    filter === FilterMode.BILINEAR
   ) {
     return GL.LINEAR_MIPMAP_NEAREST;
   }
-  if (mipFilter === MipFilterMode.NEAREST && filter === TexFilterMode.POINT) {
+  if (
+    mipmapFilter === MipmapFilterMode.NEAREST &&
+    filter === FilterMode.POINT
+  ) {
     return GL.NEAREST_MIPMAP_NEAREST;
   }
-  if (mipFilter === MipFilterMode.NO_MIP && filter === TexFilterMode.BILINEAR) {
+  if (
+    mipmapFilter === MipmapFilterMode.NO_MIP &&
+    filter === FilterMode.BILINEAR
+  ) {
     return GL.LINEAR;
   }
-  if (mipFilter === MipFilterMode.NO_MIP && filter === TexFilterMode.POINT) {
+  if (mipmapFilter === MipmapFilterMode.NO_MIP && filter === FilterMode.POINT) {
     return GL.NEAREST;
   }
   throw new Error('Unknown texture filter mode');

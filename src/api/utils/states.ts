@@ -8,7 +8,7 @@ import {
   BlendFactor,
   BlendMode,
   ChannelWriteMask,
-  CompareMode,
+  CompareFunction,
   CullMode,
   FrontFace,
   SamplerFormatKind,
@@ -16,7 +16,7 @@ import {
   TextureDimension,
 } from '../interfaces';
 import { colorCopy, colorNewCopy, TransparentBlack } from './color';
-// import { reverseDepthForCompareMode } from './depth';
+// import { reverseDepthForCompareFunction } from './depth';
 
 export function isPowerOfTwo(n: number): boolean {
   return !!(n && (n & (n - 1)) === 0);
@@ -234,10 +234,10 @@ export const defaultMegaState: MegaStateDescriptor = {
 
   blendConstant: colorNewCopy(TransparentBlack),
   depthWrite: true,
-  depthCompare: CompareMode.LEQUAL,
-  // depthCompare: reverseDepthForCompareMode(CompareMode.LessEqual),
-  // stencilCompare: CompareMode.Never,
-  stencilCompare: CompareMode.ALWAYS,
+  depthCompare: CompareFunction.LEQUAL,
+  // depthCompare: reverseDepthForCompareFunction(CompareFunction.LessEqual),
+  // stencilCompare: CompareFunction.Never,
+  stencilCompare: CompareFunction.ALWAYS,
   stencilWrite: false,
   stencilPassOp: StencilOp.KEEP,
   stencilRef: 0,
@@ -256,7 +256,7 @@ export function makeMegaState(
 }
 
 export const fullscreenMegaState = makeMegaState(
-  { depthCompare: CompareMode.ALWAYS, depthWrite: false },
+  { depthCompare: CompareFunction.ALWAYS, depthWrite: false },
   defaultMegaState,
 );
 

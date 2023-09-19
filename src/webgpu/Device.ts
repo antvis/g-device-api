@@ -34,15 +34,15 @@ import {
   assert,
   ClipSpaceNearZ,
   Format,
-  MipFilterMode,
+  MipmapFilterMode,
   ResourceType,
   SamplerFormatKind,
-  TexFilterMode,
+  FilterMode,
   TextureDimension,
   TextureUsage,
   ViewportOrigin,
-  WrapMode,
-  CompareMode,
+  AddressMode,
+  CompareFunction,
   defaultMegaState,
   PrimitiveTopology,
   copyMegaState,
@@ -166,11 +166,11 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     this.setResourceName(this.fallbackTextureCube, 'Fallback TextureCube');
 
     this.fallbackSamplerFiltering = this.createSampler({
-      wrapS: WrapMode.REPEAT,
-      wrapT: WrapMode.REPEAT,
-      minFilter: TexFilterMode.POINT,
-      magFilter: TexFilterMode.POINT,
-      mipFilter: MipFilterMode.NEAREST,
+      addressModeU: AddressMode.REPEAT,
+      addressModeV: AddressMode.REPEAT,
+      minFilter: FilterMode.POINT,
+      magFilter: FilterMode.POINT,
+      mipmapFilter: MipmapFilterMode.NEAREST,
     });
     this.setResourceName(
       this.fallbackSamplerFiltering,
@@ -178,12 +178,12 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     );
 
     this.fallbackSamplerComparison = this.createSampler({
-      wrapS: WrapMode.REPEAT,
-      wrapT: WrapMode.REPEAT,
-      minFilter: TexFilterMode.POINT,
-      magFilter: TexFilterMode.POINT,
-      mipFilter: MipFilterMode.NEAREST,
-      compareMode: CompareMode.ALWAYS,
+      addressModeU: AddressMode.REPEAT,
+      addressModeV: AddressMode.REPEAT,
+      minFilter: FilterMode.POINT,
+      magFilter: FilterMode.POINT,
+      mipmapFilter: MipmapFilterMode.NEAREST,
+      compareFunction: CompareFunction.ALWAYS,
     });
     this.setResourceName(
       this.fallbackSamplerComparison,
@@ -232,12 +232,12 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
       id: 0,
       device: this,
       descriptor: {
-        pixelFormat: Format.U8_RGBA_RT,
+        format: Format.U8_RGBA_RT,
         width: this.swapChainWidth,
         height: this.swapChainHeight,
-        depth: 0,
+        depthOrArrayLayers: 0,
         dimension: TextureDimension.TEXTURE_2D,
-        numLevels: 1,
+        mipLevelCount: 1,
         usage: this.swapChainTextureUsage,
       },
       skipCreate: true,
@@ -320,8 +320,8 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
       descriptor: {
         ...descriptor,
         dimension: TextureDimension.TEXTURE_2D,
-        numLevels: 1,
-        depth: 1,
+        mipLevelCount: 1,
+        depthOrArrayLayers: 1,
         usage: TextureUsage.RENDER_TARGET,
       },
       sampleCount: descriptor.sampleCount,
@@ -335,12 +335,12 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
 
   createRenderTargetFromTexture(texture: Texture): RenderTarget {
     const {
-      pixelFormat,
+      format,
       width,
       height,
       depthOrArrayLayers,
       sampleCount,
-      numLevels,
+      mipLevelCount,
       gpuTexture,
       gpuTextureView,
       usage,
@@ -352,12 +352,12 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
       id: this.getNextUniqueId(),
       device: this,
       descriptor: {
-        pixelFormat,
+        format,
         width,
         height,
-        depth: depthOrArrayLayers,
+        depthOrArrayLayers,
         dimension: TextureDimension.TEXTURE_2D,
-        numLevels,
+        mipLevelCount,
         usage,
       },
       skipCreate: true,
@@ -404,18 +404,18 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
       height: descriptor.height,
       depthOrArrayLayers: descriptor.depthOrArrayLayers,
     };
-    const mipLevelCount = descriptor.numLevels;
-    const format = translateTextureFormat(descriptor.pixelFormat);
+    const mipLevelCount = descriptor.mipLevelCount;
+    const format = translateTextureFormat(descriptor.format);
     const dimension = translateTextureDimension(descriptor.dimension);
     const usage = translateTextureUsage(descriptor.usage);
 
-    texture.format = format;
+    texture.gpuTextureformat = format;
     texture.dimension = descriptor.dimension;
-    texture.pixelFormat = descriptor.pixelFormat;
+    texture.format = descriptor.format;
     texture.width = descriptor.width;
     texture.height = descriptor.height;
     texture.depthOrArrayLayers = descriptor.depthOrArrayLayers;
-    texture.numLevels = mipLevelCount;
+    texture.mipLevelCount = mipLevelCount;
     texture.usage = usage;
     texture.sampleCount = descriptor.sampleCount;
 
@@ -463,17 +463,18 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     dimension: TextureDimension,
     formatKind: SamplerFormatKind,
   ): Texture_WebGPU {
-    const depth = dimension === TextureDimension.TEXTURE_CUBE_MAP ? 6 : 1;
-    const pixelFormat =
+    const depthOrArrayLayers =
+      dimension === TextureDimension.TEXTURE_CUBE_MAP ? 6 : 1;
+    const format =
       formatKind === SamplerFormatKind.Float ? Format.U8_RGBA_NORM : Format.D24;
     return this.createTexture({
       dimension,
-      pixelFormat,
+      format,
       usage: TextureUsage.SAMPLED,
       width: 1,
       height: 1,
-      depth,
-      numLevels: 1,
+      depthOrArrayLayers,
+      mipLevelCount: 1,
     }) as Texture_WebGPU;
   }
 

@@ -10,16 +10,16 @@ import type {
 } from '../api';
 import {
   BufferUsage,
-  WrapMode,
-  TexFilterMode,
-  MipFilterMode,
+  AddressMode,
+  FilterMode,
+  MipmapFilterMode,
   TextureDimension,
   PrimitiveTopology,
   CullMode,
   FrontFace,
   BlendFactor,
   BlendMode,
-  CompareMode,
+  CompareFunction,
   VertexStepMode,
   TextureUsage,
   QueryPoolType,
@@ -119,24 +119,26 @@ export function translateBufferUsage(usage_: BufferUsage): GPUBufferUsageFlags {
   return usage;
 }
 
-export function translateWrapMode(wrapMode: WrapMode): GPUAddressMode {
-  if (wrapMode === WrapMode.CLAMP) return 'clamp-to-edge';
-  else if (wrapMode === WrapMode.REPEAT) return 'repeat';
-  else if (wrapMode === WrapMode.MIRROR) return 'mirror-repeat';
+export function translateAddressMode(wrapMode: AddressMode): GPUAddressMode {
+  if (wrapMode === AddressMode.CLAMP_TO_EDGE) return 'clamp-to-edge';
+  else if (wrapMode === AddressMode.REPEAT) return 'repeat';
+  else if (wrapMode === AddressMode.MIRRORED_REPEAT) return 'mirror-repeat';
   else throw new Error('whoops');
 }
 
-export function translateMinMagFilter(texFilter: TexFilterMode): GPUFilterMode {
-  if (texFilter === TexFilterMode.BILINEAR) return 'linear';
-  else if (texFilter === TexFilterMode.POINT) return 'nearest';
+export function translateMinMagFilter(texFilter: FilterMode): GPUFilterMode {
+  if (texFilter === FilterMode.BILINEAR) return 'linear';
+  else if (texFilter === FilterMode.POINT) return 'nearest';
   else throw new Error('whoops');
 }
 
 // @see https://www.w3.org/TR/webgpu/#enumdef-gpumipmapfiltermode
-export function translateMipFilter(mipFilter: MipFilterMode): GPUFilterMode {
-  if (mipFilter === MipFilterMode.LINEAR) return 'linear';
-  else if (mipFilter === MipFilterMode.NEAREST) return 'nearest';
-  else if (mipFilter === MipFilterMode.NO_MIP) return 'nearest';
+export function translateMipFilter(
+  mipmapFilter: MipmapFilterMode,
+): GPUFilterMode {
+  if (mipmapFilter === MipmapFilterMode.LINEAR) return 'linear';
+  else if (mipmapFilter === MipmapFilterMode.NEAREST) return 'nearest';
+  else if (mipmapFilter === MipmapFilterMode.NO_MIP) return 'nearest';
   else throw new Error('whoops');
 }
 
@@ -338,17 +340,17 @@ export function translateTargets(
 }
 
 // @see https://www.w3.org/TR/webgpu/#enumdef-gpucomparefunction
-export function translateCompareMode(
-  compareMode: CompareMode,
+export function translateCompareFunction(
+  compareFunction: CompareFunction,
 ): GPUCompareFunction {
-  if (compareMode === CompareMode.NEVER) return 'never';
-  else if (compareMode === CompareMode.LESS) return 'less';
-  else if (compareMode === CompareMode.EQUAL) return 'equal';
-  else if (compareMode === CompareMode.LEQUAL) return 'less-equal';
-  else if (compareMode === CompareMode.GREATER) return 'greater';
-  else if (compareMode === CompareMode.NOTEQUAL) return 'not-equal';
-  else if (compareMode === CompareMode.GEQUAL) return 'greater-equal';
-  else if (compareMode === CompareMode.ALWAYS) return 'always';
+  if (compareFunction === CompareFunction.NEVER) return 'never';
+  else if (compareFunction === CompareFunction.LESS) return 'less';
+  else if (compareFunction === CompareFunction.EQUAL) return 'equal';
+  else if (compareFunction === CompareFunction.LEQUAL) return 'less-equal';
+  else if (compareFunction === CompareFunction.GREATER) return 'greater';
+  else if (compareFunction === CompareFunction.NOTEQUAL) return 'not-equal';
+  else if (compareFunction === CompareFunction.GEQUAL) return 'greater-equal';
+  else if (compareFunction === CompareFunction.ALWAYS) return 'always';
   else throw new Error('whoops');
 }
 
@@ -361,7 +363,7 @@ export function translateDepthStencilState(
   return {
     format: translateTextureFormat(format),
     depthWriteEnabled: !!megaStateDescriptor.depthWrite,
-    depthCompare: translateCompareMode(megaStateDescriptor.depthCompare),
+    depthCompare: translateCompareFunction(megaStateDescriptor.depthCompare),
     depthBias: megaStateDescriptor.polygonOffset ? 1 : 0,
     depthBiasSlopeScale: megaStateDescriptor.polygonOffset ? 1 : 0,
   };

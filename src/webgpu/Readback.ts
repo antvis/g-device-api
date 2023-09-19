@@ -35,7 +35,9 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
     // FIXME: default to 0 for now
     const faceIndex = 0;
 
-    const blockInformation = this.getBlockInformationFromFormat(texture.format);
+    const blockInformation = this.getBlockInformationFromFormat(
+      texture.gpuTextureformat,
+    );
 
     const bytesPerRow =
       Math.ceil(width / blockInformation.width) * blockInformation.length;
@@ -84,7 +86,7 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
       dst.byteLength === size ? dst : null,
       dstOffset,
       size,
-      texture.pixelFormat,
+      texture.format,
     );
   }
 

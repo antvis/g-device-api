@@ -4,7 +4,11 @@ module.exports = {
   preset: 'ts-jest',
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   modulePathIgnorePatterns: ['dist'],
-  collectCoverageFrom: ['src/**/*.ts'],
+  collectCoverageFrom: [
+    'src/api/**/*.ts',
+    'src/shader/**/*.ts',
+    'src/webgl/**/*.ts',
+  ],
   transform: {
     '^.+\\.[tj]s$': [
       'ts-jest',

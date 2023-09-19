@@ -53,33 +53,34 @@ npm install @strawberry-vis/g-device-api
         -   [setSubData](#setSubData)
     -   [Texture](#texture)
         -   [setImageData](#setImageData)
-    -   Sampler
-    -   RenderTarget
-    -   RenderPass
-        -   setViewport
-        -   setScissor
-        -   setPipeline
-        -   setBindings
-        -   setVertexInput
-        -   setStencilRef
-        -   draw
-        -   drawIndexed
-        -   drawIndirect
-        -   beginOcclusionQuery
-        -   endOcclusionQuery
-    -   ComputePass
-        -   setPipeline
-        -   setBindings
-        -   dispatchWorkgroups
-        -   dispatchWorkgroupsIndirect
+    -   [Sampler](#sampler)
+    -   [RenderTarget](#renderTarget)
+    -   [RenderPass](#renderPass)
+        -   [setViewport](#setViewport)
+        -   [setScissorRect](#setScissorRect)
+        -   [setPipeline](#setPipeline)
+        -   [setBindings](#setBindings)
+        -   [setVertexInput](#setVertexInput)
+        -   [setStencilReference](#setStencilReference)
+        -   [draw](#draw)
+        -   [drawIndexed](#drawIndexed)
+        -   [drawIndirect](#drawIndirect)
+        -   [drawIndexedIndirect](#drawIndexedIndirect)
+        -   [beginOcclusionQuery](#beginOcclusionQuery)
+        -   [endOcclusionQuery](#endOcclusionQuery)
+    -   [ComputePass](#computePass)
+        -   [setPipeline](#setPipeline)
+        -   [setBindings](#setBindings)
+        -   [dispatchWorkgroups](#dispatchWorkgroups)
+        -   [dispatchWorkgroupsIndirect](#dispatchWorkgroupsIndirect)
     -   Program
-        -   setUniformsLegacy
+        -   [setUniformsLegacy](#setUniformsLegacy)
     -   QueryPool
         -   queryResultOcclusion
-    -   Readback
-        -   readTexture
-        -   readTextureSync
-        -   readBuffer
+    -   [Readback](#readback)
+        -   [readTexture](#readTexture)
+        -   [readTextureSync](#readTextureSync)
+        -   [readBuffer](#readBuffer)
 
 ### <a id='createDevice' />Create Device
 
@@ -124,7 +125,7 @@ The parameters are as follows, references the [WebGPU design](https://www.w3.org
 -   hint `optional` Known as hint when calling [bufferData](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData#usage) in WebGL.
 
 ```ts
-export interface BufferDescriptor {
+interface BufferDescriptor {
     viewOrSize: ArrayBufferView | number;
     usage: BufferUsage;
     hint?: BufferFrequencyHint;
@@ -147,10 +148,11 @@ const buffer = device.createBuffer({
 buffer.setSubData(0, new Uint8Array(new Float32Array([1, 2, 3, 4]).buffer));
 ```
 
-The allowed [usage](https://www.w3.org/TR/webgpu/#dom-gpubuffer-usage) for buffer:
+The allowed [usage](https://www.w3.org/TR/webgpu/#dom-gpubuffer-usage) for buffer.
+They can also be composited like `BufferUsage.VERTEX | BufferUsage.STORAGE`.
 
 ```ts
-export enum BufferUsage {
+enum BufferUsage {
     MAP_READ = 0x0001,
     MAP_WRITE = 0x0002,
     COPY_SRC = 0x0004,
@@ -167,7 +169,7 @@ export enum BufferUsage {
 This param is called [usage](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/bufferData#usage) in WebGL. We change its name to `hint` avoiding duplicate naming.
 
 ```ts
-export enum BufferFrequencyHint {
+enum BufferFrequencyHint {
     Static = 0x01,
     Dynamic = 0x02,
 }
@@ -175,47 +177,116 @@ export enum BufferFrequencyHint {
 
 ### <a id="createTexture" />createTexture
 
-<https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createTexture>
+This method references the [WebGPU design](https://developer.mozilla.org/en-US/docs/Web/API/GPUDevice/createTexture) to create a [Texture](#texture):
 
 ```ts
 createTexture: (descriptor: TextureDescriptor) => Texture;
 ```
 
-### <a id="createSampler" />createSampler
+The parameters are as follows, references the [WebGPU design](https://www.w3.org/TR/webgpu/#GPUBufferDescriptor):
 
 ```ts
-createSampler: (descriptor: SamplerDescriptor) => Sampler;
-
-export interface SamplerDescriptor {
-    wrapS: WrapMode;
-    wrapT: WrapMode;
-    wrapQ?: WrapMode;
-    minFilter: TexFilterMode;
-    magFilter: TexFilterMode;
-    mipFilter: MipFilterMode;
-    minLOD?: number;
-    maxLOD?: number;
-    maxAnisotropy?: number;
-    compareMode?: CompareMode;
+interface TextureDescriptor {
+    usage: TextureUsage;
+    format: Format;
+    width: number;
+    height: number;
+    depthOrArrayLayers?: number;
+    dimension?: TextureDimension;
+    mipLevelCount?: number;
+    pixelStore?: Partial<{
+        packAlignment: number;
+        unpackAlignment: number;
+        unpackFlipY: boolean;
+    }>;
 }
 ```
 
+-   usage `required` The allowed usages for this GPUTexture.
+-   format `required` The format of this GPUTexture.
+-   width `required` The width of this GPUTexture.
+-   height `required` The height of this GPUTexture.
+-   depthOrArrayLayers `optional` The depth or layer count of this GPUTexture. Default to `1`.
+-   dimension `optional` The dimension of the set of texel for each of this GPUTexture's subresources. Default to `TextureDimension.TEXTURE_2D`
+-   mipLevelCount `optional` The number of mip levels of this GPUTexture. Default to `1`.
+-   pixelStore `optional` Specifies the [pixel storage modes](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei) in WebGL.
+    -   packAlignment Packing of pixel data into memory. `gl.PACK_ALIGNMENT`
+    -   unpackAlignment Unpacking of pixel data from memory. `gl.UNPACK_ALIGNMENT`
+    -   unpackFlipY Flips the source data along its vertical axis if true. `gl.UNPACK_FLIP_Y_WEBGL`
+
+The `TextureUsage` enum is as follows:
+
 ```ts
-export enum WrapMode {
-    CLAMP,
-    REPEAT,
-    MIRROR,
+enum TextureUsage {
+    SAMPLED,
+    RENDER_TARGET, // When rendering to texture, choose this usage.
 }
-export enum TexFilterMode {
+```
+
+The `TextureDimension` enum is as follows:
+
+```ts
+enum TextureDimension {
+    TEXTURE_2D,
+    TEXTURE_2D_ARRAY,
+    TEXTURE_3D,
+    TEXTURE_CUBE_MAP,
+}
+```
+
+### <a id="createSampler" />createSampler
+
+[Samplers](#sampler) are created via `createSampler()`.
+
+```ts
+createSampler: (descriptor: SamplerDescriptor) => Sampler;
+```
+
+The params reference [GPUSamplerDescriptor](https://www.w3.org/TR/webgpu/#dictdef-gpusamplerdescriptor).
+
+```ts
+interface SamplerDescriptor {
+    addressModeU: AddressMode;
+    addressModeV: AddressMode;
+    addressModeW?: AddressMode;
+    minFilter: FilterMode;
+    magFilter: FilterMode;
+    mipmapFilter: MipmapFilterMode;
+    lodMinClamp?: number;
+    lodMaxClamp?: number;
+    maxAnisotropy?: number;
+    compareFunction?: CompareFunction;
+}
+```
+
+`AddressMode` describes the behavior of the sampler if the sample footprint extends beyond the bounds of the sampled texture.
+
+```ts
+enum AddressMode {
+    CLAMP_TO_EDGE,
+    REPEAT,
+    MIRRORED_REPEAT,
+}
+```
+
+`FilterMode` and `MipmapFilterMode` describe the behavior of the sampler if the sample footprint does not exactly match one texel.
+
+```ts
+enum FilterMode {
     POINT,
     BILINEAR,
 }
-export enum MipFilterMode {
+enum MipmapFilterMode {
     NO_MIP,
     NEAREST,
     LINEAR,
 }
-export enum CompareMode {
+```
+
+`CompareFunction` specifies the behavior of a comparison sampler. If a comparison sampler is used in a shader, an input value is compared to the sampled texture value, and the result of this comparison test (0.0f for pass, or 1.0f for fail) is used in the filtering operation.
+
+```ts
+enum CompareFunction {
     NEVER = GL.NEVER,
     LESS = GL.LESS,
     EQUAL = GL.EQUAL,
@@ -234,8 +305,8 @@ createRenderTarget: (descriptor: RenderTargetDescriptor) => RenderTarget;
 ```
 
 ```ts
-export interface RenderTargetDescriptor {
-    pixelFormat: Format;
+interface RenderTargetDescriptor {
+    format: Format;
     width: number;
     height: number;
     sampleCount: number;
@@ -256,7 +327,7 @@ createProgram: (program: ProgramDescriptor) => Program;
 ```
 
 ```ts
-export interface ProgramDescriptor {
+interface ProgramDescriptor {
     vertex?: {
         glsl?: string;
         wgsl?: string;
@@ -278,7 +349,7 @@ createBindings: (bindingsDescriptor: BindingsDescriptor) => Bindings;
 ```
 
 ```ts
-export interface BindingsDescriptor {
+interface BindingsDescriptor {
     bindingLayout: BindingLayoutDescriptor;
     pipeline?: RenderPipeline | ComputePipeline;
     uniformBufferBindings?: BufferBinding[];
@@ -289,32 +360,40 @@ export interface BindingsDescriptor {
 
 ### <a id="createInputLayout" />createInputLayout
 
+`InputLayout` defines the layout of vertex attribute data in a vertex buffer used by pipeline.
+
 ```ts
 createInputLayout: (inputLayoutDescriptor: InputLayoutDescriptor) =>
     InputLayout;
 ```
 
+A vertex buffer is, conceptually, a view into buffer memory as an array of structures. `arrayStride` is the stride, in bytes, between elements of that array. Each element of a vertex buffer is like a structure with a memory layout defined by its attributes, which describe the members of the structure.
+
 ```ts
-export interface InputLayoutDescriptor {
+interface InputLayoutDescriptor {
     vertexBufferDescriptors: (InputLayoutBufferDescriptor | null)[];
-    vertexAttributeDescriptors: VertexAttributeDescriptor[];
     indexBufferFormat: Format | null;
     program: Program;
 }
 
-export interface InputLayoutBufferDescriptor {
-    byteStride: number;
-    stepMode: VertexStepMode;
+interface InputLayoutBufferDescriptor {
+    arrayStride: number; // in bytes
+    stepMode: VertexStepMode; // per vertex or instance
+    attributes: VertexAttributeDescriptor[];
 }
 
-export interface VertexAttributeDescriptor {
-    location: number;
+interface VertexAttributeDescriptor {
+    shaderLocation: number;
     format: Format;
-    bufferIndex: number;
-    bufferByteOffset: number;
+    offset: number;
     divisor?: number;
 }
 ```
+
+-   shaderLocation `required` The numeric location associated with this attribute, which will correspond with a "@location" attribute declared in the vertex.module.
+-   format `required` The VertexFormat of the attribute.
+-   offset `required` The offset, in bytes, from the beginning of the element to the data for the attribute.
+-   divisor `optional`
 
 ### <a id="createReadback" />createReadback
 
@@ -365,8 +444,8 @@ createComputePipeline: (descriptor: ComputePipelineDescriptor) =>
 ```
 
 ```ts
-export type ComputePipelineDescriptor = PipelineDescriptor;
-export interface PipelineDescriptor {
+type ComputePipelineDescriptor = PipelineDescriptor;
+interface PipelineDescriptor {
     bindingLayouts: BindingLayoutDescriptor[];
     inputLayout: InputLayout | null;
     program: Program;
@@ -414,7 +493,7 @@ queryLimits: () => DeviceLimits;
 ```
 
 ```ts
-export interface DeviceLimits {
+interface DeviceLimits {
     uniformBufferWordAlignment: number;
     uniformBufferMaxPageWordSize: number;
     supportedSampleCounts: number[];
@@ -460,7 +539,7 @@ queryVendorInfo: () => VendorInfo;
 ```
 
 ```ts
-export interface VendorInfo {
+interface VendorInfo {
     readonly platformString: string;
     readonly glslVersion: string;
     readonly explicitBindingLocations: boolean;
@@ -518,6 +597,10 @@ interface DebugGroup {
 }
 ```
 
+### <a id="popDebugGroup" />popDebugGroup
+
+<https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/popDebugGroup>
+
 ## <a id="buffer" />Buffer
 
 A Buffer represents a block of memory that can be used in GPU operations. Data is stored in linear layout.
@@ -542,11 +625,349 @@ setSubData: (
 
 ## <a id="texture" />Texture
 
+One texture consists of one or more texture subresources, each uniquely identified by a mipmap level and, for 2d textures only, array layer and aspect.
+
 ### <a id="setImageData" />setImageData
 
-### <a id="popDebugGroup" />popDebugGroup
+We can set data in buffer with this method:
 
-<https://developer.mozilla.org/en-US/docs/Web/API/GPUCommandEncoder/popDebugGroup>
+-   data `required` Array of TexImageSource or ArrayBufferView.
+-   lod `optional` Lod. Default to `0`.
+
+```ts
+setImageData: (
+  data: (TexImageSource | ArrayBufferView)[],
+  lod?: number,
+) => void;
+```
+
+Create a cubemap texture:
+
+```ts
+// The order of the array layers is [+X, -X, +Y, -Y, +Z, -Z]
+const imageBitmaps = await Promise.all(
+    [
+        '/images/posx.jpg',
+        '/images/negx.jpg',
+        '/images/posy.jpg',
+        '/images/negy.jpg',
+        '/images/posz.jpg',
+        '/images/negz.jpg',
+    ].map(async (src) => loadImage(src)),
+);
+const texture = device.createTexture({
+    format: Format.U8_RGBA_NORM,
+    width: imageBitmaps[0].width,
+    height: imageBitmaps[0].height,
+    depthOrArrayLayers: 6,
+    dimension: TextureDimension.TEXTURE_CUBE_MAP,
+    usage: TextureUsage.SAMPLED,
+});
+texture.setImageData(imageBitmaps);
+```
+
+## <a id="sampler" />Sampler
+
+A GPUSampler encodes transformations and filtering information that can be used in a shader to interpret texture resource data.
+
+## <a id="renderPass" />RenderPass
+
+The RenderPass has several methods which affect how draw commands.
+
+### <a id="setViewport" />setViewport
+
+Sets the viewport used during the rasterization stage to linearly map from normalized device coordinates to viewport coordinates.
+
+-   x `required` Minimum X value of the viewport in pixels.
+-   y `required` Minimum Y value of the viewport in pixels.
+-   w `required` Width of the viewport in pixels.
+-   h `required` Height of the viewport in pixels.
+-   minDepth `optional` Minimum depth value of the viewport.
+-   maxDepth `optional` Minimum depth value of the viewport.
+
+```ts
+setViewport: (
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  minDepth?: number, // WebGPU only
+  maxDepth?: number, // WebGPU only
+) => void;
+```
+
+### <a id="setScissorRect" />setScissorRect
+
+Sets the scissor rectangle used during the rasterization stage. After transformation into viewport coordinates any fragments which fall outside the scissor rectangle will be discarded.
+
+-   x `required` Minimum X value of the scissor rectangle in pixels.
+-   y `required` Minimum Y value of the scissor rectangle in pixels.
+-   w `required` Width of the scissor rectangle in pixels.
+-   h `required` Height of the scissor rectangle in pixels.
+
+```ts
+setScissorRect: (x: number, y: number, w: number, h: number) => void;
+```
+
+### <a id="setPipeline" />setPipeline
+
+Sets the current RenderPipeline.
+
+```ts
+setPipeline(pipeline: RenderPipeline)
+```
+
+### <a id="setBindings" />setBindings
+
+Bindings defines the interface between a set of resources bound and their accessibility in shader stages.
+
+```ts
+setBindings: (bindings: Bindings, dynamicByteOffsets?: number[]) => void;
+```
+
+### <a id="setVertexInput" />setVertexInput
+
+```ts
+setVertexInput: (
+  inputLayout: InputLayout | null,
+  buffers: (VertexBufferDescriptor | null)[] | null,
+  indexBuffer: IndexBufferDescriptor | null,
+) => void;
+```
+
+Bind vertex & index buffer(s) like this:
+
+```ts
+interface VertexBufferDescriptor {
+    buffer: Buffer;
+    offset?: number; // in bytes
+}
+type IndexBufferDescriptor = VertexBufferDescriptor;
+```
+
+### <a id="setStencilReference" />setStencilReference
+
+Sets the stencilReference value used during stencil tests with the "replace" GPUStencilOperation.
+
+```ts
+setStencilReference: (value: number) => void;
+```
+
+### <a id="draw" />draw
+
+Draws primitives.
+
+-   vertexCount `required` The number of vertices to draw.
+-   instanceCount `optional` The number of instances to draw.
+-   firstVertex `optional` Offset into the vertex buffers, in vertices, to begin drawing from.
+-   firstInstance `optional` First instance to draw.
+
+```ts
+draw: (
+  vertexCount: number,
+  instanceCount?: number,
+  firstVertex?: number,
+  firstInstance?: number,
+) => void;
+```
+
+### <a id="drawIndexed" />drawIndexed
+
+Draws indexed primitives.
+
+-   indexCount `required` The number of indices to draw.
+-   instanceCount `optional` The number of instances to draw.
+-   firstIndex `optional` Offset into the index buffer, in indices, begin drawing from.
+-   baseVertex `optional` Added to each index value before indexing into the vertex buffers.
+-   firstInstance `optional` First instance to draw.
+
+```ts
+drawIndexed: (
+  indexCount: number,
+  instanceCount?: number,
+  firstIndex?: number,
+  baseVertex?: number,
+  firstInstance?: number,
+) => void;
+```
+
+### <a id="drawIndirect" />drawIndirect
+
+⚠️ WebGPU only.
+
+Draws primitives using parameters read from a GPUBuffer.
+
+```ts
+drawIndirect: (indirectBuffer: Buffer, indirectOffset: number) => void;
+```
+
+### <a id="drawIndexedIndirect" />drawIndexedIndirect
+
+⚠️ WebGPU only.
+
+Draws indexed primitives using parameters read from a GPUBuffer.
+
+```ts
+drawIndexedIndirect: (indirectBuffer: Buffer, indirectOffset: number) => void;
+```
+
+### <a id="beginOcclusionQuery" />beginOcclusionQuery
+
+⚠️ WebGL2 & WebGPU only.
+
+Occlusion query is only available on render passes, to query the number of fragment samples that pass all the per-fragment tests for a set of drawing commands, including scissor, sample mask, alpha to coverage, stencil, and depth tests. Any non-zero result value for the query indicates that at least one sample passed the tests and reached the output merging stage of the render pipeline, 0 indicates that no samples passed the tests.
+
+When beginning a render pass, `occlusionQuerySet` must be set to be able to use occlusion queries during the pass. An occlusion query is begun and ended by calling `beginOcclusionQuery()` and `endOcclusionQuery()` in pairs that cannot be nested.
+
+```ts
+beginOcclusionQuery: (queryIndex: number) => void;
+```
+
+### <a id="endOcclusionQuery" />endOcclusionQuery
+
+⚠️ WebGL2 & WebGPU only.
+
+```ts
+endOcclusionQuery: () => void;
+```
+
+## <a id="computePass" />ComputePass
+
+⚠️ WebGPU only.
+
+Computing operations provide direct access to GPU’s programmable hardware. Compute shaders do not have shader stage inputs or outputs, their results are side effects from writing data into storage bindings.
+
+### <a id="dispatchWorkgroups" />dispatchWorkgroups
+
+Dispatch work to be performed with the current ComputePipeline.
+
+X/Y/Z dimension of the grid of workgroups to dispatch.
+
+```ts
+dispatchWorkgroups: (
+  workgroupCountX: number,
+  workgroupCountY?: number,
+  workgroupCountZ?: number,
+) => void;
+```
+
+### <a id="dispatchWorkgroupsIndirect" />dispatchWorkgroupsIndirect
+
+Dispatch work to be performed with the current GPUComputePipeline using parameters read from a GPUBuffer.
+
+```ts
+dispatchWorkgroupsIndirect: (
+  indirectBuffer: Buffer,
+  indirectOffset: number,
+) => void;
+```
+
+## Program
+
+### <a id="setUniformsLegacy" />setUniformsLegacy
+
+⚠️ Only WebGL1 need this method.
+
+```ts
+setUniformsLegacy: (uniforms: Record<string, any>) => void;
+```
+
+```ts
+program.setUniformsLegacy({
+    u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
+    u_Texture: texture,
+});
+```
+
+## <a id='readback' />Readback
+
+Readback can read data from [Texture](#texture) or [Buffer](#buffer).
+
+### <a id='readTexture' />readTexture
+
+Read pixels from texture.
+
+-   t `required` Texture.
+-   x `required` X coordinate.
+-   y `required` Y coordinate.
+-   width `required` Width of dimension.
+-   height `required` Height of dimension.
+-   dst `required` Dst buffer view.
+-   length `optional`
+
+```ts
+readTexture: (
+    t: Texture,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    dst: ArrayBufferView,
+    dstOffset?: number,
+    length?: number,
+) => Promise<ArrayBufferView>;
+```
+
+For instance, if we want to read pixels from a texture:
+
+```ts
+const texture = device.createTexture({
+    format: Format.U8_RGBA_NORM,
+    width: 1,
+    height: 1,
+    usage: TextureUsage.SAMPLED,
+});
+texture.setImageData([new Uint8Array([1, 2, 3, 4])]);
+
+const readback = device.createReadback();
+
+let output = new Uint8Array(4);
+// x/y 0/0
+await readback.readTexture(texture, 0, 0, 1, 1, output);
+expect(output[0]).toBe(1);
+expect(output[1]).toBe(2);
+expect(output[2]).toBe(3);
+expect(output[3]).toBe(4);
+```
+
+### <a id='readTextureSync' />readTextureSync
+
+⚠️ WebGL1 & WebGL2 only.
+
+```ts
+readTextureSync: (
+    t: Texture,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    dst: ArrayBufferView,
+    dstOffset?: number,
+    length?: number,
+) => ArrayBufferView;
+```
+
+### <a id='readBuffer' />readBuffer
+
+⚠️ WebGL2 & WebGPU only.
+
+Read buffer data.
+
+-   src `required` Source buffer.
+-   srcOffset `optional` Offset in bytes of src buffer. Default to `0`.
+-   dst `optional` Dest buffer view.
+-   dstOffset `optional` Offset in bytes of dst buffer. Default to `0`.
+-   length `optional` Length in bytes of dst buffer. Default to its whole size.
+
+```ts
+readBuffer: (
+    src: Buffer,
+    srcOffset?: number,
+    dst?: ArrayBufferView,
+    dstOffset?: number,
+    length?: number,
+) => Promise<ArrayBufferView>;
+```
 
 ## <a id='shader-language' />Shader Language
 

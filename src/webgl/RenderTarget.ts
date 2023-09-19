@@ -8,7 +8,7 @@ export class RenderTarget_GL extends ResourceBase_GL implements RenderTarget {
   type: ResourceType.RenderTarget = ResourceType.RenderTarget;
   gl_renderbuffer: WebGLRenderbuffer | null = null;
   texture: Texture | null = null;
-  pixelFormat: Format;
+  format: Format;
   width: number;
   height: number;
   sampleCount: number;
@@ -26,12 +26,12 @@ export class RenderTarget_GL extends ResourceBase_GL implements RenderTarget {
 
     const gl = this.device.gl;
 
-    const { pixelFormat, width, height, sampleCount = 1, texture } = descriptor;
+    const { format, width, height, sampleCount = 1, texture } = descriptor;
 
     let useRenderbuffer = false;
     // @see https://blog.tojicode.com/2012/07/using-webgldepthtexture.html
     if (
-      (pixelFormat === Format.D32F || pixelFormat === Format.D24_S8) &&
+      (format === Format.D32F || format === Format.D24_S8) &&
       texture &&
       !isWebGL2(gl) &&
       !device.WEBGL_depth_texture
@@ -50,7 +50,7 @@ export class RenderTarget_GL extends ResourceBase_GL implements RenderTarget {
       gl.bindRenderbuffer(gl.RENDERBUFFER, this.gl_renderbuffer);
 
       const gl_format = this.device.translateTextureInternalFormat(
-        pixelFormat,
+        format,
         true,
       );
 
@@ -68,7 +68,7 @@ export class RenderTarget_GL extends ResourceBase_GL implements RenderTarget {
         gl.renderbufferStorage(GL.RENDERBUFFER, gl_format, width, height);
       }
     }
-    this.pixelFormat = pixelFormat;
+    this.format = format;
     this.width = width;
     this.height = height;
     this.sampleCount = sampleCount;

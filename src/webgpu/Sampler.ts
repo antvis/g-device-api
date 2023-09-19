@@ -1,10 +1,10 @@
 import type { Sampler, SamplerDescriptor } from '../api';
-import { MipFilterMode, ResourceType, TexFilterMode, assert } from '../api';
+import { MipmapFilterMode, ResourceType, FilterMode, assert } from '../api';
 import {
   translateMinMagFilter,
   translateMipFilter,
-  translateWrapMode,
-  translateCompareMode,
+  translateAddressMode,
+  translateCompareFunction,
 } from './utils';
 import type { IDevice_WebGPU } from './interfaces';
 import { ResourceBase_WebGPU } from './ResourceBase';
@@ -26,32 +26,34 @@ export class Sampler_WebGPU extends ResourceBase_WebGPU implements Sampler {
   }) {
     super({ id, device });
 
-    const lodMinClamp = descriptor.minLOD;
+    const lodMinClamp = descriptor.lodMinClamp;
     const lodMaxClamp =
-      descriptor.mipFilter === MipFilterMode.NO_MIP
-        ? descriptor.minLOD
-        : descriptor.maxLOD;
+      descriptor.mipmapFilter === MipmapFilterMode.NO_MIP
+        ? descriptor.lodMinClamp
+        : descriptor.lodMaxClamp;
 
     const maxAnisotropy = descriptor.maxAnisotropy ?? 1;
     if (maxAnisotropy > 1)
       assert(
-        descriptor.minFilter === TexFilterMode.BILINEAR &&
-          descriptor.magFilter === TexFilterMode.BILINEAR &&
-          descriptor.mipFilter === MipFilterMode.LINEAR,
+        descriptor.minFilter === FilterMode.BILINEAR &&
+          descriptor.magFilter === FilterMode.BILINEAR &&
+          descriptor.mipmapFilter === MipmapFilterMode.LINEAR,
       );
 
     this.gpuSampler = this.device.device.createSampler({
-      addressModeU: translateWrapMode(descriptor.wrapS),
-      addressModeV: translateWrapMode(descriptor.wrapT),
-      addressModeW: translateWrapMode(descriptor.wrapQ ?? descriptor.wrapS),
+      addressModeU: translateAddressMode(descriptor.addressModeU),
+      addressModeV: translateAddressMode(descriptor.addressModeV),
+      addressModeW: translateAddressMode(
+        descriptor.addressModeW ?? descriptor.addressModeU,
+      ),
       lodMinClamp,
       lodMaxClamp,
       minFilter: translateMinMagFilter(descriptor.minFilter),
       magFilter: translateMinMagFilter(descriptor.magFilter),
-      mipmapFilter: translateMipFilter(descriptor.mipFilter),
+      mipmapFilter: translateMipFilter(descriptor.mipmapFilter),
       compare:
-        descriptor.compareMode !== undefined
-          ? translateCompareMode(descriptor.compareMode)
+        descriptor.compareFunction !== undefined
+          ? translateCompareFunction(descriptor.compareFunction)
           : undefined,
       maxAnisotropy,
     });

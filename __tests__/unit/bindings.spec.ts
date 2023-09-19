@@ -2,17 +2,17 @@ import _gl from 'gl';
 import {
   BufferUsage,
   Format,
-  WrapMode,
+  AddressMode,
   TextureUsage,
-  TexFilterMode,
-  MipFilterMode,
+  FilterMode,
+  MipmapFilterMode,
   BufferFrequencyHint,
   VertexStepMode,
   ChannelWriteMask,
   BlendMode,
   BlendFactor,
   TransparentBlack,
-  CompareMode,
+  CompareFunction,
   CullMode,
 } from '../../src';
 import { Device_GL } from '../../src/webgl/Device';
@@ -106,41 +106,39 @@ describe('Bindings', () => {
     });
 
     const texture = device.createTexture({
-      pixelFormat: Format.U8_RGBA_NORM,
+      format: Format.U8_RGBA_NORM,
       width: 10,
       height: 10,
       usage: TextureUsage.SAMPLED,
     });
 
     const sampler = device.createSampler({
-      wrapS: WrapMode.CLAMP,
-      wrapT: WrapMode.CLAMP,
-      minFilter: TexFilterMode.POINT,
-      magFilter: TexFilterMode.BILINEAR,
-      mipFilter: MipFilterMode.LINEAR,
-      minLOD: 0,
-      maxLOD: 0,
+      addressModeU: AddressMode.CLAMP_TO_EDGE,
+      addressModeV: AddressMode.CLAMP_TO_EDGE,
+      minFilter: FilterMode.POINT,
+      magFilter: FilterMode.BILINEAR,
+      mipmapFilter: MipmapFilterMode.LINEAR,
+      lodMinClamp: 0,
+      lodMaxClamp: 0,
     });
 
     const inputLayout = device.createInputLayout({
       vertexBufferDescriptors: [
         {
-          byteStride: cubeVertexSize,
+          arrayStride: cubeVertexSize,
           stepMode: VertexStepMode.VERTEX,
-        },
-      ],
-      vertexAttributeDescriptors: [
-        {
-          location: 0,
-          bufferIndex: 0,
-          bufferByteOffset: cubePositionOffset,
-          format: Format.F32_RGBA,
-        },
-        {
-          location: 1,
-          bufferIndex: 0,
-          bufferByteOffset: cubeUVOffset,
-          format: Format.F32_RG,
+          attributes: [
+            {
+              shaderLocation: 0,
+              offset: cubePositionOffset,
+              format: Format.F32_RGBA,
+            },
+            {
+              shaderLocation: 1,
+              offset: cubeUVOffset,
+              format: Format.F32_RG,
+            },
+          ],
         },
       ],
       indexBufferFormat: null,
@@ -170,7 +168,7 @@ describe('Bindings', () => {
         ],
         blendConstant: TransparentBlack,
         depthWrite: true,
-        depthCompare: CompareMode.LESS,
+        depthCompare: CompareFunction.LESS,
         cullMode: CullMode.BACK,
         stencilWrite: false,
       },

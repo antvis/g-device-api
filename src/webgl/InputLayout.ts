@@ -3,14 +3,12 @@ import {
   ResourceType,
   VertexStepMode,
   assert,
-  assertExists,
   getFormatCompByteSize,
 } from '../api';
 import type {
   InputLayout,
   InputLayoutBufferDescriptor,
   InputLayoutDescriptor,
-  VertexAttributeDescriptor,
 } from '../api';
 import { isNil } from '@antv/util';
 import type { Device_GL } from './Device';
@@ -27,9 +25,8 @@ import { Program_GL } from './Program';
 export class InputLayout_GL extends ResourceBase_GL implements InputLayout {
   type: ResourceType.InputLayout = ResourceType.InputLayout;
 
-  vertexAttributeDescriptors: VertexAttributeDescriptor[];
   vertexBufferDescriptors: (InputLayoutBufferDescriptor | null)[];
-  vertexBufferFormats: ReturnType<typeof translateVertexFormat>[];
+  // vertexBufferFormats: ReturnType<typeof translateVertexFormat>[];
   indexBufferFormat: Format | null;
   indexBufferType: GLenum | null;
   indexBufferCompByteSize: number | null;
@@ -47,12 +44,7 @@ export class InputLayout_GL extends ResourceBase_GL implements InputLayout {
   }) {
     super({ id, device });
 
-    const {
-      vertexAttributeDescriptors,
-      vertexBufferDescriptors,
-      indexBufferFormat,
-      program,
-    } = descriptor;
+    const { vertexBufferDescriptors, indexBufferFormat, program } = descriptor;
     assert(
       indexBufferFormat === Format.U16_R ||
         indexBufferFormat === Format.U32_R ||
@@ -84,47 +76,47 @@ export class InputLayout_GL extends ResourceBase_GL implements InputLayout {
       getPlatformBuffer(this.device['fallbackVertexBuffer']),
     );
 
-    const vertexBufferFormats = [];
-    for (let i = 0; i < vertexAttributeDescriptors.length; i++) {
-      const attr = vertexAttributeDescriptors[i];
+    // const vertexBufferFormats = [];
+    for (const vertexBufferDescriptor of descriptor.vertexBufferDescriptors) {
+      const { stepMode, attributes } = vertexBufferDescriptor;
 
-      const { format, divisor = 1, bufferIndex } = attr;
-      // find location by name in WebGL1
-      const location = isWebGL2(gl)
-        ? attr.location
-        : (program as Program_GL).attributes[attr.location]?.location;
+      for (const attribute of attributes) {
+        const { shaderLocation, format, divisor = 1 } = attribute;
 
-      const vertexFormat = translateVertexFormat(format);
-      vertexBufferFormats.push(vertexFormat);
+        // find location by name in WebGL1
+        const location = isWebGL2(gl)
+          ? shaderLocation
+          : (program as Program_GL).attributes[shaderLocation]?.location;
 
-      if (!isNil(location)) {
-        if (isFormatSizedInteger(format)) {
-          // See https://groups.google.com/d/msg/angleproject/yQb5DaCzcWg/Ova0E3wcAQAJ for more info.
-          // console.warn("Vertex format uses sized integer types; this will cause a shader recompile on ANGLE platforms");
-          // debugger;
-        }
+        const vertexFormat = translateVertexFormat(format);
+        // @ts-ignore
+        attribute.vertexFormat = vertexFormat;
 
-        const { size, type, normalized } = vertexFormat;
-
-        const inputLayoutBuffer = assertExists(
-          vertexBufferDescriptors[bufferIndex],
-        );
-
-        gl.vertexAttribPointer(location, size, type, normalized, 0, 0);
-
-        if (inputLayoutBuffer.stepMode === VertexStepMode.INSTANCE) {
-          if (isWebGL2(gl)) {
-            // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribDivisor
-            gl.vertexAttribDivisor(location, divisor);
-          } else {
-            device.ANGLE_instanced_arrays.vertexAttribDivisorANGLE(
-              location,
-              divisor,
-            );
+        if (!isNil(location)) {
+          if (isFormatSizedInteger(format)) {
+            // See https://groups.google.com/d/msg/angleproject/yQb5DaCzcWg/Ova0E3wcAQAJ for more info.
+            // console.warn("Vertex format uses sized integer types; this will cause a shader recompile on ANGLE platforms");
+            // debugger;
           }
-        }
 
-        gl.enableVertexAttribArray(location);
+          const { size, type, normalized } = vertexFormat;
+
+          gl.vertexAttribPointer(location, size, type, normalized, 0, 0);
+
+          if (stepMode === VertexStepMode.INSTANCE) {
+            if (isWebGL2(gl)) {
+              // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/vertexAttribDivisor
+              gl.vertexAttribDivisor(location, divisor);
+            } else {
+              device.ANGLE_instanced_arrays.vertexAttribDivisorANGLE(
+                location,
+                divisor,
+              );
+            }
+          }
+
+          gl.enableVertexAttribArray(location);
+        }
       }
     }
 
@@ -134,10 +126,8 @@ export class InputLayout_GL extends ResourceBase_GL implements InputLayout {
       device.OES_vertex_array_object.bindVertexArrayOES(null);
     }
 
-    this.vertexAttributeDescriptors = vertexAttributeDescriptors;
     this.vertexBufferDescriptors = vertexBufferDescriptors;
     this.vao = vao;
-    this.vertexBufferFormats = vertexBufferFormats;
     this.indexBufferFormat = indexBufferFormat;
     this.indexBufferType = indexBufferType;
     this.indexBufferCompByteSize = indexBufferCompByteSize;
