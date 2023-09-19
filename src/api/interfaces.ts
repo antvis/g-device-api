@@ -662,7 +662,7 @@ export interface RenderPass extends DebugCommandsMixin {
   ) => void;
   setScissorRect: (x: number, y: number, w: number, h: number) => void;
   setPipeline: (pipeline: RenderPipeline) => void;
-  setBindings: (bindings: Bindings, dynamicByteOffsets?: number[]) => void;
+  setBindings: (bindings: Bindings) => void;
   setVertexInput: (
     inputLayout: InputLayout | null,
     buffers: (VertexBufferDescriptor | null)[] | null,
@@ -716,7 +716,7 @@ export interface RenderPass extends DebugCommandsMixin {
  */
 export interface ComputePass extends DebugCommandsMixin {
   setPipeline: (pipeline: ComputePipeline) => void;
-  setBindings: (bindings: Bindings, dynamicByteOffsets?: number[]) => void;
+  setBindings: (bindings: Bindings) => void;
   /**
    * @see https://www.w3.org/TR/webgpu/#dom-gpucomputepassencoder-dispatchworkgroups
    */

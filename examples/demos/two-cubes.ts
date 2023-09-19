@@ -3,26 +3,29 @@ import {
   VertexStepMode,
   Format,
   TransparentWhite,
-  TransparentBlack,
   BufferUsage,
   BufferFrequencyHint,
-  TextureUsage,
-  ChannelWriteMask,
   BlendMode,
   BlendFactor,
-  CompareFunction,
+  TextureUsage,
   CullMode,
+  ChannelWriteMask,
+  TransparentBlack,
+  CompareFunction,
 } from '../../src';
 import { initExample } from './utils';
-import { vec3, mat4 } from 'gl-matrix';
 import {
   cubeVertexArray,
   cubeVertexSize,
   cubeVertexCount,
+  cubePositionOffset,
 } from '../meshes/cube';
+import { vec3, mat4 } from 'gl-matrix';
 
 /**
- * @see https://webgpu.github.io/webgpu-samples/samples/instancedCube#main.ts
+ * This example shows some of the alignment requirements involved when updating and binding multiple slices of a uniform buffer.
+ * It renders two rotating cubes which have transform matrices at different offsets in a uniform buffer.
+ * @see https://webgpu.github.io/webgpu-samples/samples/twoCubes
  */
 
 export async function render(
@@ -32,6 +35,7 @@ export async function render(
 ) {
   // create swap chain and get device
   const swapChain = await deviceContribution.createSwapChain($canvas);
+
   // TODO: resize
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
@@ -40,16 +44,16 @@ export async function render(
     vertex: {
       glsl: `
 layout(std140) uniform Uniforms {
-  mat4 u_ModelViewProjectionMatrix[16];
+  mat4 u_ModelViewProjectionMatrix;
 };
 
-layout(location = 0) in vec3 a_Position;
+layout(location = 0) in vec4 a_Position;
 
 out vec4 v_Position;
 
 void main() {
-  v_Position = vec4(a_Position, 1.0);
-  gl_Position = u_ModelViewProjectionMatrix[gl_InstanceID] * vec4(a_Position, 1.0);
+  v_Position = 0.5 * (a_Position + vec4(1.0, 1.0, 1.0, 1.0));
+  gl_Position = u_ModelViewProjectionMatrix * a_Position;
 } 
 `,
     },
@@ -64,18 +68,14 @@ void main() {
 `,
     },
   });
-
-  const xCount = 4;
-  const yCount = 4;
-  const numInstances = xCount * yCount;
-  const matrixFloatCount = 16; // 4x4 matrix
-  const matrixSize = 4 * matrixFloatCount;
-  const uniformBufferSize = numInstances * matrixSize;
-
   const vertexBuffer = device.createBuffer({
     viewOrSize: cubeVertexArray,
     usage: BufferUsage.VERTEX,
   });
+
+  const matrixSize = 4 * 16; // 4x4 matrix
+  const offset = 256; // uniformBindGroup offset must be 256-byte aligned
+  const uniformBufferSize = offset + matrixSize;
 
   const uniformBuffer = device.createBuffer({
     viewOrSize: uniformBufferSize, // mat4
@@ -91,8 +91,8 @@ void main() {
         attributes: [
           {
             shaderLocation: 0,
-            offset: 0,
-            format: Format.F32_RGB,
+            offset: cubePositionOffset,
+            format: Format.F32_RGBA,
           },
         ],
       },
@@ -130,13 +130,25 @@ void main() {
     },
   });
 
-  const bindings = device.createBindings({
+  const bindings1 = device.createBindings({
     pipeline,
     uniformBufferBindings: [
       {
         binding: 0,
         buffer: uniformBuffer,
-        size: matrixSize * numInstances,
+        offset: 0,
+        size: matrixSize,
+      },
+    ],
+  });
+  const bindings2 = device.createBindings({
+    pipeline,
+    uniformBufferBindings: [
+      {
+        binding: 0,
+        buffer: uniformBuffer,
+        offset,
+        size: matrixSize,
       },
     ],
   });
@@ -158,71 +170,68 @@ void main() {
     }),
   );
 
-  const aspect = $canvas.width / $canvas.height;
-  const projectionMatrix = mat4.perspective(
+  const modelMatrix1 = mat4.fromTranslation(
     mat4.create(),
-    (2 * Math.PI) / 5,
-    aspect,
-    1,
-    100,
+    vec3.fromValues(-2, 0, 0),
   );
-  const modelMatrices = new Array<mat4>(numInstances);
-  const mvpMatricesData = new Float32Array(matrixFloatCount * numInstances);
-
-  const step = 4.0;
-
-  // Initialize the matrix data for every instance.
-  let m = 0;
-  for (let x = 0; x < xCount; x++) {
-    for (let y = 0; y < yCount; y++) {
-      modelMatrices[m] = mat4.fromTranslation(
-        mat4.create(),
-        vec3.fromValues(
-          step * (x - xCount / 2 + 0.5),
-          step * (y - yCount / 2 + 0.5),
-          0,
-        ),
-      );
-      m++;
-    }
-  }
-
+  const modelMatrix2 = mat4.fromTranslation(
+    mat4.create(),
+    vec3.fromValues(2, 0, 0),
+  );
+  const modelViewProjectionMatrix1 = mat4.create();
+  const modelViewProjectionMatrix2 = mat4.create();
   const viewMatrix = mat4.fromTranslation(
     mat4.create(),
-    vec3.fromValues(0, 0, -12),
+    vec3.fromValues(0, 0, -7),
   );
-  const tmpMat4 = mat4.create();
-
-  let id;
+  const tmpMat41 = mat4.create();
+  const tmpMat42 = mat4.create();
+  let id: number;
   const frame = () => {
-    const now = Date.now() / 1000;
+    const aspect = $canvas.width / $canvas.height;
+    const projectionMatrix = mat4.perspective(
+      mat4.create(),
+      (2 * Math.PI) / 5,
+      aspect,
+      1,
+      100,
+    );
 
-    let m = 0,
-      i = 0;
-    for (let x = 0; x < xCount; x++) {
-      for (let y = 0; y < yCount; y++) {
-        mat4.rotate(
-          tmpMat4,
-          modelMatrices[i],
-          1,
-          vec3.fromValues(
-            Math.sin((x + 0.5) * now),
-            Math.cos((y + 0.5) * now),
-            0,
-          ),
-        );
+    const now = useRAF ? Date.now() / 1000 : 0;
+    mat4.rotate(
+      tmpMat41,
+      modelMatrix1,
+      1,
+      vec3.fromValues(Math.sin(now), Math.cos(now), 0),
+    );
+    mat4.rotate(
+      tmpMat42,
+      modelMatrix2,
+      1,
+      vec3.fromValues(Math.cos(now), Math.sin(now), 0),
+    );
 
-        mat4.multiply(tmpMat4, viewMatrix, tmpMat4);
-        mat4.multiply(tmpMat4, projectionMatrix, tmpMat4);
+    mat4.multiply(modelViewProjectionMatrix1, viewMatrix, tmpMat41);
+    mat4.multiply(
+      modelViewProjectionMatrix1,
+      projectionMatrix,
+      modelViewProjectionMatrix1,
+    );
+    mat4.multiply(modelViewProjectionMatrix2, viewMatrix, tmpMat42);
+    mat4.multiply(
+      modelViewProjectionMatrix2,
+      projectionMatrix,
+      modelViewProjectionMatrix2,
+    );
 
-        mvpMatricesData.set(tmpMat4, m);
-
-        i++;
-        m += matrixFloatCount;
-      }
-    }
-
-    uniformBuffer.setSubData(0, new Uint8Array(mvpMatricesData.buffer));
+    uniformBuffer.setSubData(
+      0,
+      new Uint8Array((modelViewProjectionMatrix1 as Float32Array).buffer),
+    );
+    uniformBuffer.setSubData(
+      offset,
+      new Uint8Array((modelViewProjectionMatrix2 as Float32Array).buffer),
+    );
 
     /**
      * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
@@ -249,11 +258,15 @@ void main() {
       null,
     );
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-    renderPass.setBindings(bindings);
-    renderPass.draw(cubeVertexCount, numInstances);
+    renderPass.setBindings(bindings1);
+    renderPass.draw(cubeVertexCount);
+    renderPass.setBindings(bindings2);
+    renderPass.draw(cubeVertexCount);
 
     device.submitPass(renderPass);
-    id = requestAnimationFrame(frame);
+    if (useRAF) {
+      id = requestAnimationFrame(frame);
+    }
   };
 
   frame();
@@ -266,7 +279,8 @@ void main() {
     vertexBuffer.destroy();
     uniformBuffer.destroy();
     inputLayout.destroy();
-    bindings.destroy();
+    bindings1.destroy();
+    bindings2.destroy();
     pipeline.destroy();
     mainColorRT.destroy();
     mainDepthRT.destroy();
@@ -277,7 +291,7 @@ void main() {
   };
 }
 
-export async function InstancedCubes($container: HTMLDivElement) {
+export async function TwoCubes($container: HTMLDivElement) {
   return initExample($container, render, {
     targets: ['webgl2', 'webgpu'],
     default: 'webgl2',
