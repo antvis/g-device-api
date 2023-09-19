@@ -90,7 +90,7 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
 
         samplerEntry.dimension = (texture as Texture_WebGPU).dimension;
         samplerEntry.formatKind = getFormatSamplerKind(
-          (texture as Texture_WebGPU).pixelFormat,
+          (texture as Texture_WebGPU).format,
         );
 
         const gpuTextureView = (texture as Texture_WebGPU).gpuTextureView;

@@ -16,12 +16,12 @@ describe('RenderTarget', () => {
 
   it('should create RenderTarget correctly.', () => {
     const renderTarget = device.createRenderTarget({
-      pixelFormat: Format.U8_RGBA_RT,
+      format: Format.U8_RGBA_RT,
       width: 100,
       height: 100,
     }) as RenderTarget_GL;
     device.setResourceName(renderTarget, 'Main Render Target');
-    expect(renderTarget.pixelFormat).toBe(Format.U8_RGBA_RT);
+    expect(renderTarget.format).toBe(Format.U8_RGBA_RT);
     expect(renderTarget.width).toBe(100);
     expect(renderTarget.height).toBe(100);
     expect(renderTarget.texture).toBeNull();
@@ -32,13 +32,13 @@ describe('RenderTarget', () => {
   it('should create Depth RenderTarget correctly.', () => {
     let renderTarget = device.createRenderTargetFromTexture(
       device.createTexture({
-        pixelFormat: Format.D32F,
+        format: Format.D32F,
         width: 100,
         height: 100,
         usage: TextureUsage.RENDER_TARGET,
       }),
     ) as RenderTarget_GL;
-    expect(renderTarget.pixelFormat).toBe(Format.D32F);
+    expect(renderTarget.format).toBe(Format.D32F);
     expect(renderTarget.width).toBe(100);
     expect(renderTarget.height).toBe(100);
     expect(renderTarget.texture).toBeNull();
@@ -46,13 +46,13 @@ describe('RenderTarget', () => {
 
     renderTarget = renderTarget = device.createRenderTargetFromTexture(
       device.createTexture({
-        pixelFormat: Format.D24_S8,
+        format: Format.D24_S8,
         width: 100,
         height: 100,
         usage: TextureUsage.RENDER_TARGET,
       }),
     ) as RenderTarget_GL;
-    expect(renderTarget.pixelFormat).toBe(Format.D24_S8);
+    expect(renderTarget.format).toBe(Format.D24_S8);
     expect(renderTarget.width).toBe(100);
     expect(renderTarget.height).toBe(100);
     expect(renderTarget.texture).toBeNull();

@@ -1,5 +1,5 @@
 import type { mat4 } from 'gl-matrix';
-import { CompareMode } from '../interfaces';
+import { CompareFunction } from '../interfaces';
 
 /**
  * @see https://forum.babylonjs.com/t/reverse-depth-buffer-z-buffer/6905/2
@@ -26,25 +26,25 @@ export function reverseDepthForOrthographicProjectionMatrix(
   }
 }
 
-export function reverseDepthForCompareMode(
-  compareMode: CompareMode,
+export function reverseDepthForCompareFunction(
+  compareFunction: CompareFunction,
   isDepthReversed = IsDepthReversed,
-): CompareMode {
+): CompareFunction {
   if (isDepthReversed) {
-    switch (compareMode) {
-      case CompareMode.LESS:
-        return CompareMode.GREATER;
-      case CompareMode.LEQUAL:
-        return CompareMode.GEQUAL;
-      case CompareMode.GEQUAL:
-        return CompareMode.LEQUAL;
-      case CompareMode.GREATER:
-        return CompareMode.LESS;
+    switch (compareFunction) {
+      case CompareFunction.LESS:
+        return CompareFunction.GREATER;
+      case CompareFunction.LEQUAL:
+        return CompareFunction.GEQUAL;
+      case CompareFunction.GEQUAL:
+        return CompareFunction.LEQUAL;
+      case CompareFunction.GREATER:
+        return CompareFunction.LESS;
       default:
-        return compareMode;
+        return compareFunction;
     }
   } else {
-    return compareMode;
+    return compareFunction;
   }
 }
 
@@ -73,13 +73,13 @@ export function reverseDepthForDepthOffset(
 export function compareDepthValues(
   a: number,
   b: number,
-  op: CompareMode,
+  op: CompareFunction,
   isDepthReversed = IsDepthReversed,
 ): boolean {
-  op = reverseDepthForCompareMode(op, isDepthReversed);
-  if (op === CompareMode.LESS) return a < b;
-  else if (op === CompareMode.LEQUAL) return a <= b;
-  else if (op === CompareMode.GREATER) return a > b;
-  else if (op === CompareMode.GEQUAL) return a >= b;
+  op = reverseDepthForCompareFunction(op, isDepthReversed);
+  if (op === CompareFunction.LESS) return a < b;
+  else if (op === CompareFunction.LEQUAL) return a <= b;
+  else if (op === CompareFunction.GREATER) return a > b;
+  else if (op === CompareFunction.GEQUAL) return a >= b;
   else throw new Error('whoops');
 }

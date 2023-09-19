@@ -171,9 +171,8 @@ export function vertexAttributeDescriptorEquals(
   b: Readonly<VertexAttributeDescriptor>,
 ): boolean {
   return (
-    a.bufferIndex === b.bufferIndex &&
-    a.bufferByteOffset === b.bufferByteOffset &&
-    a.location === b.location &&
+    a.offset === b.offset &&
+    a.shaderLocation === b.shaderLocation &&
     a.format === b.format &&
     a.divisor === b.divisor
   );
@@ -185,7 +184,11 @@ export function inputLayoutBufferDescriptorEquals(
 ): boolean {
   if (isNil(a)) return isNil(b);
   if (isNil(b)) return false;
-  return a.byteStride === b.byteStride && a.stepMode === b.stepMode;
+  return (
+    a.arrayStride === b.arrayStride &&
+    a.stepMode === b.stepMode &&
+    arrayEqual(a.attributes, b.attributes, vertexAttributeDescriptorEquals)
+  );
 }
 
 export function inputLayoutDescriptorEquals(
@@ -201,14 +204,6 @@ export function inputLayoutDescriptorEquals(
     )
   )
     return false;
-  if (
-    !arrayEqual(
-      a.vertexAttributeDescriptors,
-      b.vertexAttributeDescriptors,
-      vertexAttributeDescriptorEquals,
-    )
-  )
-    return false;
   if (!programEquals(a.program, b.program)) return false;
   return true;
 }
@@ -218,15 +213,15 @@ export function samplerDescriptorEquals(
   b: Readonly<SamplerDescriptor>,
 ): boolean {
   return (
-    a.wrapS === b.wrapS &&
-    a.wrapT === b.wrapT &&
+    a.addressModeU === b.addressModeU &&
+    a.addressModeV === b.addressModeV &&
     a.minFilter === b.minFilter &&
     a.magFilter === b.magFilter &&
-    a.mipFilter === b.mipFilter &&
-    a.minLOD === b.minLOD &&
-    a.maxLOD === b.maxLOD &&
+    a.mipmapFilter === b.mipmapFilter &&
+    a.lodMinClamp === b.lodMinClamp &&
+    a.lodMaxClamp === b.lodMaxClamp &&
     a.maxAnisotropy === b.maxAnisotropy &&
-    a.compareMode === b.compareMode
+    a.compareFunction === b.compareFunction
   );
 }
 
@@ -289,16 +284,14 @@ export function renderPipelineDescriptorCopy(
 export function vertexAttributeDescriptorCopy(
   a: Readonly<VertexAttributeDescriptor>,
 ): VertexAttributeDescriptor {
-  const location = a.location;
+  const shaderLocation = a.shaderLocation;
   const format = a.format;
-  const bufferIndex = a.bufferIndex;
-  const bufferByteOffset = a.bufferByteOffset;
+  const offset = a.offset;
   const divisor = a.divisor;
   return {
-    location,
+    shaderLocation,
     format,
-    bufferIndex,
-    bufferByteOffset,
+    offset,
     divisor,
   };
 }
@@ -307,9 +300,10 @@ export function inputLayoutBufferDescriptorCopy(
   a: Readonly<InputLayoutBufferDescriptor | null>,
 ): InputLayoutBufferDescriptor | null {
   if (!isNil(a)) {
-    const byteStride = a.byteStride;
+    const arrayStride = a.arrayStride;
     const stepMode = a.stepMode;
-    return { byteStride, stepMode };
+    const attributes = arrayCopy(a.attributes, vertexAttributeDescriptorCopy);
+    return { arrayStride, stepMode, attributes };
   } else {
     return a;
   }
@@ -318,10 +312,6 @@ export function inputLayoutBufferDescriptorCopy(
 export function inputLayoutDescriptorCopy(
   a: Readonly<InputLayoutDescriptor>,
 ): InputLayoutDescriptor {
-  const vertexAttributeDescriptors = arrayCopy(
-    a.vertexAttributeDescriptors,
-    vertexAttributeDescriptorCopy,
-  );
   const vertexBufferDescriptors = arrayCopy(
     a.vertexBufferDescriptors,
     inputLayoutBufferDescriptorCopy,
@@ -329,7 +319,6 @@ export function inputLayoutDescriptorCopy(
   const indexBufferFormat = a.indexBufferFormat;
   const program = a.program;
   return {
-    vertexAttributeDescriptors,
     vertexBufferDescriptors,
     indexBufferFormat,
     program,

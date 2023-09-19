@@ -84,9 +84,9 @@ export class Readback_GL extends ResourceBase_GL implements Readback {
     const gl = this.device.gl;
 
     const texture = t as Texture_GL;
-    const gl_format = this.device.translateTextureFormat(texture.pixelFormat);
-    const gl_type = this.device.translateTextureType(texture.pixelFormat);
-    const formatByteSize = getFormatByteSize(texture.pixelFormat);
+    const gl_format = this.device.translateTextureFormat(texture.format);
+    const gl_type = this.device.translateTextureType(texture.format);
+    const formatByteSize = getFormatByteSize(texture.format);
 
     if (isWebGL2(gl)) {
       this.gl_pbo = this.device.ensureResourceExists(gl.createBuffer());
@@ -160,7 +160,7 @@ export class Readback_GL extends ResourceBase_GL implements Readback {
     const gl = this.device.gl;
 
     const texture = t as Texture_GL;
-    const gl_type = this.device.translateTextureType(texture.pixelFormat);
+    const gl_type = this.device.translateTextureType(texture.format);
 
     gl.bindFramebuffer(GL.FRAMEBUFFER, this.device['readbackFramebuffer']);
     gl.framebufferTexture2D(

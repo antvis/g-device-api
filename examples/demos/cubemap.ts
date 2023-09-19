@@ -11,10 +11,10 @@ import {
   CullMode,
   ChannelWriteMask,
   TransparentBlack,
-  CompareMode,
-  WrapMode,
-  TexFilterMode,
-  MipFilterMode,
+  CompareFunction,
+  AddressMode,
+  FilterMode,
+  MipmapFilterMode,
   TextureDimension,
 } from '../../src';
 import { initExample, loadImage } from './utils';
@@ -128,10 +128,10 @@ void main() {
   );
 
   const texture = device.createTexture({
-    pixelFormat: Format.U8_RGBA_NORM,
+    format: Format.U8_RGBA_NORM,
     width: imageBitmaps[0].width,
     height: imageBitmaps[0].height,
-    depth: 6,
+    depthOrArrayLayers: 6,
     dimension: TextureDimension.TEXTURE_CUBE_MAP,
     usage: TextureUsage.SAMPLED,
   });
@@ -139,34 +139,32 @@ void main() {
   device.setResourceName(texture, 'Cube map');
 
   const sampler = device.createSampler({
-    wrapS: WrapMode.CLAMP,
-    wrapT: WrapMode.CLAMP,
-    minFilter: TexFilterMode.BILINEAR,
-    magFilter: TexFilterMode.BILINEAR,
-    mipFilter: MipFilterMode.LINEAR,
-    minLOD: 0,
-    maxLOD: 0,
+    addressModeU: AddressMode.CLAMP_TO_EDGE,
+    addressModeV: AddressMode.CLAMP_TO_EDGE,
+    minFilter: FilterMode.BILINEAR,
+    magFilter: FilterMode.BILINEAR,
+    mipmapFilter: MipmapFilterMode.LINEAR,
+    lodMinClamp: 0,
+    lodMaxClamp: 0,
   });
 
   const inputLayout = device.createInputLayout({
     vertexBufferDescriptors: [
       {
-        byteStride: cubeVertexSize,
+        arrayStride: cubeVertexSize,
         stepMode: VertexStepMode.VERTEX,
-      },
-    ],
-    vertexAttributeDescriptors: [
-      {
-        location: 0,
-        bufferIndex: 0,
-        bufferByteOffset: cubePositionOffset,
-        format: Format.F32_RGBA,
-      },
-      {
-        location: 1,
-        bufferIndex: 0,
-        bufferByteOffset: cubeUVOffset,
-        format: Format.F32_RG,
+        attributes: [
+          {
+            shaderLocation: 0,
+            offset: cubePositionOffset,
+            format: Format.F32_RGBA,
+          },
+          {
+            shaderLocation: 1,
+            offset: cubeUVOffset,
+            format: Format.F32_RG,
+          },
+        ],
       },
     ],
     indexBufferFormat: null,
@@ -196,7 +194,7 @@ void main() {
       ],
       blendConstant: TransparentBlack,
       depthWrite: true,
-      depthCompare: CompareMode.LESS,
+      depthCompare: CompareFunction.LESS,
       // Since we are seeing from inside of the cube
       // and we are using the regular cube geomtry data with outward-facing normals,
       // the cullMode should be 'front' or 'none'.
@@ -224,7 +222,7 @@ void main() {
 
   const mainColorRT = device.createRenderTargetFromTexture(
     device.createTexture({
-      pixelFormat: Format.U8_RGBA_RT,
+      format: Format.U8_RGBA_RT,
       width: $canvas.width,
       height: $canvas.height,
       usage: TextureUsage.RENDER_TARGET,
@@ -232,7 +230,7 @@ void main() {
   );
   const mainDepthRT = device.createRenderTargetFromTexture(
     device.createTexture({
-      pixelFormat: Format.D24_S8,
+      format: Format.D24_S8,
       width: $canvas.width,
       height: $canvas.height,
       usage: TextureUsage.RENDER_TARGET,

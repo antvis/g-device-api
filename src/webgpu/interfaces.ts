@@ -8,23 +8,23 @@ import type {
 
 export interface TextureSharedDescriptor {
   dimension: TextureDimension;
-  pixelFormat: Format;
+  format: Format;
   width: number;
   height: number;
   depthOrArrayLayers: number;
-  numLevels: number;
+  mipLevelCount: number;
   sampleCount: number;
   usage: TextureUsage;
 }
 
 export interface TextureShared_WebGPU {
-  format: GPUTextureFormat;
+  gpuTextureformat: GPUTextureFormat;
   dimension: TextureDimension;
-  pixelFormat: Format;
+  format: Format;
   width: number;
   height: number;
   depthOrArrayLayers: number;
-  numLevels: number;
+  mipLevelCount: number;
   sampleCount: number;
   usage: GPUTextureUsageFlags;
   gpuTexture: GPUTexture;

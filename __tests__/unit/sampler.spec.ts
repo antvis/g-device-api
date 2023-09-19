@@ -1,9 +1,9 @@
 import _gl from 'gl';
 import {
   ResourceType,
-  WrapMode,
-  TexFilterMode,
-  MipFilterMode,
+  AddressMode,
+  FilterMode,
+  MipmapFilterMode,
 } from '../../src';
 import { Device_GL } from '../../src/webgl/Device';
 import { Sampler_GL } from '../../src/webgl/Sampler';
@@ -21,36 +21,36 @@ describe('Sampler', () => {
 
   it('should create sampler correctly.', () => {
     const sampler = device.createSampler({
-      wrapS: WrapMode.CLAMP,
-      wrapT: WrapMode.CLAMP,
-      minFilter: TexFilterMode.POINT,
-      magFilter: TexFilterMode.BILINEAR,
-      mipFilter: MipFilterMode.LINEAR,
-      minLOD: 0,
-      maxLOD: 0,
+      addressModeU: AddressMode.CLAMP_TO_EDGE,
+      addressModeV: AddressMode.CLAMP_TO_EDGE,
+      minFilter: FilterMode.POINT,
+      magFilter: FilterMode.BILINEAR,
+      mipmapFilter: MipmapFilterMode.LINEAR,
+      lodMinClamp: 0,
+      lodMaxClamp: 0,
     }) as Sampler_GL;
     expect(sampler.type).toBe(ResourceType.Sampler);
-    expect(sampler.descriptor.wrapS).toBe(WrapMode.CLAMP);
-    expect(sampler.descriptor.wrapT).toBe(WrapMode.CLAMP);
-    expect(sampler.descriptor.wrapQ).toBeUndefined();
-    expect(sampler.descriptor.minFilter).toBe(TexFilterMode.POINT);
-    expect(sampler.descriptor.magFilter).toBe(TexFilterMode.BILINEAR);
-    expect(sampler.descriptor.mipFilter).toBe(MipFilterMode.LINEAR);
-    expect(sampler.descriptor.minLOD).toBe(0);
-    expect(sampler.descriptor.maxLOD).toBe(0);
+    expect(sampler.descriptor.addressModeU).toBe(AddressMode.CLAMP_TO_EDGE);
+    expect(sampler.descriptor.addressModeV).toBe(AddressMode.CLAMP_TO_EDGE);
+    expect(sampler.descriptor.addressModeW).toBeUndefined();
+    expect(sampler.descriptor.minFilter).toBe(FilterMode.POINT);
+    expect(sampler.descriptor.magFilter).toBe(FilterMode.BILINEAR);
+    expect(sampler.descriptor.mipmapFilter).toBe(MipmapFilterMode.LINEAR);
+    expect(sampler.descriptor.lodMinClamp).toBe(0);
+    expect(sampler.descriptor.lodMaxClamp).toBe(0);
 
     sampler.destroy();
   });
 
   it('should setTextureParameters correctly.', () => {
     const sampler = device.createSampler({
-      wrapS: WrapMode.CLAMP,
-      wrapT: WrapMode.CLAMP,
-      minFilter: TexFilterMode.BILINEAR,
-      magFilter: TexFilterMode.BILINEAR,
-      mipFilter: MipFilterMode.LINEAR,
-      minLOD: 0,
-      maxLOD: 0,
+      addressModeU: AddressMode.CLAMP_TO_EDGE,
+      addressModeV: AddressMode.CLAMP_TO_EDGE,
+      minFilter: FilterMode.BILINEAR,
+      magFilter: FilterMode.BILINEAR,
+      mipmapFilter: MipmapFilterMode.LINEAR,
+      lodMinClamp: 0,
+      lodMaxClamp: 0,
       maxAnisotropy: 2,
     }) as Sampler_GL;
 

@@ -116,7 +116,7 @@ void main() {
 
     // Set multiple uniforms once.
     const texture = device.createTexture({
-      pixelFormat: Format.U8_RGBA_NORM,
+      format: Format.U8_RGBA_NORM,
       width: 1,
       height: 1,
       usage: TextureUsage.SAMPLED,
