@@ -1585,7 +1585,7 @@ export class Device_GL implements SwapChain, Device {
     }
   }
 
-  setBindings(bindings_: Bindings, dynamicByteOffsets: number[] = [0]): void {
+  setBindings(bindings_: Bindings): void {
     const gl = this.gl;
 
     const { uniformBufferBindings, samplerBindings, bindingLayouts } =
@@ -1597,14 +1597,13 @@ export class Device_GL implements SwapChain, Device {
       uniformBufferBindings.length >= bindingLayoutTable.numUniformBuffers,
     );
     assert(samplerBindings.length >= bindingLayoutTable.numSamplers);
-    assert(dynamicByteOffsets.length >= uniformBufferBindings.length);
 
     for (let i = 0; i < uniformBufferBindings.length; i++) {
       const binding = uniformBufferBindings[i];
       if (binding.size === 0) continue;
       const index = bindingLayoutTable.firstUniformBuffer + i;
       const buffer = binding.buffer as Buffer_GL;
-      const byteOffset = dynamicByteOffsets[i];
+      const byteOffset = binding.offset || 0;
       const byteSize = binding.size;
       if (
         buffer !== this.currentUniformBuffers[index] ||
