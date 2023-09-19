@@ -1,5 +1,11 @@
 # @strawberry-vis/g-device-api
 
+## 1.1.0
+
+### Minor Changes
+
+-   59a952f: Rename interface & params to make API closed to WebGPU style.
+
 ## 1.0.3
 
 ### Patch Changes
