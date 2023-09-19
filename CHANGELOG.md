@@ -1,5 +1,11 @@
 # @strawberry-vis/g-device-api
 
+## 1.1.1
+
+### Patch Changes
+
+-   6891a60: Export compiler utils.
+
 ## 1.1.0
 
 ### Minor Changes
