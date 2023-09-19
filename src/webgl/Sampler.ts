@@ -1,8 +1,8 @@
 import {
   GL,
-  MipFilterMode,
+  MipmapFilterMode,
   ResourceType,
-  TexFilterMode,
+  FilterMode,
   assert,
   isPowerOfTwo,
 } from '../api';
@@ -13,7 +13,7 @@ import {
   getPlatformSampler,
   isWebGL2,
   translateFilterMode,
-  translateWrapMode,
+  translateAddressMode,
 } from './utils';
 
 /**
@@ -44,36 +44,46 @@ export class Sampler_GL extends ResourceBase_GL implements Sampler {
       gl.samplerParameteri(
         gl_sampler,
         GL.TEXTURE_WRAP_S,
-        translateWrapMode(descriptor.wrapS),
+        translateAddressMode(descriptor.addressModeU),
       );
       gl.samplerParameteri(
         gl_sampler,
         GL.TEXTURE_WRAP_T,
-        translateWrapMode(descriptor.wrapT),
+        translateAddressMode(descriptor.addressModeV),
       );
       gl.samplerParameteri(
         gl_sampler,
         GL.TEXTURE_WRAP_R,
-        translateWrapMode(descriptor.wrapQ ?? descriptor.wrapS),
+        translateAddressMode(
+          descriptor.addressModeW ?? descriptor.addressModeU,
+        ),
       );
       gl.samplerParameteri(
         gl_sampler,
         GL.TEXTURE_MIN_FILTER,
-        translateFilterMode(descriptor.minFilter, descriptor.mipFilter),
+        translateFilterMode(descriptor.minFilter, descriptor.mipmapFilter),
       );
       gl.samplerParameteri(
         gl_sampler,
         GL.TEXTURE_MAG_FILTER,
-        translateFilterMode(descriptor.magFilter, MipFilterMode.NO_MIP),
+        translateFilterMode(descriptor.magFilter, MipmapFilterMode.NO_MIP),
       );
 
-      if (descriptor.minLOD !== undefined) {
-        gl.samplerParameterf(gl_sampler, GL.TEXTURE_MIN_LOD, descriptor.minLOD);
+      if (descriptor.lodMinClamp !== undefined) {
+        gl.samplerParameterf(
+          gl_sampler,
+          GL.TEXTURE_MIN_LOD,
+          descriptor.lodMinClamp,
+        );
       }
-      if (descriptor.maxLOD !== undefined) {
-        gl.samplerParameterf(gl_sampler, GL.TEXTURE_MAX_LOD, descriptor.maxLOD);
+      if (descriptor.lodMaxClamp !== undefined) {
+        gl.samplerParameterf(
+          gl_sampler,
+          GL.TEXTURE_MAX_LOD,
+          descriptor.lodMaxClamp,
+        );
       }
-      if (descriptor.compareMode !== undefined) {
+      if (descriptor.compareFunction !== undefined) {
         gl.samplerParameteri(
           gl_sampler,
           gl.TEXTURE_COMPARE_MODE,
@@ -82,7 +92,7 @@ export class Sampler_GL extends ResourceBase_GL implements Sampler {
         gl.samplerParameteri(
           gl_sampler,
           gl.TEXTURE_COMPARE_FUNC,
-          descriptor.compareMode,
+          descriptor.compareFunction,
         );
       }
 
@@ -92,9 +102,9 @@ export class Sampler_GL extends ResourceBase_GL implements Sampler {
         this.device.EXT_texture_filter_anisotropic !== null
       ) {
         assert(
-          descriptor.minFilter === TexFilterMode.BILINEAR &&
-            descriptor.magFilter === TexFilterMode.BILINEAR &&
-            descriptor.mipFilter === MipFilterMode.LINEAR,
+          descriptor.minFilter === FilterMode.BILINEAR &&
+            descriptor.magFilter === FilterMode.BILINEAR &&
+            descriptor.mipmapFilter === MipmapFilterMode.LINEAR,
         );
         gl.samplerParameterf(
           gl_sampler,
@@ -121,31 +131,31 @@ export class Sampler_GL extends ResourceBase_GL implements Sampler {
       gl.texParameteri(
         gl_target,
         GL.TEXTURE_MIN_FILTER,
-        translateFilterMode(descriptor.minFilter, descriptor.mipFilter),
+        translateFilterMode(descriptor.minFilter, descriptor.mipmapFilter),
       );
     }
     gl.texParameteri(
       GL.TEXTURE_2D,
       GL.TEXTURE_WRAP_S,
-      translateWrapMode(descriptor.wrapS),
+      translateAddressMode(descriptor.addressModeU),
     );
     gl.texParameteri(
       GL.TEXTURE_2D,
       GL.TEXTURE_WRAP_T,
-      translateWrapMode(descriptor.wrapT),
+      translateAddressMode(descriptor.addressModeV),
     );
 
     gl.texParameteri(
       gl_target,
       GL.TEXTURE_MAG_FILTER,
-      translateFilterMode(descriptor.magFilter, MipFilterMode.NO_MIP),
+      translateFilterMode(descriptor.magFilter, MipmapFilterMode.NO_MIP),
     );
 
-    // if (descriptor.minLOD !== undefined) {
-    //   gl.texParameterf(gl_target, GL.TEXTURE_MIN_LOD, descriptor.minLOD);
+    // if (descriptor.lodMinClamp !== undefined) {
+    //   gl.texParameterf(gl_target, GL.TEXTURE_MIN_LOD, descriptor.lodMinClamp);
     // }
-    // if (descriptor.maxLOD !== undefined) {
-    //   gl.texParameterf(gl_target, GL.TEXTURE_MAX_LOD, descriptor.maxLOD);
+    // if (descriptor.lodMaxClamp !== undefined) {
+    //   gl.texParameterf(gl_target, GL.TEXTURE_MAX_LOD, descriptor.lodMaxClamp);
     // }
 
     const maxAnisotropy = descriptor.maxAnisotropy ?? 1;
@@ -154,9 +164,9 @@ export class Sampler_GL extends ResourceBase_GL implements Sampler {
       this.device.EXT_texture_filter_anisotropic !== null
     ) {
       assert(
-        descriptor.minFilter === TexFilterMode.BILINEAR &&
-          descriptor.magFilter === TexFilterMode.BILINEAR &&
-          descriptor.mipFilter === MipFilterMode.LINEAR,
+        descriptor.minFilter === FilterMode.BILINEAR &&
+          descriptor.magFilter === FilterMode.BILINEAR &&
+          descriptor.mipmapFilter === MipmapFilterMode.LINEAR,
       );
       gl.texParameteri(
         gl_target,

@@ -190,35 +190,33 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   const inputLayout = device.createInputLayout({
     vertexBufferDescriptors: [
       {
-        byteStride: 4 * 4,
+        arrayStride: 4 * 4,
         stepMode: VertexStepMode.INSTANCE,
+        attributes: [
+          {
+            // instance position
+            shaderLocation: 0,
+            offset: 0,
+            format: Format.F32_RG,
+          },
+          {
+            // instance velocity
+            shaderLocation: 1,
+            offset: 4 * 2,
+            format: Format.F32_RG,
+          },
+        ],
       },
       {
-        byteStride: 4 * 2,
+        arrayStride: 4 * 2,
         stepMode: VertexStepMode.VERTEX,
-      },
-    ],
-    vertexAttributeDescriptors: [
-      {
-        // instance position
-        bufferIndex: 0,
-        location: 0,
-        bufferByteOffset: 0,
-        format: Format.F32_RG,
-      },
-      {
-        // instance velocity
-        bufferIndex: 0,
-        location: 1,
-        bufferByteOffset: 4 * 2,
-        format: Format.F32_RG,
-      },
-      {
-        // vertex positions
-        bufferIndex: 1,
-        location: 2,
-        bufferByteOffset: 0,
-        format: Format.F32_RG,
+        attributes: [
+          {
+            shaderLocation: 2,
+            offset: 0,
+            format: Format.F32_RG,
+          },
+        ],
       },
     ],
     indexBufferFormat: null,
@@ -272,7 +270,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   }
 
   const renderTarget = device.createRenderTarget({
-    pixelFormat: Format.U8_RGBA_RT,
+    format: Format.U8_RGBA_RT,
     width: $canvas.width,
     height: $canvas.height,
   });

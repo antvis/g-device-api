@@ -53,8 +53,8 @@ export class RenderPass_WebGPU implements RenderPass {
     target: TextureShared_WebGPU,
     level: number,
   ): GPUTextureView {
-    assert(level < target.numLevels);
-    if (target.numLevels === 1) return target.gpuTextureView;
+    assert(level < target.mipLevelCount);
+    if (target.mipLevelCount === 1) return target.gpuTextureView;
     else
       return target.gpuTexture.createView({
         baseMipLevel: level,
@@ -141,7 +141,7 @@ export class RenderPass_WebGPU implements RenderPass {
       dstAttachment.view = dsAttachment.gpuTextureView;
 
       const hasDepth = !!(
-        getFormatFlags(dsAttachment.pixelFormat) & FormatFlags.Depth
+        getFormatFlags(dsAttachment.format) & FormatFlags.Depth
       );
       if (hasDepth) {
         if (descriptor.depthClearValue === 'load') {
@@ -163,7 +163,7 @@ export class RenderPass_WebGPU implements RenderPass {
       }
 
       const hasStencil = !!(
-        getFormatFlags(dsAttachment.pixelFormat) & FormatFlags.Stencil
+        getFormatFlags(dsAttachment.format) & FormatFlags.Stencil
       );
       if (hasStencil) {
         if (descriptor.stencilClearValue === 'load') {
@@ -216,7 +216,7 @@ export class RenderPass_WebGPU implements RenderPass {
     this.gpuRenderPassEncoder.setViewport(x, y, w, h, minDepth, maxDepth);
   }
 
-  setScissor(x: number, y: number, w: number, h: number): void {
+  setScissorRect(x: number, y: number, w: number, h: number): void {
     this.gpuRenderPassEncoder.setScissorRect(x, y, w, h);
   }
 
@@ -238,7 +238,7 @@ export class RenderPass_WebGPU implements RenderPass {
       this.gpuRenderPassEncoder.setIndexBuffer(
         getPlatformBuffer(indexBuffer.buffer),
         assertExists(inputLayout.indexFormat),
-        indexBuffer.byteOffset,
+        indexBuffer.offset,
       );
 
     for (let i = 0; i < vertexBuffers!.length; i++) {
@@ -247,7 +247,7 @@ export class RenderPass_WebGPU implements RenderPass {
       this.gpuRenderPassEncoder.setVertexBuffer(
         i,
         getPlatformBuffer(b.buffer),
-        b.byteOffset,
+        b.offset,
       );
     }
   }
@@ -265,7 +265,7 @@ export class RenderPass_WebGPU implements RenderPass {
     }
   }
 
-  setStencilRef(ref: number): void {
+  setStencilReference(ref: number): void {
     this.gpuRenderPassEncoder.setStencilReference(ref);
   }
 
@@ -307,14 +307,24 @@ export class RenderPass_WebGPU implements RenderPass {
    * @see https://www.w3.org/TR/webgpu/#dom-gpurendercommandsmixin-drawindirect
    */
   drawIndirect(indirectBuffer: Buffer, indirectOffset: number) {
-    // TODO
+    this.gpuRenderPassEncoder.drawIndirect(
+      getPlatformBuffer(indirectBuffer),
+      indirectOffset,
+    );
   }
 
-  beginOcclusionQuery(dstOffs: number): void {
-    this.gpuRenderPassEncoder.beginOcclusionQuery(dstOffs);
+  drawIndexedIndirect(indirectBuffer: Buffer, indirectOffset: number) {
+    this.gpuRenderPassEncoder.drawIndexedIndirect(
+      getPlatformBuffer(indirectBuffer),
+      indirectOffset,
+    );
   }
 
-  endOcclusionQuery(dstOffs: number): void {
+  beginOcclusionQuery(queryIndex: number): void {
+    this.gpuRenderPassEncoder.beginOcclusionQuery(queryIndex);
+  }
+
+  endOcclusionQuery(): void {
     this.gpuRenderPassEncoder.endOcclusionQuery();
   }
 

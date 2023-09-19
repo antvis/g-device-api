@@ -51,16 +51,15 @@ void main() {
   const inputLayout = device.createInputLayout({
     vertexBufferDescriptors: [
       {
-        byteStride: 4 * 2,
+        arrayStride: 4 * 2,
         stepMode: VertexStepMode.VERTEX,
-      },
-    ],
-    vertexAttributeDescriptors: [
-      {
-        location: 0,
-        bufferIndex: 0,
-        bufferByteOffset: 0,
-        format: Format.F32_RG,
+        attributes: [
+          {
+            shaderLocation: 0,
+            offset: 0,
+            format: Format.F32_RG,
+          },
+        ],
       },
     ],
     indexBufferFormat: null,
@@ -75,7 +74,7 @@ void main() {
 
   const renderTarget = device.createRenderTargetFromTexture(
     device.createTexture({
-      pixelFormat: Format.U8_RGBA_RT,
+      format: Format.U8_RGBA_RT,
       width: $canvas.width,
       height: $canvas.height,
       usage: TextureUsage.RENDER_TARGET,

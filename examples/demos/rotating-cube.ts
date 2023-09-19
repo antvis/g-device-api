@@ -11,7 +11,7 @@ import {
   CullMode,
   ChannelWriteMask,
   TransparentBlack,
-  CompareMode,
+  CompareFunction,
 } from '../../src';
 import { initExample } from './utils';
 import { vec3, mat4 } from 'gl-matrix';
@@ -104,16 +104,15 @@ void main() {
   const inputLayout = device.createInputLayout({
     vertexBufferDescriptors: [
       {
-        byteStride: cubeVertexSize,
+        arrayStride: cubeVertexSize,
         stepMode: VertexStepMode.VERTEX,
-      },
-    ],
-    vertexAttributeDescriptors: [
-      {
-        location: 0,
-        bufferIndex: 0,
-        bufferByteOffset: 0,
-        format: Format.F32_RGB,
+        attributes: [
+          {
+            shaderLocation: 0,
+            offset: 0,
+            format: Format.F32_RGB,
+          },
+        ],
       },
     ],
     indexBufferFormat: null,
@@ -143,7 +142,7 @@ void main() {
       ],
       blendConstant: TransparentBlack,
       depthWrite: true,
-      depthCompare: CompareMode.LESS,
+      depthCompare: CompareFunction.LESS,
       cullMode: CullMode.BACK,
       stencilWrite: false,
     },
@@ -162,7 +161,7 @@ void main() {
 
   const mainColorRT = device.createRenderTargetFromTexture(
     device.createTexture({
-      pixelFormat: Format.U8_RGBA_RT,
+      format: Format.U8_RGBA_RT,
       width: $canvas.width,
       height: $canvas.height,
       usage: TextureUsage.RENDER_TARGET,
@@ -170,7 +169,7 @@ void main() {
   );
   const mainDepthRT = device.createRenderTargetFromTexture(
     device.createTexture({
-      pixelFormat: Format.D24_S8,
+      format: Format.D24_S8,
       width: $canvas.width,
       height: $canvas.height,
       usage: TextureUsage.RENDER_TARGET,

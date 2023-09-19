@@ -47,7 +47,7 @@ import {
   ClipSpaceNearZ,
   colorCopy,
   colorEqual,
-  CompareMode,
+  CompareFunction,
   copyMegaState,
   CullMode,
   defaultMegaState,
@@ -291,11 +291,11 @@ export class Device_GL implements SwapChain, Device {
       descriptor: {
         width: 0,
         height: 0,
-        depth: 1,
+        depthOrArrayLayers: 1,
         dimension: TextureDimension.TEXTURE_2D,
-        numLevels: 1,
+        mipLevelCount: 1,
         usage: TextureUsage.RENDER_TARGET,
-        pixelFormat:
+        format:
           this.contextAttributes.alpha === false
             ? Format.U8_RGB_RT
             : Format.U8_RGBA_RT,
@@ -355,7 +355,7 @@ export class Device_GL implements SwapChain, Device {
     }
 
     // Adjust for GL defaults.
-    this.currentMegaState.depthCompare = CompareMode.LESS;
+    this.currentMegaState.depthCompare = CompareFunction.LESS;
     this.currentMegaState.depthWrite = false;
     this.currentMegaState.attachmentsState[0].channelWriteMask =
       ChannelWriteMask.ALL;
@@ -397,26 +397,27 @@ export class Device_GL implements SwapChain, Device {
     dimension: TextureDimension,
     formatKind: SamplerFormatKind,
   ): WebGLTexture {
-    const depth = dimension === TextureDimension.TEXTURE_CUBE_MAP ? 6 : 1;
+    const depthOrArrayLayers =
+      dimension === TextureDimension.TEXTURE_CUBE_MAP ? 6 : 1;
     // const supportDepthTexture =
     //   isWebGL2(this.gl) || (!isWebGL2(this.gl) && !!this.WEBGL_depth_texture);
-    const pixelFormat =
+    const format =
       formatKind === SamplerFormatKind.Depth
         ? Format.D32F
         : Format.U8_RGBA_NORM;
 
     const texture = this.createTexture({
       dimension,
-      pixelFormat,
+      format,
       usage: TextureUsage.SAMPLED,
       width: 1,
       height: 1,
-      depth,
-      numLevels: 1,
+      depthOrArrayLayers,
+      mipLevelCount: 1,
     });
 
     if (formatKind === SamplerFormatKind.Float) {
-      texture.setImageData([new Uint8Array(4 * depth)]);
+      texture.setImageData([new Uint8Array(4 * depthOrArrayLayers)]);
     }
     return getPlatformTexture(texture);
   }
@@ -775,12 +776,12 @@ export class Device_GL implements SwapChain, Device {
   }
 
   createRenderTargetFromTexture(texture: Texture): RenderTarget {
-    const { pixelFormat, width, height, numLevels } = texture as Texture_GL;
+    const { format, width, height, mipLevelCount } = texture as Texture_GL;
     // Render targets cannot have a mip chain currently.
-    assert(numLevels === 1);
+    assert(mipLevelCount === 1);
 
     return this.createRenderTarget({
-      pixelFormat,
+      format,
       width,
       height,
       sampleCount: 1,
@@ -979,8 +980,8 @@ export class Device_GL implements SwapChain, Device {
 
     const dst = dst_ as Texture_GL;
     const src = src_ as Texture_GL;
-    assert(src.numLevels === 1);
-    assert(dst.numLevels === 1);
+    assert(src.mipLevelCount === 1);
+    assert(dst.mipLevelCount === 1);
 
     if (isWebGL2(gl)) {
       if (dst === this.scTexture) {
@@ -1304,7 +1305,7 @@ export class Device_GL implements SwapChain, Device {
 
     const flags =
       attachment !== null
-        ? getFormatFlags(attachment.pixelFormat)
+        ? getFormatFlags(attachment.format)
         : FormatFlags.Depth | FormatFlags.Stencil;
     const depth = !!(flags & FormatFlags.Depth);
     const stencil = !!(flags & FormatFlags.Stencil);
@@ -1537,7 +1538,7 @@ export class Device_GL implements SwapChain, Device {
       }
     }
 
-    this.setScissorEnabled(false);
+    this.setScissorRectEnabled(false);
 
     if (isWebGL2(gl)) {
       // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGL2RenderingContext/clearBuffer
@@ -1653,7 +1654,7 @@ export class Device_GL implements SwapChain, Device {
 
       if (this.currentTextures[samplerIndex] !== gl_texture) {
         this.setActiveTexture(gl.TEXTURE0 + samplerIndex);
-        const { gl_target, width, height, pixelFormat } = assertExists(binding)
+        const { gl_target, width, height, format } = assertExists(binding)
           .texture as Texture_GL;
         if (gl_texture !== null) {
           // update index
@@ -1675,7 +1676,7 @@ export class Device_GL implements SwapChain, Device {
             gl_target,
             this.getFallbackTexture({
               gl_target,
-              formatKind: getFormatSamplerKind(pixelFormat),
+              formatKind: getFormatSamplerKind(format),
             }),
           );
         }
@@ -1689,9 +1690,9 @@ export class Device_GL implements SwapChain, Device {
     gl.viewport(x, y, w, h);
   }
 
-  setScissor(x: number, y: number, w: number, h: number): void {
+  setScissorRect(x: number, y: number, w: number, h: number): void {
     const gl = this.gl;
-    this.setScissorEnabled(true);
+    this.setScissorRectEnabled(true);
     gl.scissor(x, y, w, h);
   }
 
@@ -1912,7 +1913,7 @@ export class Device_GL implements SwapChain, Device {
       currentMegaState.stencilCompare !== newMegaState.stencilCompare
     ) {
       currentMegaState.stencilCompare = newMegaState.stencilCompare;
-      this.setStencilRef(newMegaState.stencilRef);
+      this.setStencilReference(newMegaState.stencilRef);
     }
 
     if (currentMegaState.cullMode !== newMegaState.cullMode) {
@@ -1952,12 +1953,12 @@ export class Device_GL implements SwapChain, Device {
     for (let i = 0; i < this.currentColorAttachments.length; i++) {
       const attachment = this.currentColorAttachments[i];
       if (attachment === null) continue;
-      assert(attachment.pixelFormat === pipeline.colorAttachmentFormats[i]);
+      assert(attachment.format === pipeline.colorAttachmentFormats[i]);
     }
 
     if (this.currentDepthStencilAttachment) {
       assert(
-        this.currentDepthStencilAttachment.pixelFormat ===
+        this.currentDepthStencilAttachment.format ===
           pipeline.depthStencilAttachmentFormat,
       );
     }
@@ -2027,39 +2028,47 @@ export class Device_GL implements SwapChain, Device {
       this.bindVAO(inputLayout.vao);
 
       const gl = this.gl;
-      for (let i = 0; i < inputLayout.vertexAttributeDescriptors.length; i++) {
-        const attr = inputLayout.vertexAttributeDescriptors[i];
 
-        // find location by name in WebGL1
-        const location = isWebGL2(gl)
-          ? attr.location
-          : inputLayout.program.attributes[attr.location]?.location;
+      for (let i = 0; i < inputLayout.vertexBufferDescriptors.length; i++) {
+        const vertexBufferDescriptor = inputLayout.vertexBufferDescriptors[i];
+        const { arrayStride, attributes } = vertexBufferDescriptor;
 
-        if (!isNil(location)) {
-          const vertexBuffer = vertexBuffers![attr.bufferIndex];
+        for (const attribute of attributes) {
+          const { shaderLocation, offset } = attribute;
 
-          if (vertexBuffer === null) continue;
+          // find location by name in WebGL1
+          const location = isWebGL2(gl)
+            ? shaderLocation
+            : inputLayout.program.attributes[shaderLocation]?.location;
 
-          const format = inputLayout.vertexBufferFormats[i];
+          if (!isNil(location)) {
+            const vertexBuffer = vertexBuffers[i];
 
-          gl.bindBuffer(
-            gl.ARRAY_BUFFER,
-            getPlatformBuffer(vertexBuffer.buffer),
-          );
+            if (vertexBuffer === null) continue;
 
-          const bufferOffset =
-            (vertexBuffer.byteOffset || 0) + attr.bufferByteOffset;
+            // @ts-ignore
+            const format = attribute.vertexFormat as {
+              size: number;
+              type: number;
+              normalized: boolean;
+            };
 
-          const inputLayoutBuffer =
-            inputLayout.vertexBufferDescriptors[attr.bufferIndex]!;
-          gl.vertexAttribPointer(
-            location,
-            format.size,
-            format.type,
-            format.normalized,
-            inputLayoutBuffer.byteStride,
-            bufferOffset,
-          );
+            gl.bindBuffer(
+              gl.ARRAY_BUFFER,
+              getPlatformBuffer(vertexBuffer.buffer),
+            );
+
+            const bufferOffset = (vertexBuffer.offset || 0) + offset;
+
+            gl.vertexAttribPointer(
+              location,
+              format.size,
+              format.type,
+              format.normalized,
+              arrayStride,
+              bufferOffset,
+            );
+          }
         }
       }
 
@@ -2070,7 +2079,7 @@ export class Device_GL implements SwapChain, Device {
         const buffer = indexBuffer.buffer as Buffer_GL;
         assert(buffer.usage === BufferUsage.INDEX);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getPlatformBuffer(buffer));
-        this.currentIndexBufferByteOffset = indexBuffer.byteOffset;
+        this.currentIndexBufferByteOffset = indexBuffer.offset;
       } else {
         this.currentIndexBufferByteOffset = null;
       }
@@ -2082,7 +2091,7 @@ export class Device_GL implements SwapChain, Device {
     }
   }
 
-  setStencilRef(value: number): void {
+  setStencilReference(value: number): void {
     if (this.currentStencilRef === value) {
       return;
     }
@@ -2168,20 +2177,20 @@ export class Device_GL implements SwapChain, Device {
   /**
    * @see https://www.w3.org/TR/webgpu/#dom-gpurendercommandsmixin-drawindirect
    */
-  drawIndirect(indirectBuffer: Buffer, indirectOffset: number) {
-    // TODO
-  }
+  drawIndirect(indirectBuffer: Buffer, indirectOffset: number) {}
 
-  beginOcclusionQuery(dstOffs: number): void {
+  drawIndexedIndirect(indirectBuffer: Buffer, indirectOffset: number) {}
+
+  beginOcclusionQuery(queryIndex: number): void {
     const gl = this.gl;
     if (isWebGL2(gl)) {
       const queryPool = this.currentRenderPassDescriptor
         .occlusionQueryPool as QueryPool_GL;
-      gl.beginQuery(queryPool.gl_query_type, queryPool.gl_query[dstOffs]);
+      gl.beginQuery(queryPool.gl_query_type, queryPool.gl_query[queryIndex]);
     }
   }
 
-  endOcclusionQuery(dstOffs: number): void {
+  endOcclusionQuery(): void {
     const gl = this.gl;
     if (isWebGL2(gl)) {
       const queryPool = this.currentRenderPassDescriptor!
@@ -2216,9 +2225,9 @@ export class Device_GL implements SwapChain, Device {
             colorResolveFrom.width === colorResolveTo.width &&
               colorResolveFrom.height === colorResolveTo.height,
           );
-          assert(colorResolveFrom.pixelFormat === colorResolveTo.pixelFormat);
+          assert(colorResolveFrom.format === colorResolveTo.format);
 
-          this.setScissorEnabled(false);
+          this.setScissorRectEnabled(false);
           if (isWebGL2(gl)) {
             gl.bindFramebuffer(
               gl.READ_FRAMEBUFFER,
@@ -2321,7 +2330,7 @@ export class Device_GL implements SwapChain, Device {
             depthStencilResolveFrom.height === depthStencilResolveTo.height,
         );
 
-        this.setScissorEnabled(false);
+        this.setScissorRectEnabled(false);
 
         gl.bindFramebuffer(
           isWebGL2(gl) ? GL.READ_FRAMEBUFFER : GL.FRAMEBUFFER,
@@ -2404,7 +2413,7 @@ export class Device_GL implements SwapChain, Device {
     }
   }
 
-  private setScissorEnabled(v: boolean): void {
+  private setScissorRectEnabled(v: boolean): void {
     if (this.currentScissorEnabled === v) {
       return;
     }
@@ -2478,14 +2487,16 @@ void main() {
       });
       this.blitInputLayout = this.createInputLayout({
         vertexBufferDescriptors: [
-          { byteStride: 4 * 2, stepMode: VertexStepMode.VERTEX },
-        ],
-        vertexAttributeDescriptors: [
           {
-            format: Format.F32_RG,
-            bufferIndex: 0,
-            bufferByteOffset: 4 * 0,
-            location: 0,
+            arrayStride: 4 * 2,
+            stepMode: VertexStepMode.VERTEX,
+            attributes: [
+              {
+                format: Format.F32_RG,
+                offset: 4 * 0,
+                shaderLocation: 0,
+              },
+            ],
           },
         ],
         indexBufferFormat: null,

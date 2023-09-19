@@ -1,5 +1,5 @@
 import type { InputLayout, InputLayoutDescriptor } from '../api';
-import { assertExists, ResourceType } from '../api';
+import { ResourceType } from '../api';
 import type { IDevice_WebGPU } from './interfaces';
 import { ResourceBase_WebGPU } from './ResourceBase';
 import {
@@ -29,27 +29,22 @@ export class InputLayout_WebGPU
     super({ id, device });
 
     const buffers: GPUVertexBufferLayout[] = [];
-    for (let i = 0; i < descriptor.vertexAttributeDescriptors.length; i++) {
-      const attr = descriptor.vertexAttributeDescriptors[i];
+    for (const vertexBufferDescriptor of descriptor.vertexBufferDescriptors) {
+      const { arrayStride, stepMode, attributes } = vertexBufferDescriptor;
+      buffers.push({
+        arrayStride,
+        stepMode: translateVertexStepMode(stepMode),
+        attributes: [],
+      });
 
-      const attribute: GPUVertexAttribute = {
-        shaderLocation: attr.location,
-        format: translateVertexFormat(attr.format),
-        offset: attr.bufferByteOffset,
-      };
-
-      if (buffers[attr.bufferIndex] !== undefined) {
-        (buffers[attr.bufferIndex].attributes as GPUVertexAttribute[]).push(
-          attribute,
-        );
-      } else {
-        const b = assertExists(
-          descriptor.vertexBufferDescriptors[attr.bufferIndex],
-        );
-        const arrayStride = b.byteStride;
-        const stepMode = translateVertexStepMode(b.stepMode);
-        const attributes: GPUVertexAttribute[] = [attribute];
-        buffers[attr.bufferIndex] = { arrayStride, stepMode, attributes };
+      for (const attribute of attributes) {
+        // TODO: divisor
+        const { shaderLocation, format, offset } = attribute;
+        (buffers[buffers.length - 1].attributes as GPUVertexAttribute[]).push({
+          shaderLocation,
+          format: translateVertexFormat(format),
+          offset,
+        });
       }
     }
 

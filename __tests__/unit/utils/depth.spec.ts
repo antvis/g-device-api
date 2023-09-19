@@ -2,11 +2,11 @@ import { mat4 } from 'gl-matrix';
 import {
   reverseDepthForPerspectiveProjectionMatrix,
   reverseDepthForOrthographicProjectionMatrix,
-  reverseDepthForCompareMode,
+  reverseDepthForCompareFunction,
   reverseDepthForClearValue,
   reverseDepthForDepthOffset,
   compareDepthValues,
-  CompareMode,
+  CompareFunction,
 } from '../../../src';
 
 describe('Depth', () => {
@@ -22,25 +22,25 @@ describe('Depth', () => {
     reverseDepthForOrthographicProjectionMatrix(m, false);
   });
 
-  it('should reverseDepthForCompareMode.', () => {
-    expect(reverseDepthForCompareMode(CompareMode.ALWAYS, false)).toBe(
-      CompareMode.ALWAYS,
+  it('should reverseDepthForCompareFunction.', () => {
+    expect(reverseDepthForCompareFunction(CompareFunction.ALWAYS, false)).toBe(
+      CompareFunction.ALWAYS,
     );
 
-    expect(reverseDepthForCompareMode(CompareMode.ALWAYS)).toBe(
-      CompareMode.ALWAYS,
+    expect(reverseDepthForCompareFunction(CompareFunction.ALWAYS)).toBe(
+      CompareFunction.ALWAYS,
     );
-    expect(reverseDepthForCompareMode(CompareMode.LESS)).toBe(
-      CompareMode.GREATER,
+    expect(reverseDepthForCompareFunction(CompareFunction.LESS)).toBe(
+      CompareFunction.GREATER,
     );
-    expect(reverseDepthForCompareMode(CompareMode.LEQUAL)).toBe(
-      CompareMode.GEQUAL,
+    expect(reverseDepthForCompareFunction(CompareFunction.LEQUAL)).toBe(
+      CompareFunction.GEQUAL,
     );
-    expect(reverseDepthForCompareMode(CompareMode.GEQUAL)).toBe(
-      CompareMode.LEQUAL,
+    expect(reverseDepthForCompareFunction(CompareFunction.GEQUAL)).toBe(
+      CompareFunction.LEQUAL,
     );
-    expect(reverseDepthForCompareMode(CompareMode.GREATER)).toBe(
-      CompareMode.LESS,
+    expect(reverseDepthForCompareFunction(CompareFunction.GREATER)).toBe(
+      CompareFunction.LESS,
     );
   });
 
@@ -55,10 +55,10 @@ describe('Depth', () => {
   });
 
   it('should compareDepthValues.', () => {
-    expect(compareDepthValues(0, 1, CompareMode.LESS)).toBeFalsy();
-    expect(compareDepthValues(0, 1, CompareMode.LEQUAL)).toBeFalsy();
-    expect(compareDepthValues(0, 1, CompareMode.GREATER)).toBeTruthy();
-    expect(compareDepthValues(0, 1, CompareMode.GEQUAL)).toBeTruthy();
-    expect(() => compareDepthValues(0, 1, CompareMode.ALWAYS)).toThrow();
+    expect(compareDepthValues(0, 1, CompareFunction.LESS)).toBeFalsy();
+    expect(compareDepthValues(0, 1, CompareFunction.LEQUAL)).toBeFalsy();
+    expect(compareDepthValues(0, 1, CompareFunction.GREATER)).toBeTruthy();
+    expect(compareDepthValues(0, 1, CompareFunction.GEQUAL)).toBeTruthy();
+    expect(() => compareDepthValues(0, 1, CompareFunction.ALWAYS)).toThrow();
   });
 });

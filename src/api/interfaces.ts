@@ -118,7 +118,7 @@ export type Resource =
   | ComputePipeline
   | Readback;
 
-export enum CompareMode {
+export enum CompareFunction {
   NEVER = GL.NEVER,
   LESS = GL.LESS,
   EQUAL = GL.EQUAL,
@@ -229,16 +229,16 @@ export enum BlendMode {
   MAX = GL.MAX,
 }
 
-export enum WrapMode {
-  CLAMP,
+export enum AddressMode {
+  CLAMP_TO_EDGE,
   REPEAT,
-  MIRROR,
+  MIRRORED_REPEAT,
 }
-export enum TexFilterMode {
+export enum FilterMode {
   POINT,
   BILINEAR,
 }
-export enum MipFilterMode {
+export enum MipmapFilterMode {
   NO_MIP,
   NEAREST,
   LINEAR,
@@ -331,34 +331,56 @@ export enum StencilOp {
 
 export interface VertexBufferDescriptor {
   buffer: Buffer;
-  byteOffset?: number;
+  offset?: number;
 }
 
 export type IndexBufferDescriptor = VertexBufferDescriptor;
 
 export interface VertexAttributeDescriptor {
-  location: number;
+  /**
+   * The numeric location associated with this attribute,
+   * which will correspond with a "@location" attribute declared in the vertex.module.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpuvertexattribute-shaderlocation
+   */
+  shaderLocation: number;
+  /**
+   * The GPUVertexFormat of the attribute.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpuvertexattribute-format
+   */
   format: Format;
-  bufferIndex: number;
-  bufferByteOffset: number;
+  /**
+   * The offset, in bytes, from the beginning of the element to the data for the attribute.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpuvertexattribute-offset
+   */
+  offset: number;
   divisor?: number;
 }
 
 export interface InputLayoutBufferDescriptor {
-  byteStride: number;
   /**
+   * The stride, in bytes, between elements of this array.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpuvertexbufferlayout-arraystride
+   */
+  arrayStride: number;
+  /**
+   * Whether each element of this array represents per-vertex data or per-instance data.
    * @see https://www.w3.org/TR/webgpu/#dom-gpuvertexbufferlayout-stepmode
    */
   stepMode: VertexStepMode;
+  /**
+   * An array defining the layout of the vertex attributes within each element.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpuvertexbufferlayout-attributes
+   */
+  attributes: VertexAttributeDescriptor[];
 }
 
 export interface TextureDescriptor {
   dimension?: TextureDimension;
-  pixelFormat: Format;
+  format: Format;
   width: number;
   height: number;
-  depth?: number;
-  numLevels?: number;
+  depthOrArrayLayers?: number;
+  mipLevelCount?: number;
   usage: TextureUsage;
   /**
    * @see https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/pixelStorei
@@ -371,32 +393,40 @@ export interface TextureDescriptor {
 }
 
 export function makeTextureDescriptor2D(
-  pixelFormat: Format,
+  format: Format,
   width: number,
   height: number,
-  numLevels: number,
+  mipLevelCount: number,
 ): TextureDescriptor {
-  const dimension = TextureDimension.TEXTURE_2D,
-    depth = 1;
+  const dimension = TextureDimension.TEXTURE_2D;
+  const depthOrArrayLayers = 1;
   const usage = TextureUsage.SAMPLED;
-  return { dimension, pixelFormat, width, height, depth, numLevels, usage };
+  return {
+    dimension,
+    format,
+    width,
+    height,
+    depthOrArrayLayers,
+    mipLevelCount,
+    usage,
+  };
 }
 
 export interface SamplerDescriptor {
-  wrapS: WrapMode;
-  wrapT: WrapMode;
-  wrapQ?: WrapMode;
-  minFilter: TexFilterMode;
-  magFilter: TexFilterMode;
-  mipFilter: MipFilterMode;
-  minLOD?: number;
-  maxLOD?: number;
+  addressModeU: AddressMode;
+  addressModeV: AddressMode;
+  addressModeW?: AddressMode;
+  minFilter: FilterMode;
+  magFilter: FilterMode;
+  mipmapFilter: MipmapFilterMode;
+  lodMinClamp?: number;
+  lodMaxClamp?: number;
   maxAnisotropy?: number;
-  compareMode?: CompareMode;
+  compareFunction?: CompareFunction;
 }
 
 export interface RenderTargetDescriptor {
-  pixelFormat: Format;
+  format: Format;
   width: number;
   height: number;
   sampleCount?: number;
@@ -483,7 +513,6 @@ export interface ProgramDescriptorSimple {
 
 export interface InputLayoutDescriptor {
   vertexBufferDescriptors: (InputLayoutBufferDescriptor | null)[];
-  vertexAttributeDescriptors: VertexAttributeDescriptor[];
   indexBufferFormat: Format | null;
   /**
    * Read attributes from linked program.
@@ -506,9 +535,9 @@ export interface AttachmentState {
 export interface MegaStateDescriptor {
   attachmentsState: AttachmentState[];
   blendConstant?: Color;
-  depthCompare?: CompareMode;
+  depthCompare?: CompareFunction;
   depthWrite?: boolean;
-  stencilCompare?: CompareMode;
+  stencilCompare?: CompareFunction;
   stencilWrite?: boolean;
   stencilPassOp?: StencilOp;
   stencilRef?: number;
@@ -631,7 +660,7 @@ export interface RenderPass extends DebugCommandsMixin {
      */
     maxDepth?: number,
   ) => void;
-  setScissor: (x: number, y: number, w: number, h: number) => void;
+  setScissorRect: (x: number, y: number, w: number, h: number) => void;
   setPipeline: (pipeline: RenderPipeline) => void;
   setBindings: (bindings: Bindings, dynamicByteOffsets?: number[]) => void;
   setVertexInput: (
@@ -639,7 +668,11 @@ export interface RenderPass extends DebugCommandsMixin {
     buffers: (VertexBufferDescriptor | null)[] | null,
     indexBuffer: IndexBufferDescriptor | null,
   ) => void;
-  setStencilRef: (value: number) => void;
+  /**
+   * Sets the [[stencilReference]] value used during stencil tests with the "replace" GPUStencilOperation.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpurenderpassencoder-setstencilreference
+   */
+  setStencilReference: (value: number) => void;
 
   // Draw commands.
   /**
@@ -663,13 +696,19 @@ export interface RenderPass extends DebugCommandsMixin {
   ) => void;
   /**
    * WebGPU only.
+   * Draws indexed primitives using parameters read from a GPUBuffer.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpurendercommandsmixin-drawindexedindirect
+   */
+  drawIndexedIndirect: (indirectBuffer: Buffer, indirectOffset: number) => void;
+  /**
+   * WebGPU only.
    * @see https://www.w3.org/TR/webgpu/#dom-gpurendercommandsmixin-drawindirect
    */
   drawIndirect: (indirectBuffer: Buffer, indirectOffset: number) => void;
 
   // Query system.
-  beginOcclusionQuery: (dstOffs: number) => void;
-  endOcclusionQuery: (dstOffs: number) => void;
+  beginOcclusionQuery: (queryIndex: number) => void;
+  endOcclusionQuery: () => void;
 }
 
 /**

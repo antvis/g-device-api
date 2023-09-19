@@ -9,13 +9,13 @@ export class Texture_WebGPU
   implements TextureShared_WebGPU, Texture
 {
   type: ResourceType.Texture = ResourceType.Texture;
-  pixelFormat: Format;
+  format: Format;
   dimension: TextureDimension;
-  format: GPUTextureFormat;
+  gpuTextureformat: GPUTextureFormat;
   width: number;
   height: number;
   depthOrArrayLayers: number;
-  numLevels: number;
+  mipLevelCount: number;
   sampleCount: number;
   usage: GPUTextureUsageFlags;
   gpuTexture: GPUTexture;
@@ -36,15 +36,25 @@ export class Texture_WebGPU
   }) {
     super({ id, device });
 
+    const {
+      format,
+      dimension,
+      width,
+      height,
+      depthOrArrayLayers,
+      mipLevelCount,
+      usage,
+    } = descriptor;
+
     this.device.createTextureShared(
       {
-        pixelFormat: descriptor.pixelFormat,
-        dimension: descriptor.dimension ?? TextureDimension.TEXTURE_2D,
-        width: descriptor.width,
-        height: descriptor.height,
-        depthOrArrayLayers: descriptor.depth ?? 1,
-        numLevels: descriptor.numLevels ?? 1,
-        usage: descriptor.usage,
+        format,
+        dimension: dimension ?? TextureDimension.TEXTURE_2D,
+        width,
+        height,
+        depthOrArrayLayers: depthOrArrayLayers ?? 1,
+        mipLevelCount: mipLevelCount ?? 1,
+        usage,
         sampleCount: sampleCount ?? 1,
       },
       this,

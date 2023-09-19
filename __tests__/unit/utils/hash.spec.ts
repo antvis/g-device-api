@@ -1,13 +1,13 @@
 import {
   BindingsDescriptor,
   BufferUsage,
-  MipFilterMode,
+  MipmapFilterMode,
   PrimitiveTopology,
   RenderPipelineDescriptor,
   SamplerFormatKind,
-  TexFilterMode,
+  FilterMode,
   TextureDimension,
-  WrapMode,
+  AddressMode,
   bindingsDescriptorEquals,
   renderPipelineDescriptorEquals,
 } from '../../../src';
@@ -83,22 +83,22 @@ describe('Hash', () => {
 
     // samplerBindingEquals
     const sampler = device.createSampler({
-      wrapS: WrapMode.CLAMP,
-      wrapT: WrapMode.CLAMP,
-      minFilter: TexFilterMode.POINT,
-      magFilter: TexFilterMode.BILINEAR,
-      mipFilter: MipFilterMode.LINEAR,
-      minLOD: 0,
-      maxLOD: 0,
+      addressModeU: AddressMode.CLAMP_TO_EDGE,
+      addressModeV: AddressMode.CLAMP_TO_EDGE,
+      minFilter: FilterMode.POINT,
+      magFilter: FilterMode.BILINEAR,
+      mipmapFilter: MipmapFilterMode.LINEAR,
+      lodMinClamp: 0,
+      lodMaxClamp: 0,
     }) as Sampler_GL;
     const sampler2 = device.createSampler({
-      wrapS: WrapMode.CLAMP,
-      wrapT: WrapMode.CLAMP,
-      minFilter: TexFilterMode.POINT,
-      magFilter: TexFilterMode.BILINEAR,
-      mipFilter: MipFilterMode.LINEAR,
-      minLOD: 0,
-      maxLOD: 0,
+      addressModeU: AddressMode.CLAMP_TO_EDGE,
+      addressModeV: AddressMode.CLAMP_TO_EDGE,
+      minFilter: FilterMode.POINT,
+      magFilter: FilterMode.BILINEAR,
+      mipmapFilter: MipmapFilterMode.LINEAR,
+      lodMinClamp: 0,
+      lodMaxClamp: 0,
     }) as Sampler_GL;
     a.samplerBindings?.push({
       sampler,

@@ -32,7 +32,7 @@ describe('Readback', () => {
 
   it('should read texture sync correctly.', () => {
     const texture = device.createTexture({
-      pixelFormat: Format.U8_RGBA_NORM,
+      format: Format.U8_RGBA_NORM,
       width: 1,
       height: 1,
       usage: TextureUsage.SAMPLED,
@@ -68,7 +68,7 @@ describe('Readback', () => {
 
   it('should read texture async correctly.', async () => {
     const texture = device.createTexture({
-      pixelFormat: Format.U8_RGBA_NORM,
+      format: Format.U8_RGBA_NORM,
       width: 1,
       height: 1,
       usage: TextureUsage.SAMPLED,
