@@ -57,13 +57,9 @@ export class ComputePass_WebGPU implements ComputePass {
     this.gpuComputePassEncoder.setPipeline(gpuComputePipeline);
   }
 
-  setBindings(bindings_: Bindings, dynamicByteOffsets?: number[]): void {
+  setBindings(bindings_: Bindings): void {
     const bindings = bindings_ as Bindings_WebGPU;
-    this.gpuComputePassEncoder.setBindGroup(
-      0,
-      bindings.gpuBindGroup[0],
-      dynamicByteOffsets,
-    );
+    this.gpuComputePassEncoder.setBindGroup(0, bindings.gpuBindGroup[0]);
   }
 
   pushDebugGroup(name: string): void {

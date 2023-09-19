@@ -722,7 +722,7 @@ setPipeline(pipeline: RenderPipeline)
 Bindings defines the interface between a set of resources bound and their accessibility in shader stages.
 
 ```ts
-setBindings: (bindings: Bindings, dynamicByteOffsets?: number[]) => void;
+setBindings: (bindings: Bindings) => void;
 ```
 
 ### <a id="setVertexInput" />setVertexInput
