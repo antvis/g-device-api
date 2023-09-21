@@ -1,5 +1,11 @@
 # @strawberry-vis/g-device-api
 
+## 1.1.3
+
+### Patch Changes
+
+-   d7760db: Export rust bundle.
+
 ## 1.1.2
 
 ### Patch Changes
