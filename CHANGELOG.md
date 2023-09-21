@@ -1,5 +1,11 @@
 # @strawberry-vis/g-device-api
 
+## 1.1.2
+
+### Patch Changes
+
+-   e521c2a: Use default sampler entry.
+
 ## 1.1.1
 
 ### Patch Changes
