@@ -78,8 +78,8 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
       numBindings = 0;
       for (let i = 0; i < samplerBindings.length; i++) {
         const samplerEntry = {
-          ...defaultBindingLayoutSamplerDescriptor,
           ...samplerBindings[i],
+          ...defaultBindingLayoutSamplerDescriptor,
         };
 
         const binding = descriptor.samplerBindings[i];
