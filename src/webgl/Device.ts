@@ -37,7 +37,7 @@ import {
   TransparentWhite,
   VendorInfo,
   VertexBufferDescriptor,
-  getFormatSamplerKind,
+  defaultBindingLayoutSamplerDescriptor,
 } from '../api';
 import {
   assert,
@@ -100,6 +100,7 @@ import {
   isFormatSizedInteger,
   isTextureFormatCompressed,
   isWebGL2,
+  translateTextureDimension,
 } from './utils';
 import { ComputePass_GL } from './ComputePass';
 import { preprocessShader_GLSL } from '../shader';
@@ -1653,9 +1654,9 @@ export class Device_GL implements SwapChain, Device {
 
       if (this.currentTextures[samplerIndex] !== gl_texture) {
         this.setActiveTexture(gl.TEXTURE0 + samplerIndex);
-        const { gl_target, width, height, format } = assertExists(binding)
-          .texture as Texture_GL;
         if (gl_texture !== null) {
+          const { gl_target, width, height } = assertExists(binding)
+            .texture as Texture_GL;
           // update index
           (binding.texture as Texture_GL).textureIndex = samplerIndex;
           gl.bindTexture(gl_target, gl_texture);
@@ -1671,11 +1672,19 @@ export class Device_GL implements SwapChain, Device {
 
           this.debugGroupStatisticsTextureBind();
         } else {
+          const samplerEntry = {
+            ...binding,
+            ...defaultBindingLayoutSamplerDescriptor,
+          };
+          const { dimension, formatKind } = samplerEntry;
+          const gl_target = translateTextureDimension(dimension);
+
           gl.bindTexture(
             gl_target,
             this.getFallbackTexture({
               gl_target,
-              formatKind: getFormatSamplerKind(format),
+              formatKind,
+              ...samplerEntry,
             }),
           );
         }
