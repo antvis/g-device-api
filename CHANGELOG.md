@@ -1,5 +1,15 @@
 # @strawberry-vis/g-device-api
 
+## 1.2.0
+
+### Minor Changes
+
+-   991faea: Support stencil front & back.
+
+### Patch Changes
+
+-   d74a956: Set default offset of IndexBuffer.
+
 ## 1.1.3
 
 ### Patch Changes

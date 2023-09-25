@@ -532,15 +532,23 @@ export interface AttachmentState {
   alphaBlendState: ChannelBlendState;
 }
 
+export interface StencilFaceState {
+  failOp: StencilOp;
+  passOp: StencilOp;
+  depthFailOp: StencilOp;
+  compare?: CompareFunction;
+}
+
 export interface MegaStateDescriptor {
   attachmentsState: AttachmentState[];
   blendConstant?: Color;
   depthCompare?: CompareFunction;
   depthWrite?: boolean;
-  stencilCompare?: CompareFunction;
+  stencilFront?: Partial<StencilFaceState>;
+  stencilBack?: Partial<StencilFaceState>;
   stencilWrite?: boolean;
-  stencilPassOp?: StencilOp;
-  stencilRef?: number;
+  // stencilWriteMask?: number;
+  // stencilReadMask?: number;
   cullMode?: CullMode;
   frontFace?: FrontFace;
   polygonOffset?: boolean;

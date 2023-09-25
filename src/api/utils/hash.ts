@@ -12,6 +12,7 @@ import type {
   RenderPipelineDescriptor,
   SamplerBinding,
   SamplerDescriptor,
+  StencilFaceState,
   VertexAttributeDescriptor,
 } from '../interfaces';
 import { colorEqual } from './color';
@@ -103,6 +104,18 @@ function attachmentStateEquals(
   return true;
 }
 
+export function stencilFaceStateEquals(
+  a: Readonly<Partial<StencilFaceState>>,
+  b: Readonly<Partial<StencilFaceState>>,
+): boolean {
+  return (
+    a.compare == b.compare &&
+    a.depthFailOp === b.depthFailOp &&
+    a.failOp === b.failOp &&
+    a.passOp === b.passOp
+  );
+}
+
 function megaStateDescriptorEquals(
   a: MegaStateDescriptor,
   b: MegaStateDescriptor,
@@ -118,13 +131,24 @@ function megaStateDescriptorEquals(
   )
     return false;
 
+  if (
+    a.stencilFront &&
+    b.stencilFront &&
+    !stencilFaceStateEquals(a.stencilFront, b.stencilFront)
+  )
+    return false;
+
+  if (
+    a.stencilBack &&
+    b.stencilBack &&
+    !stencilFaceStateEquals(a.stencilBack, b.stencilBack)
+  )
+    return false;
+
   return (
     a.depthCompare === b.depthCompare &&
     a.depthWrite === b.depthWrite &&
-    a.stencilCompare === b.stencilCompare &&
     a.stencilWrite === b.stencilWrite &&
-    a.stencilPassOp === b.stencilPassOp &&
-    a.stencilRef === b.stencilRef &&
     a.cullMode === b.cullMode &&
     a.frontFace === b.frontFace &&
     a.polygonOffset === b.polygonOffset

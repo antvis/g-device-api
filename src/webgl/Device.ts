@@ -38,6 +38,7 @@ import {
   VendorInfo,
   VertexBufferDescriptor,
   defaultBindingLayoutSamplerDescriptor,
+  stencilFaceStateEquals,
 } from '../api';
 import {
   assert,
@@ -238,7 +239,7 @@ export class Device_GL implements SwapChain, Device {
       this.OES_texture_float = gl.getExtension('OES_texture_float');
       // this.WEBGL_draw_buffers = gl.getExtension('WEBGL_draw_buffers');
       // @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
-      // this.WEBGL_depth_texture = gl.getExtension('WEBGL_depth_texture');
+      this.WEBGL_depth_texture = gl.getExtension('WEBGL_depth_texture');
       // @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_frag_depth
       gl.getExtension('EXT_frag_depth');
       // @see https://developer.mozilla.org/en-US/docs/Web/API/OES_element_index_uint
@@ -1911,18 +1912,65 @@ export class Device_GL implements SwapChain, Device {
       currentMegaState.stencilWrite = newMegaState.stencilWrite;
     }
 
-    if (currentMegaState.stencilPassOp !== newMegaState.stencilPassOp) {
-      gl.stencilOp(gl.KEEP, gl.KEEP, newMegaState.stencilPassOp);
-      currentMegaState.stencilPassOp = newMegaState.stencilPassOp;
+    if (
+      !stencilFaceStateEquals(
+        currentMegaState.stencilFront,
+        newMegaState.stencilFront,
+      )
+    ) {
+      const { passOp, failOp, depthFailOp, compare } =
+        newMegaState.stencilFront;
+
+      if (
+        currentMegaState.stencilFront.passOp !== passOp ||
+        currentMegaState.stencilFront.failOp !== failOp ||
+        currentMegaState.stencilFront.depthFailOp !== depthFailOp
+      ) {
+        // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOpSeparate
+        gl.stencilOpSeparate(gl.FRONT, failOp, depthFailOp, passOp);
+        currentMegaState.stencilFront.passOp = passOp;
+        currentMegaState.stencilFront.failOp = failOp;
+        currentMegaState.stencilFront.depthFailOp = depthFailOp;
+      }
+
+      if (currentMegaState.stencilFront.compare !== compare) {
+        this.setStencilReference(0);
+        currentMegaState.stencilFront.compare = compare;
+      }
     }
 
     if (
-      currentMegaState.stencilRef !== newMegaState.stencilRef ||
-      currentMegaState.stencilCompare !== newMegaState.stencilCompare
+      !stencilFaceStateEquals(
+        currentMegaState.stencilBack,
+        newMegaState.stencilBack,
+      )
     ) {
-      currentMegaState.stencilCompare = newMegaState.stencilCompare;
-      this.setStencilReference(newMegaState.stencilRef);
+      const { passOp, failOp, depthFailOp, compare } = newMegaState.stencilBack;
+
+      if (
+        currentMegaState.stencilBack.passOp !== passOp ||
+        currentMegaState.stencilBack.failOp !== failOp ||
+        currentMegaState.stencilBack.depthFailOp !== depthFailOp
+      ) {
+        // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/stencilOpSeparate
+        gl.stencilOpSeparate(gl.BACK, failOp, depthFailOp, passOp);
+        currentMegaState.stencilBack.passOp = passOp;
+        currentMegaState.stencilBack.failOp = failOp;
+        currentMegaState.stencilBack.depthFailOp = depthFailOp;
+      }
+
+      if (currentMegaState.stencilBack.compare !== compare) {
+        this.setStencilReference(0);
+        currentMegaState.stencilBack.compare = compare;
+      }
     }
+
+    // if (
+    //   currentMegaState.stencilCompare !== newMegaState.stencilCompare
+    // ) {
+    //   currentMegaState.stencilCompare = newMegaState.stencilCompare;
+    //   this.setStencilReference(newMegaState.stencilRef);
+    // }
 
     if (currentMegaState.cullMode !== newMegaState.cullMode) {
       if (currentMegaState.cullMode === CullMode.NONE) {
@@ -2087,7 +2135,7 @@ export class Device_GL implements SwapChain, Device {
         const buffer = indexBuffer.buffer as Buffer_GL;
         assert(buffer.usage === BufferUsage.INDEX);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getPlatformBuffer(buffer));
-        this.currentIndexBufferByteOffset = indexBuffer.offset;
+        this.currentIndexBufferByteOffset = indexBuffer.offset || 0;
       } else {
         this.currentIndexBufferByteOffset = null;
       }
@@ -2439,8 +2487,15 @@ export class Device_GL implements SwapChain, Device {
     if (isNil(this.currentStencilRef)) {
       return;
     }
-    this.gl.stencilFunc(
-      this.currentMegaState.stencilCompare,
+    this.gl.stencilFuncSeparate(
+      GL.FRONT,
+      this.currentMegaState.stencilFront.compare,
+      this.currentStencilRef,
+      0xff,
+    );
+    this.gl.stencilFuncSeparate(
+      GL.BACK,
+      this.currentMegaState.stencilBack.compare,
       this.currentStencilRef,
       0xff,
     );
