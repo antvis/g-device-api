@@ -549,9 +549,21 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
       fragmentStage = program.fragmentStage;
     if (vertexStage === null || fragmentStage === null) return;
 
+    const { stencilBack, stencilFront, ...rest } =
+      descriptor.megaStateDescriptor;
+
+    const copied = copyMegaState(defaultMegaState);
     descriptor.megaStateDescriptor = {
-      ...copyMegaState(defaultMegaState),
-      ...descriptor.megaStateDescriptor,
+      ...copied,
+      stencilBack: {
+        ...copied.stencilBack,
+        ...stencilBack,
+      },
+      stencilFront: {
+        ...copied.stencilFront,
+        ...stencilFront,
+      },
+      ...rest,
     };
 
     const primitive = translatePrimitiveState(

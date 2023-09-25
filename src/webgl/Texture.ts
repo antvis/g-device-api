@@ -12,6 +12,7 @@ import {
   getFormatSamplerKind,
   getFormatTypeFlags,
   isPowerOfTwo,
+  isTypedArray,
 } from '../api';
 import type { Device_GL } from './Device';
 import { ResourceBase_GL } from './ResourceBase';
@@ -223,8 +224,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
       this.gl_target === GL.TEXTURE_3D ||
       this.gl_target === GL.TEXTURE_2D_ARRAY;
     const isCube = this.gl_target === GL.TEXTURE_CUBE_MAP;
-    // @ts-ignore
-    const isTypedArray = levelDatas[0].buffer;
+    const isTA = isTypedArray(levelDatas[0]);
 
     this.device.setActiveTexture(gl.TEXTURE0);
     this.device['currentTextures'][0] = null;
@@ -233,7 +233,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
 
     let width: number;
     let height: number;
-    if (isTypedArray) {
+    if (isTA) {
       width = this.width;
       height = this.height;
     } else {
@@ -312,7 +312,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
           }
         } else {
           // WebGL1: upload Array & Image separately
-          if (isTypedArray) {
+          if (isTA) {
             (gl as WebGLRenderingContext).texImage2D(
               gl_target,
               lod,
