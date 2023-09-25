@@ -2087,7 +2087,7 @@ export class Device_GL implements SwapChain, Device {
         const buffer = indexBuffer.buffer as Buffer_GL;
         assert(buffer.usage === BufferUsage.INDEX);
         gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, getPlatformBuffer(buffer));
-        this.currentIndexBufferByteOffset = indexBuffer.offset;
+        this.currentIndexBufferByteOffset = indexBuffer.offset || 0;
       } else {
         this.currentIndexBufferByteOffset = null;
       }
