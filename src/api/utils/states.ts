@@ -3,6 +3,7 @@ import type {
   ChannelBlendState,
   MegaStateDescriptor,
   SamplerBinding,
+  StencilFaceState,
 } from '../interfaces';
 import {
   BlendFactor,
@@ -114,6 +115,21 @@ function copyChannelBlendState(
   dst.blendMode = src.blendMode;
 }
 
+export function copyStencilFaceState(
+  dst: Partial<StencilFaceState> | undefined,
+  src: Partial<StencilFaceState>,
+): Partial<StencilFaceState> {
+  if (dst === undefined) {
+    dst = {};
+  }
+
+  dst.compare = src.compare;
+  dst.depthFailOp = src.depthFailOp;
+  dst.passOp = src.passOp;
+  dst.failOp = src.failOp;
+  return dst;
+}
+
 export function copyAttachmentState(
   dst: AttachmentState | undefined,
   src: AttachmentState,
@@ -155,13 +171,13 @@ export function setMegaStateFlags(
 
   dst.depthCompare = fallbackUndefined(src.depthCompare, dst.depthCompare);
   dst.depthWrite = fallbackUndefined(src.depthWrite, dst.depthWrite);
-  dst.stencilCompare = fallbackUndefined(
-    src.stencilCompare,
-    dst.stencilCompare,
-  );
   dst.stencilWrite = fallbackUndefined(src.stencilWrite, dst.stencilWrite);
-  dst.stencilPassOp = fallbackUndefined(src.stencilPassOp, dst.stencilPassOp);
-  dst.stencilRef = fallbackUndefined(src.stencilRef, dst.stencilRef);
+  if (dst.stencilFront && src.stencilFront) {
+    copyStencilFaceState(dst.stencilFront, src.stencilFront);
+  }
+  if (dst.stencilBack && src.stencilBack) {
+    copyStencilFaceState(dst.stencilBack, src.stencilBack);
+  }
   dst.cullMode = fallbackUndefined(src.cullMode, dst.cullMode);
   dst.frontFace = fallbackUndefined(src.frontFace, dst.frontFace);
   dst.polygonOffset = fallbackUndefined(src.polygonOffset, dst.polygonOffset);
@@ -173,6 +189,8 @@ export function copyMegaState(src: MegaStateDescriptor): MegaStateDescriptor {
   dst.attachmentsState = [];
   copyAttachmentsState(dst.attachmentsState, src.attachmentsState);
   dst.blendConstant = dst.blendConstant && colorNewCopy(dst.blendConstant);
+  dst.stencilFront = copyStencilFaceState(undefined, src.stencilFront);
+  dst.stencilBack = copyStencilFaceState(undefined, src.stencilBack);
   return dst;
 }
 
@@ -231,16 +249,22 @@ export const defaultMegaState: MegaStateDescriptor = {
       alphaBlendState: defaultBlendState,
     },
   ],
-
   blendConstant: colorNewCopy(TransparentBlack),
   depthWrite: true,
   depthCompare: CompareFunction.LEQUAL,
-  // depthCompare: reverseDepthForCompareFunction(CompareFunction.LessEqual),
-  // stencilCompare: CompareFunction.Never,
-  stencilCompare: CompareFunction.ALWAYS,
   stencilWrite: false,
-  stencilPassOp: StencilOp.KEEP,
-  stencilRef: 0,
+  stencilFront: {
+    compare: CompareFunction.ALWAYS,
+    passOp: StencilOp.KEEP,
+    depthFailOp: StencilOp.KEEP,
+    failOp: StencilOp.KEEP,
+  },
+  stencilBack: {
+    compare: CompareFunction.ALWAYS,
+    passOp: StencilOp.KEEP,
+    depthFailOp: StencilOp.KEEP,
+    failOp: StencilOp.KEEP,
+  },
   cullMode: CullMode.NONE,
   frontFace: FrontFace.CCW,
   polygonOffset: false,

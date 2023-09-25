@@ -1,5 +1,5 @@
 import { GPUTextureUsage } from './constants';
-import type {
+import {
   Buffer,
   Sampler,
   MegaStateDescriptor,
@@ -7,6 +7,7 @@ import type {
   ChannelBlendState,
   QueryPool,
   SamplerBinding,
+  StencilOp,
 } from '../api';
 import {
   BufferUsage,
@@ -354,6 +355,23 @@ export function translateCompareFunction(
   else throw new Error('whoops');
 }
 
+export function translateStencilOperation(
+  stencilOp: StencilOp,
+): GPUStencilOperation {
+  if (stencilOp === StencilOp.KEEP) return 'keep';
+  else if (stencilOp === StencilOp.REPLACE) return 'replace';
+  else if (stencilOp === StencilOp.ZERO) return 'zero';
+  else if (stencilOp === StencilOp.DECREMENT_CLAMP) return 'decrement-clamp';
+  else if (stencilOp === StencilOp.DECREMENT_WRAP) return 'decrement-wrap';
+  else if (stencilOp === StencilOp.INCREMENT_CLAMP) return 'increment-clamp';
+  else if (stencilOp === StencilOp.INCREMENT_WRAP) return 'increment-wrap';
+  else if (stencilOp === StencilOp.INVERT) return 'invert';
+  else throw new Error('whoops');
+}
+
+/**
+ * @see https://www.w3.org/TR/webgpu/#dictdef-gpudepthstencilstate
+ */
 export function translateDepthStencilState(
   format: Format | null,
   megaStateDescriptor: MegaStateDescriptor,
@@ -361,11 +379,40 @@ export function translateDepthStencilState(
   if (isNil(format)) return undefined;
 
   return {
+    /**
+     * @see https://www.w3.org/TR/webgpu/#dom-gpudepthstencilstate-format
+     */
     format: translateTextureFormat(format),
     depthWriteEnabled: !!megaStateDescriptor.depthWrite,
     depthCompare: translateCompareFunction(megaStateDescriptor.depthCompare),
     depthBias: megaStateDescriptor.polygonOffset ? 1 : 0,
     depthBiasSlopeScale: megaStateDescriptor.polygonOffset ? 1 : 0,
+    stencilFront: {
+      compare: translateCompareFunction(
+        megaStateDescriptor.stencilFront.compare,
+      ),
+      passOp: translateStencilOperation(
+        megaStateDescriptor.stencilFront.passOp,
+      ),
+      failOp: translateStencilOperation(
+        megaStateDescriptor.stencilFront.failOp,
+      ),
+      depthFailOp: translateStencilOperation(
+        megaStateDescriptor.stencilFront.depthFailOp,
+      ),
+    },
+    stencilBack: {
+      compare: translateCompareFunction(
+        megaStateDescriptor.stencilBack.compare,
+      ),
+      passOp: translateStencilOperation(megaStateDescriptor.stencilBack.passOp),
+      failOp: translateStencilOperation(megaStateDescriptor.stencilBack.failOp),
+      depthFailOp: translateStencilOperation(
+        megaStateDescriptor.stencilBack.depthFailOp,
+      ),
+    },
+    stencilReadMask: 1,
+    stencilWriteMask: 1,
   };
 }
 
