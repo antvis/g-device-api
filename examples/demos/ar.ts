@@ -14,7 +14,7 @@ import {
   CompareFunction,
 } from '../../src';
 import { initExample } from './utils';
-import { vec3, mat4 } from 'gl-matrix';
+import { vec3, mat4, quat } from 'gl-matrix';
 import {
   cubeVertexArray,
   cubeVertexSize,
@@ -160,6 +160,14 @@ void main() {
     const referenceSpace = await session.requestReferenceSpace('local');
 
     const modelViewProjectionMatrix = mat4.create();
+    const modelViewMatrix = mat4.create();
+    const modelMatrix = mat4.fromRotationTranslationScale(
+      mat4.create(),
+      quat.create(),
+      vec3.fromValues(0, 0, 0),
+      vec3.fromValues(0.2, 0.2, 0.2),
+    );
+
     const onXRFrame: XRFrameRequestCallback = (time, frame) => {
       // Queue up the next draw request.
       session.requestAnimationFrame(onXRFrame);
@@ -182,7 +190,13 @@ void main() {
         // Use the view's transform matrix and projection matrix
         const viewMatrix = view.transform.matrix;
         const projectionMatrix = view.projectionMatrix;
-        mat4.multiply(modelViewProjectionMatrix, projectionMatrix, viewMatrix);
+
+        mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
+        mat4.multiply(
+          modelViewProjectionMatrix,
+          projectionMatrix,
+          modelViewMatrix,
+        );
 
         uniformBuffer.setSubData(
           0,
