@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.2.2
+
+### Patch Changes
+
+-   d627fe8: Size in storage bindings can be undefined.
+
 ## 1.2.1
 
 ### Patch Changes
