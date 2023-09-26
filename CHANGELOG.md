@@ -1,5 +1,12 @@
 # @antv/g-device-api
 
+## 1.2.3
+
+### Patch Changes
+
+-   14f2b4d: Add xrCompatible to device contribution.
+-   14f2b4d: Uniform binding can omit size.
+
 ## 1.2.2
 
 ### Patch Changes
