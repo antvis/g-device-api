@@ -1,4 +1,4 @@
-# @strawberry-vis/g-device-api
+# @antv/g-device-api
 
 ## 1.2.0
 
