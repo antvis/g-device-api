@@ -1606,7 +1606,7 @@ export class Device_GL implements SwapChain, Device {
       const index = bindingLayoutTable.firstUniformBuffer + i;
       const buffer = binding.buffer as Buffer_GL;
       const byteOffset = binding.offset || 0;
-      const byteSize = binding.size;
+      const byteSize = binding.size || buffer.byteSize;
       if (
         buffer !== this.currentUniformBuffers[index] ||
         byteOffset !== this.currentUniformBufferByteOffsets[index] ||

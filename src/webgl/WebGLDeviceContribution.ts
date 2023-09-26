@@ -3,6 +3,7 @@ import { Device_GL } from './Device';
 
 export interface WebGLRendererPluginOptions {
   targets: ('webgl1' | 'webgl2')[];
+  xrCompatible: boolean;
   onContextCreationError: (e: Event) => void;
   onContextLost: (e: Event) => void;
   onContextRestored: (e: Event) => void;
@@ -12,7 +13,8 @@ export class WebGLDeviceContribution implements DeviceContribution {
   constructor(private pluginOptions: Partial<WebGLRendererPluginOptions>) {}
 
   async createSwapChain($canvas: HTMLCanvasElement) {
-    const options: WebGLContextAttributes = {
+    const { targets, xrCompatible } = this.pluginOptions;
+    const options: WebGLContextAttributes & { xrCompatible: boolean } = {
       // alpha: true,
       antialias: false,
       // @see https://stackoverflow.com/questions/27746091/preservedrawingbuffer-false-is-it-worth-the-effort
@@ -21,10 +23,9 @@ export class WebGLDeviceContribution implements DeviceContribution {
       stencil: true,
       // @see https://webglfundamentals.org/webgl/lessons/webgl-and-alpha.html
       premultipliedAlpha: true,
+      xrCompatible,
     };
     this.handleContextEvents($canvas);
-
-    const { targets } = this.pluginOptions;
 
     let gl: WebGLRenderingContext | WebGL2RenderingContext;
     if (targets.includes('webgl2')) {
