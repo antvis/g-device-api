@@ -5,7 +5,7 @@ It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](ht
 
 -   [API](#api)
 -   [Shader Language](#shader-language)
--   [Observable Examples](https://observablehq.com/@strawberry-vis/gallery)
+-   [Observable Examples](https://observablehq.com/@antv/g-device-api)
 
 ## Installing
 

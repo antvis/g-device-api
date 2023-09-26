@@ -10,4 +10,5 @@ export { TexturedCube } from './textured-cube';
 export { Sampler } from './sampler';
 export { InstancedCubes } from './instanced-cubes';
 export { Cubemap } from './cubemap';
+export { Add2Vectors } from './add-2-vectors';
 export { ComputeBoids } from './compute-boids';
