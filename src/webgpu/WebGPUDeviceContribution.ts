@@ -4,6 +4,7 @@ import { Device_WebGPU } from './Device';
 
 export interface WebGPUDeviceOptions {
   shaderCompilerPath: string;
+  xrCompatible: boolean;
   onContextLost: () => void;
 }
 
@@ -16,8 +17,11 @@ export class WebGPUDeviceContribution implements DeviceContribution {
 
     let adapter = null;
     try {
+      const { xrCompatible } = this.pluginOptions;
       // eslint-disable-next-line
-      adapter = await (globalThis.navigator as any).gpu.requestAdapter();
+      adapter = await (globalThis.navigator as any).gpu.requestAdapter({
+        xrCompatible,
+      });
     } catch (e) {
       console.log(e);
     }

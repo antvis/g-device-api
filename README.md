@@ -206,9 +206,9 @@ interface TextureDescriptor {
 -   format `required` The format of this GPUTexture.
 -   width `required` The width of this GPUTexture.
 -   height `required` The height of this GPUTexture.
--   depthOrArrayLayers `optional` The depth or layer count of this GPUTexture. Default to `1`.
--   dimension `optional` The dimension of the set of texel for each of this GPUTexture's subresources. Default to `TextureDimension.TEXTURE_2D`
--   mipLevelCount `optional` The number of mip levels of this GPUTexture. Default to `1`.
+-   depthOrArrayLayers `optional` The depth or layer count of this GPUTexture. Defaulting to `1`.
+-   dimension `optional` The dimension of the set of texel for each of this GPUTexture's subresources. Defaulting to `TextureDimension.TEXTURE_2D`
+-   mipLevelCount `optional` The number of mip levels of this GPUTexture. Defaulting to `1`.
 -   pixelStore `optional` Specifies the [pixel storage modes](https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei) in WebGL.
     -   packAlignment Packing of pixel data into memory. `gl.PACK_ALIGNMENT`
     -   unpackAlignment Unpacking of pixel data from memory. `gl.UNPACK_ALIGNMENT`
@@ -326,6 +326,9 @@ createRenderTargetFromTexture: (texture: Texture) => RenderTarget;
 createProgram: (program: ProgramDescriptor) => Program;
 ```
 
+`wgsl` will be used directly in WebGPU while `glsl` will be compiled internally.
+Since WebGL doesn't support compute shader, `compute` is only available in WebGPU.
+
 ```ts
 interface ProgramDescriptor {
     vertex?: {
@@ -355,6 +358,22 @@ interface BindingsDescriptor {
     uniformBufferBindings?: BufferBinding[];
     samplerBindings?: SamplerBinding[];
     storageBufferBindings?: BufferBinding[];
+}
+```
+
+`BufferBinding` has the following properties:
+
+-   binding `required` Should match the `binding` in shader.
+-   buffer `required`
+-   offset `optional` The offset, in bytes, from the beginning of buffer to the beginning of the range exposed to the shader by the buffer binding. Defaulting to `0`.
+-   size `optional` The size, in bytes, of the buffer binding. If not provided, specifies the range starting at offset and ending at the end of buffer.
+
+```ts
+interface BufferBinding {
+    binding: number;
+    buffer: Buffer;
+    offset?: number;
+    size?: number;
 }
 ```
 
@@ -432,8 +451,53 @@ queryResultOcclusion(dstOffs: number): boolean | null
 
 ### <a id="createRenderPipeline" />createRenderPipeline
 
+A `RenderPipeline` is a kind of pipeline that controls the vertex and fragment shader stages.
+
 ```ts
 createRenderPipeline: (descriptor: RenderPipelineDescriptor) => RenderPipeline;
+```
+
+The descriptor is as follows:
+
+-   colorAttachmentFormats `required` The formats of color attachment.
+-   topology `optional` The type of primitive to be constructed from the vertex inputs. Defaulting to `TRIANGLES`:
+-   megaStateDescriptor `optional`
+-   depthStencilAttachmentFormat `optional` The format of depth & stencil attachment.
+-   sampleCount `optional` Used in MSAA, defaulting to `1`.
+
+```ts
+interface RenderPipelineDescriptor extends PipelineDescriptor {
+    topology?: PrimitiveTopology;
+    megaStateDescriptor?: MegaStateDescriptor;
+    colorAttachmentFormats: (Format | null)[];
+    depthStencilAttachmentFormat?: Format | null;
+    sampleCount?: number;
+}
+```
+
+```ts
+enum PrimitiveTopology {
+    POINTS,
+    TRIANGLES,
+    TRIANGLE_STRIP,
+    LINES,
+    LINE_STRIP,
+}
+```
+
+```ts
+interface MegaStateDescriptor {
+    attachmentsState: AttachmentState[];
+    blendConstant?: Color;
+    depthCompare?: CompareFunction;
+    depthWrite?: boolean;
+    stencilFront?: Partial<StencilFaceState>;
+    stencilBack?: Partial<StencilFaceState>;
+    stencilWrite?: boolean;
+    cullMode?: CullMode;
+    frontFace?: FrontFace;
+    polygonOffset?: boolean;
+}
 ```
 
 ### <a id="createComputePipeline" />createComputePipeline
@@ -454,6 +518,29 @@ interface PipelineDescriptor {
 
 ### <a id="createRenderPass" />createRenderPass
 
+A RenderPass is usually created at the beginning of each frame.
+
+```ts
+createRenderPass: (renderPassDescriptor: RenderPassDescriptor) => RenderPass;
+```
+
+```ts
+export interface RenderPassDescriptor {
+    colorAttachment: (RenderTarget | null)[];
+    colorAttachmentLevel?: number[];
+    colorClearColor?: (Color | 'load')[];
+    colorResolveTo: (Texture | null)[];
+    colorResolveToLevel?: number[];
+    colorStore?: boolean[];
+    depthStencilAttachment?: RenderTarget | null;
+    depthStencilResolveTo?: Texture | null;
+    depthStencilStore?: boolean;
+    depthClearValue?: number | 'load';
+    stencilClearValue?: number | 'load';
+    occlusionQueryPool?: QueryPool | null;
+}
+```
+
 ### <a id="createComputePass" />createComputePass
 
 ⚠️Only WebGPU support.
@@ -463,6 +550,8 @@ createComputePass: () => ComputePass;
 ```
 
 ### <a id="submitPass" />submitPass
+
+Schedules the execution of the command buffers by the GPU on this queue.
 
 ```ts
 submitPass(o: RenderPass | ComputePass): void;
@@ -611,8 +700,8 @@ We can set data in buffer with this method:
 
 -   dstByteOffset `required` Offset of dest buffer in bytes.
 -   src `required` Source buffer data, must use Uint8Array.
--   srcByteOffset `optional` Offset of src buffer in bytes. Default to `0`.
--   byteLength `optional` Default to the whole length of the src buffer.
+-   srcByteOffset `optional` Offset of src buffer in bytes. Defaulting to `0`.
+-   byteLength `optional` Defaulting to the whole length of the src buffer.
 
 ```ts
 setSubData: (
@@ -632,7 +721,7 @@ One texture consists of one or more texture subresources, each uniquely identifi
 We can set data in buffer with this method:
 
 -   data `required` Array of TexImageSource or ArrayBufferView.
--   lod `optional` Lod. Default to `0`.
+-   lod `optional` Lod. Defaulting to `0`.
 
 ```ts
 setImageData: (
@@ -954,10 +1043,10 @@ readTextureSync: (
 Read buffer data.
 
 -   src `required` Source buffer.
--   srcOffset `optional` Offset in bytes of src buffer. Default to `0`.
+-   srcOffset `optional` Offset in bytes of src buffer. Defaulting to `0`.
 -   dst `optional` Dest buffer view.
--   dstOffset `optional` Offset in bytes of dst buffer. Default to `0`.
--   length `optional` Length in bytes of dst buffer. Default to its whole size.
+-   dstOffset `optional` Offset in bytes of dst buffer. Defaulting to `0`.
+-   length `optional` Length in bytes of dst buffer. Defaulting to its whole size.
 
 ```ts
 readBuffer: (

@@ -32,6 +32,7 @@
   ],
   "scripts": {
     "dev": "vite dev",
+    "site": "vite build",
     "build": "rollup -c",
     "clean": "rimraf dist",
     "eslint": "eslint --ext .ts,.js ./src --quiet",
@@ -69,6 +70,7 @@
     "@types/jest": "^26.0.24",
     "@types/pixelmatch": "^5.2.4",
     "@types/pngjs": "^6.0.1",
+    "@types/webxr": "0.5.5",
     "@types/offscreencanvas": "^2019.6.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
