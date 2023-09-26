@@ -44,11 +44,10 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
       for (let i = 0; i < storageBufferBindings.length; i++) {
         const { binding, size, offset, buffer } =
           descriptor.storageBufferBindings[i];
-        assert(size > 0);
         const gpuBufferBinding: GPUBufferBinding = {
           buffer: getPlatformBuffer(buffer),
           offset: offset ?? 0,
-          size: size,
+          size,
         };
         gpuBindGroupEntries[0].push({
           binding: binding ?? numBindings++,
