@@ -14,17 +14,20 @@ export async function initExample(
   ) => Promise<() => void>,
   params: {
     targets: ('webgl1' | 'webgl2' | 'webgpu')[];
+    xrCompatible?: boolean;
     default: 'webgl1' | 'webgl2' | 'webgpu';
   },
 ) {
   const deviceContributionWebGL1 = new WebGLDeviceContribution({
     targets: ['webgl1'],
+    xrCompatible: params.xrCompatible,
     onContextCreationError: () => {},
     onContextLost: () => {},
     onContextRestored(e) {},
   });
   const deviceContributionWebGL2 = new WebGLDeviceContribution({
     targets: ['webgl2', 'webgl1'],
+    xrCompatible: params.xrCompatible,
     onContextCreationError: () => {},
     onContextLost: () => {},
     onContextRestored(e) {},
