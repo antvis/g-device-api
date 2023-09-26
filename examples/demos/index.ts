@@ -4,6 +4,7 @@ export { DrawIndex } from './draw-index';
 export { MSAA } from './msaa';
 export { RotatingCube } from './rotating-cube';
 export { Stencil } from './stencil';
+export { Scissor } from './scissor';
 export { TwoCubes } from './two-cubes';
 export { TexturedCube } from './textured-cube';
 export { Sampler } from './sampler';

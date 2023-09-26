@@ -550,7 +550,7 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     if (vertexStage === null || fragmentStage === null) return;
 
     const { stencilBack, stencilFront, ...rest } =
-      descriptor.megaStateDescriptor;
+      descriptor.megaStateDescriptor || {};
 
     const copied = copyMegaState(defaultMegaState);
     descriptor.megaStateDescriptor = {

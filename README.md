@@ -1,4 +1,4 @@
-# @strawberry-vis/g-device-api
+# @antv/g-device-api
 
 This is a set of Device API also known as the hardware adaptation layer(HAL).
 It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](https://github.com/magcius/noclip.website).
@@ -10,7 +10,7 @@ It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](ht
 ## Installing
 
 ```bash
-npm install @strawberry-vis/g-device-api
+npm install @antv/g-device-api
 ```
 
 ## <a id='api' />API Reference
@@ -92,7 +92,7 @@ import {
     BufferUsage,
     WebGLDeviceContribution,
     WebGPUDeviceContribution,
-} from '@strawberry-vis/g-device-api';
+} from '@antv/g-device-api';
 
 // Create a WebGL based device contribution.
 const deviceContribution = new WebGLDeviceContribution({
