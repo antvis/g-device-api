@@ -28,8 +28,7 @@ export async function render(
 ) {
   // create swap chain and get device
   const swapChain = await deviceContribution.createSwapChain($canvas);
-  // TODO: resize
-  swapChain.configureSwapChain($canvas.width, $canvas.height);
+
   const device = swapChain.getDevice();
   const gl = device['gl'];
 
@@ -172,10 +171,20 @@ void main() {
       // Queue up the next draw request.
       session.requestAnimationFrame(onXRFrame);
 
-      // Bind the graphics framebuffer to the baseLayer's framebuffer
-      gl.bindFramebuffer(
-        gl.FRAMEBUFFER,
-        session.renderState.baseLayer!.framebuffer,
+      // Assumed to be a XRWebGLLayer for now.
+      let layer = session.renderState.baseLayer;
+      if (!layer) {
+        layer = session.renderState.layers![0] as XRWebGLLayer;
+      } else {
+        // Bind the graphics framebuffer to the baseLayer's framebuffer.
+        // Only baseLayer has framebuffer and we need to bind it, even if it is null (for inline sessions).
+        gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+      }
+
+      swapChain.configureSwapChain(
+        $canvas.width,
+        $canvas.height,
+        layer.framebuffer,
       );
 
       // Retrieve the pose of the device.
@@ -260,6 +269,6 @@ export async function AR($container: HTMLDivElement) {
   return initExample($container, render, {
     targets: ['webgl1', 'webgl2'],
     xrCompatible: true,
-    default: 'webgl2',
+    default: 'webgl1',
   });
 }
