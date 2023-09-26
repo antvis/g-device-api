@@ -33,6 +33,7 @@
   "scripts": {
     "dev": "vite dev",
     "deploy": "vite build",
+    "preview": "vite preview",
     "build": "rollup -c",
     "clean": "rimraf dist",
     "eslint": "eslint --ext .ts,.js ./src --quiet",

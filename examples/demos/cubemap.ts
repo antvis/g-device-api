@@ -26,6 +26,18 @@ import {
   cubePositionOffset,
   cubeUVOffset,
 } from '../meshes/cube';
+// @ts-ignore
+import posx from '../public/images/posx.jpg';
+// @ts-ignore
+import negx from '../public/images/negx.jpg';
+// @ts-ignore
+import posy from '../public/images/posy.jpg';
+// @ts-ignore
+import negy from '../public/images/negy.jpg';
+// @ts-ignore
+import posz from '../public/images/posz.jpg';
+// @ts-ignore
+import negz from '../public/images/negz.jpg';
 
 /**
  * @see https://webgpu.github.io/webgpu-samples/samples/texturedCube
@@ -91,14 +103,7 @@ void main() {
 
   // The order of the array layers is [+X, -X, +Y, -Y, +Z, -Z]
   const imageBitmaps = await Promise.all(
-    [
-      '/images/posx.jpg',
-      '/images/negx.jpg',
-      '/images/posy.jpg',
-      '/images/negy.jpg',
-      '/images/posz.jpg',
-      '/images/negz.jpg',
-    ].map(async (src) => loadImage(src)),
+    [posx, negx, posy, negy, posz, negz].map(async (src) => loadImage(src)),
   );
 
   const texture = device.createTexture({
