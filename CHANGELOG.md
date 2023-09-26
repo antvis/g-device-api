@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.2.1
+
+### Patch Changes
+
+-   f948404: Use default mega state in WebGPU device.
+
 ## 1.2.0
 
 ### Minor Changes
