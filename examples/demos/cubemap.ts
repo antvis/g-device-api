@@ -183,7 +183,6 @@ void main() {
       {
         binding: 0,
         buffer: uniformBuffer,
-        size: 16 * 4,
       },
     ],
     samplerBindings: [

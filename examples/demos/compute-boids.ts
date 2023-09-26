@@ -251,19 +251,16 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
         {
           binding: 0,
           buffer: uniformBuffer,
-          size: 7 * Float32Array.BYTES_PER_ELEMENT,
         },
       ],
       storageBufferBindings: [
         {
           binding: 1,
           buffer: particleBuffers[i],
-          size: initialParticleData.byteLength,
         },
         {
           binding: 2,
           buffer: particleBuffers[(i + 1) % 2],
-          size: initialParticleData.byteLength,
         },
       ],
     });
