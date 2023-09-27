@@ -6,11 +6,7 @@ export async function render(
   deviceContribution: DeviceContribution,
   $canvas: HTMLCanvasElement,
 ) {
-  // create swap chain and get device
-  const swapChain = await deviceContribution.createSwapChain($canvas);
-
-  const device = swapChain.getDevice();
-  const gl = device['gl'];
+  const gl = $canvas.getContext('webgl', { xrCompatible: true })!;
 
   const activateXR = async () => {
     const scene = new THREE.Scene();
