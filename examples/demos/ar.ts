@@ -139,14 +139,14 @@ export async function render(
       usage: TextureUsage.RENDER_TARGET,
     }),
   );
-  const mainDepthRT = device.createRenderTargetFromTexture(
-    device.createTexture({
-      format: Format.D24_S8,
-      width: $canvas.width,
-      height: $canvas.height,
-      usage: TextureUsage.RENDER_TARGET,
-    }),
-  );
+  // const mainDepthRT = device.createRenderTargetFromTexture(
+  //   device.createTexture({
+  //     format: Format.D24_S8,
+  //     width: $canvas.width,
+  //     height: $canvas.height,
+  //     usage: TextureUsage.RENDER_TARGET,
+  //   }),
+  // );
 
   const activateXR = async () => {
     // Initialize a WebXR session using "immersive-ar".
@@ -158,8 +158,8 @@ export async function render(
         antialias: false,
         depth: false,
       }),
-      depthNear: 5,
-      depthFar: 1000000.0,
+      // depthNear: 5,
+      // depthFar: 1000000.0,
     });
 
     // A 'local' reference space has a native origin that is located
@@ -171,7 +171,7 @@ export async function render(
     const modelMatrix = mat4.fromRotationTranslationScale(
       mat4.create(),
       quat.create(),
-      vec3.fromValues(0, 0, 8),
+      vec3.fromValues(0, 0, -4),
       vec3.fromValues(1, 1, 1),
     );
 
@@ -230,8 +230,11 @@ export async function render(
         const tempRT = getXRTempRT(viewport.width, viewport.height);
 
         // Use the view's transform matrix and projection matrix
-        const viewMatrix = view.transform.inverse.matrix;
+        const viewMatrix = mat4.invert(mat4.create(), view.transform.matrix);
         const projectionMatrix = view.projectionMatrix;
+
+        const fov = 2.0 * Math.atan(1.0 / projectionMatrix[5]);
+        const aspect = projectionMatrix[5] / projectionMatrix[0];
 
         mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
         mat4.multiply(
@@ -253,23 +256,23 @@ export async function render(
           colorAttachment: [mainColorRT],
           colorResolveTo: [tempRT],
           colorClearColor: [colorNewFromRGBA(255, 0, 0, 0.1)],
-          depthStencilAttachment: mainDepthRT,
-          depthClearValue: 1,
+          // depthStencilAttachment: mainDepthRT,
+          // depthClearValue: 1,
         });
 
-        renderPass.setPipeline(pipeline);
-        renderPass.setVertexInput(
-          inputLayout,
-          [
-            {
-              buffer: vertexBuffer,
-            },
-          ],
-          null,
-        );
-        renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-        renderPass.setBindings(bindings);
-        renderPass.draw(cubeVertexCount);
+        // renderPass.setPipeline(pipeline);
+        // renderPass.setVertexInput(
+        //   inputLayout,
+        //   [
+        //     {
+        //       buffer: vertexBuffer,
+        //     },
+        //   ],
+        //   null,
+        // );
+        // renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+        // renderPass.setBindings(bindings);
+        // renderPass.draw(cubeVertexCount);
 
         device.submitPass(renderPass);
 
