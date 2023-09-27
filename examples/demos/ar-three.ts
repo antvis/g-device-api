@@ -1,11 +1,5 @@
 import * as THREE from 'three';
 import { initExample } from './utils';
-import { vec3, mat4, quat } from 'gl-matrix';
-import {
-  cubeVertexArray,
-  cubeVertexSize,
-  cubeVertexCount,
-} from '../meshes/cube';
 import { DeviceContribution } from '../../src';
 
 export async function render(
@@ -33,7 +27,7 @@ export async function render(
 
     // Create the cube and add it to the demo scene.
     const cube = new THREE.Mesh(
-      new THREE.BoxBufferGeometry(0.2, 0.2, 0.2),
+      new THREE.BoxGeometry(0.2, 0.2, 0.2),
       materials,
     );
     cube.position.set(1, 1, 1);
