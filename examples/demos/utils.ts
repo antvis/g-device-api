@@ -26,7 +26,7 @@ export async function initExample(
     onContextRestored(e) {},
   });
   const deviceContributionWebGL2 = new WebGLDeviceContribution({
-    targets: ['webgl2', 'webgl1'],
+    targets: ['webgl2'],
     xrCompatible: params.xrCompatible,
     onContextCreationError: () => {},
     onContextLost: () => {},
