@@ -13,3 +13,4 @@ export { Cubemap } from './cubemap';
 export { Add2Vectors } from './add-2-vectors';
 export { ComputeBoids } from './compute-boids';
 export { AR } from './ar';
+export { ARThree } from './ar-three';

@@ -108,7 +108,7 @@ export async function render(
   return () => {};
 }
 
-export async function AR($container: HTMLDivElement) {
+export async function ARThree($container: HTMLDivElement) {
   return initExample($container, render, {
     targets: ['webgl1', 'webgl2'],
     xrCompatible: true,
