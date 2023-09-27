@@ -12,6 +12,7 @@ import {
   ChannelWriteMask,
   TransparentBlack,
   CompareFunction,
+  Texture,
 } from '../../src';
 import { initExample } from './utils';
 import { vec3, mat4, quat } from 'gl-matrix';
@@ -166,6 +167,28 @@ export async function render(
       vec3.fromValues(0.2, 0.2, 0.2),
     );
 
+    let xrTempWidth = -1;
+    let xrTempHeight = -1;
+    let xrTempRT: Texture | null = null;
+    const getXRTempRT = (width: number, height: number) => {
+      if (xrTempWidth !== width || xrTempHeight !== height) {
+        if (xrTempRT !== null) {
+          xrTempRT.destroy();
+        }
+
+        xrTempRT = device.createTexture({
+          format: Format.U8_RGBA_RT,
+          width,
+          height,
+          usage: TextureUsage.SAMPLED,
+        });
+        xrTempWidth = width;
+        xrTempHeight = height;
+      }
+
+      return xrTempRT!;
+    };
+
     const onXRFrame: XRFrameRequestCallback = (time, frame) => {
       // Queue up the next draw request.
       session.requestAnimationFrame(onXRFrame);
@@ -180,38 +203,16 @@ export async function render(
         // gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
       }
 
-      // // @ts-ignore
-      // if (layer.colorTexture) {
-      //   gl.framebufferTexture2D(
-      //     gl.FRAMEBUFFER,
-      //     gl.COLOR_ATTACHMENT0,
-      //     gl.TEXTURE_2D,
-      //     // @ts-ignore
-      //     layer.colorTexture,
-      //     0,
-      //   );
-      // }
-      // // @ts-ignore
-      // if (layer.depthStencilTexture) {
-      //   gl.framebufferTexture2D(
-      //     gl.FRAMEBUFFER,
-      //     gl.DEPTH_ATTACHMENT,
-      //     gl.TEXTURE_2D,
-      //     // @ts-ignore
-      //     layer.depthStencilTexture,
-      //     0,
-      //   );
-      // }
-
-      // if (this.clear) {
-      //   gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
-      // }
-
       swapChain.configureSwapChain(
-        $canvas.width,
-        $canvas.height,
+        layer.framebufferWidth,
+        layer.framebufferHeight,
         layer.framebuffer,
       );
+      /**
+       * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
+       * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
+       */
+      const onscreenTexture = swapChain.getOnscreenTexture();
 
       // Retrieve the pose of the device.
       // XRFrame.getViewerPose can return null while the session attempts to establish tracking.
@@ -220,7 +221,8 @@ export async function render(
         // In mobile AR, we only have one view.
         const view = pose.views[0];
 
-        const viewport = session.renderState.baseLayer!.getViewport(view);
+        const viewport = session.renderState.baseLayer!.getViewport(view)!;
+        const tempRT = getXRTempRT(viewport.width, viewport.height);
 
         // Use the view's transform matrix and projection matrix
         const viewMatrix = view.transform.matrix;
@@ -241,12 +243,6 @@ export async function render(
         program.setUniformsLegacy({
           u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
         });
-
-        /**
-         * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
-         * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
-         */
-        const onscreenTexture = swapChain.getOnscreenTexture();
 
         const renderPass = device.createRenderPass({
           colorAttachment: [mainColorRT],
@@ -271,6 +267,15 @@ export async function render(
         renderPass.draw(cubeVertexCount);
 
         device.submitPass(renderPass);
+
+        device.copySubTexture2D(
+          onscreenTexture,
+          viewport.x,
+          viewport.y,
+          tempRT,
+          0,
+          0,
+        );
       }
     };
     session.requestAnimationFrame(onXRFrame);
@@ -295,6 +300,6 @@ export async function AR($container: HTMLDivElement) {
   return initExample($container, render, {
     targets: ['webgl1', 'webgl2'],
     xrCompatible: true,
-    default: 'webgl1',
+    default: 'webgl2',
   });
 }
