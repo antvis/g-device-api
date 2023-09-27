@@ -27,7 +27,7 @@ export async function render(
 
     // Create the cube and add it to the demo scene.
     const cube = new THREE.Mesh(
-      new THREE.BoxGeometry(0.2, 0.2, 0.2),
+      new THREE.BoxBufferGeometry(0.2, 0.2, 0.2),
       materials,
     );
     cube.position.set(1, 1, 1);
@@ -49,7 +49,9 @@ export async function render(
     camera.matrixAutoUpdate = false;
 
     // Initialize a WebXR session using "immersive-ar".
-    const session = await navigator.xr!.requestSession('immersive-ar');
+    const session = await navigator.xr!.requestSession('immersive-ar', {
+      requiredFeatures: ['local'],
+    });
     session.updateRenderState({
       baseLayer: new XRWebGLLayer(session, gl),
     });
@@ -107,6 +109,6 @@ export async function ARThree($container: HTMLDivElement) {
   return initExample($container, render, {
     targets: ['webgl1', 'webgl2'],
     xrCompatible: true,
-    default: 'webgl2',
+    default: 'webgl1',
   });
 }

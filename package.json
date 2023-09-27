@@ -72,7 +72,7 @@
     "@types/pixelmatch": "^5.2.4",
     "@types/pngjs": "^6.0.1",
     "@types/webxr": "0.5.5",
-    "@types/three": "^0.156.0",
+    "@types/three": "^0.126.0",
     "@types/offscreencanvas": "^2019.6.4",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
@@ -96,7 +96,7 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
-    "three": "0.156.1"
+    "three": "0.126.0"
   },
   "lint-staged": {
     "*.{md,json}": [
