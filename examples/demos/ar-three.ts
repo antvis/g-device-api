@@ -1,103 +1,81 @@
-import * as THREE from 'three';
+import { ARButton } from 'three/examples/jsm/webxr/ARButton';
 import { initExample } from './utils';
 import { DeviceContribution } from '../../src';
+import {
+  AmbientLight,
+  Mesh,
+  Object3D,
+  PerspectiveCamera,
+  Scene,
+  WebGLRenderer,
+  MeshBasicMaterial,
+  BoxGeometry,
+} from 'three';
 
 export async function render(
   deviceContribution: DeviceContribution,
   $canvas: HTMLCanvasElement,
 ) {
-  const gl = $canvas.getContext('webgl', { xrCompatible: true })!;
+  const renderer = new WebGLRenderer({
+    antialias: true,
+    alpha: true,
+    canvas: $canvas,
+  });
+  renderer.xr.enabled = true;
 
-  const activateXR = async () => {
-    const scene = new THREE.Scene();
-
-    // The cube will have a different color on each side.
-    const materials = [
-      new THREE.MeshBasicMaterial({ color: 0xff0000 }),
-      new THREE.MeshBasicMaterial({ color: 0x0000ff }),
-      new THREE.MeshBasicMaterial({ color: 0x00ff00 }),
-      new THREE.MeshBasicMaterial({ color: 0xff00ff }),
-      new THREE.MeshBasicMaterial({ color: 0x00ffff }),
-      new THREE.MeshBasicMaterial({ color: 0xffff00 }),
-    ];
-
-    // Create the cube and add it to the demo scene.
-    const cube = new THREE.Mesh(
-      new THREE.BoxBufferGeometry(0.2, 0.2, 0.2),
-      materials,
-    );
-    cube.position.set(1, 1, 1);
-    scene.add(cube);
-
-    const renderer = new THREE.WebGLRenderer({
-      alpha: true,
-      preserveDrawingBuffer: true,
-      canvas: $canvas,
-      context: gl,
-    });
-    renderer.autoClear = false;
-    renderer.xr.enabled = true;
-
-    // The API directly updates the camera matrices.
-    // Disable matrix auto updates so three.js doesn't attempt
-    // to handle the matrices independently.
-    const camera = new THREE.PerspectiveCamera();
-    camera.matrixAutoUpdate = false;
-
-    // Initialize a WebXR session using "immersive-ar".
-    const session = await navigator.xr!.requestSession('immersive-ar', {
-      requiredFeatures: ['local'],
-    });
-    session.updateRenderState({
-      baseLayer: new XRWebGLLayer(session, gl),
-    });
-
-    // A 'local' reference space has a native origin that is located
-    // near the viewer's position at the time the session was created.
-    const referenceSpace = await session.requestReferenceSpace('local');
-
-    const onXRFrame: XRFrameRequestCallback = (time, frame) => {
-      // Queue up the next draw request.
-      session.requestAnimationFrame(onXRFrame);
-
-      // Assumed to be a XRWebGLLayer for now.
-      let layer = session.renderState.baseLayer;
-      if (!layer) {
-        layer = session.renderState.layers![0] as XRWebGLLayer;
-      } else {
-        // Bind the graphics framebuffer to the baseLayer's framebuffer.
-        // Only baseLayer has framebuffer and we need to bind it, even if it is null (for inline sessions).
-        gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
-      }
-
-      // Retrieve the pose of the device.
-      // XRFrame.getViewerPose can return null while the session attempts to establish tracking.
-      const pose = frame.getViewerPose(referenceSpace);
-      if (pose) {
-        // In mobile AR, we only have one view.
-        const view = pose.views[0];
-
-        const viewport = session.renderState.baseLayer!.getViewport(view)!;
-
-        // Use the view's transform matrix and projection matrix to configure the THREE.camera.
-        camera.matrix.fromArray(view.transform.matrix);
-        camera.projectionMatrix.fromArray(view.projectionMatrix);
-        camera.updateMatrixWorld(true);
-
-        // Render the scene with THREE.WebGLRenderer.
-        renderer.render(scene, camera);
-      }
-    };
-    session.requestAnimationFrame(onXRFrame);
-  };
-
-  // Starting an immersive WebXR session requires user interaction.
-  // We start this one with a simple button.
-  const $button = document.createElement('button');
-  $button.innerHTML = 'Start Hello WebXR';
-  $button.onclick = activateXR;
+  const $button = ARButton.createButton(renderer, {
+    requiredFeatures: ['hit-test'],
+  });
   $canvas.parentElement?.appendChild($button);
 
+  const scene = new Scene();
+
+  const materials = [
+    new MeshBasicMaterial({ color: 0xff0000 }),
+    new MeshBasicMaterial({ color: 0x0000ff }),
+    new MeshBasicMaterial({ color: 0x00ff00 }),
+    new MeshBasicMaterial({ color: 0xff00ff }),
+    new MeshBasicMaterial({ color: 0x00ffff }),
+    new MeshBasicMaterial({ color: 0xffff00 }),
+  ];
+
+  // Create the cube and add it to the demo scene.
+  const cube = new Mesh(new BoxGeometry(0.2, 0.2, 0.2), materials);
+  cube.position.set(1, 1, 1);
+  scene.add(cube);
+
+  const camera = new PerspectiveCamera(
+    70,
+    window.innerWidth / window.innerHeight,
+    0.02,
+    20,
+  );
+  const ambientLight = new AmbientLight(0xffffff, 1.0);
+  scene.add(ambientLight);
+
+  const controller = renderer.xr.getController(0);
+  scene.add(controller);
+
+  function onSelect() {}
+
+  controller.addEventListener('select', onSelect);
+
+  const renderLoop = (timestamp: any, frame?: XRFrame) => {
+    if (renderer.xr.isPresenting) {
+      // if (frame) {
+      //   handleXRHitTest(
+      //     renderer,
+      //     frame,
+      //     onHitTestResultReady,
+      //     onHitTestResultEmpty,
+      //   );
+      // }
+
+      renderer.render(scene, camera);
+    }
+  };
+
+  renderer.setAnimationLoop(renderLoop);
   return () => {};
 }
 
