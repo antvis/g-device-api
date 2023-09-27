@@ -4,7 +4,6 @@ import { DeviceContribution } from '../../src';
 import {
   AmbientLight,
   Mesh,
-  Object3D,
   PerspectiveCamera,
   Scene,
   WebGLRenderer,
@@ -30,26 +29,19 @@ export async function render(
 
   const scene = new Scene();
 
-  const materials = [
-    new MeshBasicMaterial({ color: 0xff0000 }),
-    new MeshBasicMaterial({ color: 0x0000ff }),
-    new MeshBasicMaterial({ color: 0x00ff00 }),
-    new MeshBasicMaterial({ color: 0xff00ff }),
-    new MeshBasicMaterial({ color: 0x00ffff }),
-    new MeshBasicMaterial({ color: 0xffff00 }),
-  ];
-
-  // Create the cube and add it to the demo scene.
-  const cube = new Mesh(new BoxGeometry(0.2, 0.2, 0.2), materials);
-  cube.position.set(1, 1, 1);
-  scene.add(cube);
-
   const camera = new PerspectiveCamera(
     70,
     window.innerWidth / window.innerHeight,
     0.02,
     20,
   );
+
+  const geometry = new BoxGeometry(1, 1, 1);
+  const material = new MeshBasicMaterial({ color: 0x00ff00 });
+  const cube = new Mesh(geometry, material);
+  cube.position.z = -4;
+  scene.add(cube);
+
   const ambientLight = new AmbientLight(0xffffff, 1.0);
   scene.add(ambientLight);
 
@@ -61,16 +53,10 @@ export async function render(
   controller.addEventListener('select', onSelect);
 
   const renderLoop = (timestamp: any, frame?: XRFrame) => {
-    if (renderer.xr.isPresenting) {
-      // if (frame) {
-      //   handleXRHitTest(
-      //     renderer,
-      //     frame,
-      //     onHitTestResultReady,
-      //     onHitTestResultEmpty,
-      //   );
-      // }
+    cube.rotation.y += 0.01;
+    cube.rotation.x += 0.01;
 
+    if (renderer.xr.isPresenting) {
       renderer.render(scene, camera);
     }
   };
