@@ -13,6 +13,7 @@ import {
   TransparentBlack,
   CompareFunction,
   Texture,
+  colorNewFromRGBA,
 } from '../../src';
 import { initExample } from './utils';
 import { vec3, mat4, quat } from 'gl-matrix';
@@ -155,6 +156,8 @@ export async function render(
     await gl.makeXRCompatible();
     session.updateRenderState({
       baseLayer: new XRWebGLLayer(session, gl, { antialias: false }),
+      depthNear: 5,
+      depthFar: 1000000.0,
     });
 
     // A 'local' reference space has a native origin that is located
@@ -250,7 +253,7 @@ export async function render(
         const renderPass = device.createRenderPass({
           colorAttachment: [mainColorRT],
           colorResolveTo: [onscreenTexture],
-          colorClearColor: [TransparentWhite],
+          colorClearColor: [colorNewFromRGBA(255, 0, 0, 0.1)],
           depthStencilAttachment: mainDepthRT,
           depthClearValue: 1,
         });
