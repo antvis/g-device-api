@@ -117,6 +117,9 @@ devDependencies:
   rollup-plugin-visualizer:
     specifier: ^5.9.2
     version: 5.9.2(rollup@3.29.1)
+  three:
+    specifier: 0.156.1
+    version: 0.156.1
   ts-jest:
     specifier: ^29.1.0
     version: 29.1.0(@babel/core@7.22.17)(jest@29.0.0)(typescript@5.2.2)
@@ -6756,6 +6759,10 @@ packages:
 
   /text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
+    dev: true
+
+  /three@0.156.1:
+    resolution: {integrity: sha512-kP7H0FK9d/k6t/XvQ9FO6i+QrePoDcNhwl0I02+wmUJRNSLCUIDMcfObnzQvxb37/0Uc9TDT0T1HgsRRrO6SYQ==}
     dev: true
 
   /through2@0.6.5:
