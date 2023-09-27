@@ -255,19 +255,19 @@ export async function render(
           depthClearValue: 1,
         });
 
-        renderPass.setPipeline(pipeline);
-        renderPass.setVertexInput(
-          inputLayout,
-          [
-            {
-              buffer: vertexBuffer,
-            },
-          ],
-          null,
-        );
-        renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-        renderPass.setBindings(bindings);
-        renderPass.draw(cubeVertexCount);
+        // renderPass.setPipeline(pipeline);
+        // renderPass.setVertexInput(
+        //   inputLayout,
+        //   [
+        //     {
+        //       buffer: vertexBuffer,
+        //     },
+        //   ],
+        //   null,
+        // );
+        // renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+        // renderPass.setBindings(bindings);
+        // renderPass.draw(cubeVertexCount);
 
         device.submitPass(renderPass);
 
