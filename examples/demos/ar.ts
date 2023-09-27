@@ -152,8 +152,9 @@ export async function render(
     const session = await navigator.xr!.requestSession('immersive-ar', {
       requiredFeatures: ['local'],
     });
+    await gl.makeXRCompatible();
     session.updateRenderState({
-      baseLayer: new XRWebGLLayer(session, gl),
+      baseLayer: new XRWebGLLayer(session, gl, { antialias: false }),
     });
 
     // A 'local' reference space has a native origin that is located
@@ -168,7 +169,6 @@ export async function render(
       vec3.fromValues(0, 0, -4),
       vec3.fromValues(1, 1, 1),
     );
-    // const modelMatrix = mat4.identity(mat4.create());
 
     let xrTempWidth = -1;
     let xrTempHeight = -1;
