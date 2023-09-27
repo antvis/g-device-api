@@ -32,120 +32,120 @@ export async function render(
   const device = swapChain.getDevice();
   const gl = device['gl'];
 
-  const program = device.createProgram({
-    vertex: {
-      glsl: `
-layout(std140) uniform Uniforms {
-  mat4 u_ModelViewProjectionMatrix;
-};
+  //   const program = device.createProgram({
+  //     vertex: {
+  //       glsl: `
+  // layout(std140) uniform Uniforms {
+  //   mat4 u_ModelViewProjectionMatrix;
+  // };
 
-layout(location = 0) in vec3 a_Position;
+  // layout(location = 0) in vec3 a_Position;
 
-out vec4 v_Position;
+  // out vec4 v_Position;
 
-void main() {
-  v_Position = vec4(a_Position, 1.0);
-  gl_Position = u_ModelViewProjectionMatrix * vec4(a_Position, 1.0);
-} 
-`,
-    },
-    fragment: {
-      glsl: `
-in vec4 v_Position;
-out vec4 outputColor;
+  // void main() {
+  //   v_Position = vec4(a_Position, 1.0);
+  //   gl_Position = u_ModelViewProjectionMatrix * vec4(a_Position, 1.0);
+  // }
+  // `,
+  //     },
+  //     fragment: {
+  //       glsl: `
+  // in vec4 v_Position;
+  // out vec4 outputColor;
 
-void main() {
-  outputColor = v_Position;
-}
-`,
-    },
-  });
+  // void main() {
+  //   outputColor = v_Position;
+  // }
+  // `,
+  //     },
+  //   });
 
-  const vertexBuffer = device.createBuffer({
-    viewOrSize: cubeVertexArray,
-    usage: BufferUsage.VERTEX,
-  });
+  //   const vertexBuffer = device.createBuffer({
+  //     viewOrSize: cubeVertexArray,
+  //     usage: BufferUsage.VERTEX,
+  //   });
 
-  const uniformBuffer = device.createBuffer({
-    viewOrSize: 16 * 4, // mat4
-    usage: BufferUsage.UNIFORM,
-    hint: BufferFrequencyHint.DYNAMIC,
-  });
+  //   const uniformBuffer = device.createBuffer({
+  //     viewOrSize: 16 * 4, // mat4
+  //     usage: BufferUsage.UNIFORM,
+  //     hint: BufferFrequencyHint.DYNAMIC,
+  //   });
 
-  const inputLayout = device.createInputLayout({
-    vertexBufferDescriptors: [
-      {
-        arrayStride: cubeVertexSize,
-        stepMode: VertexStepMode.VERTEX,
-        attributes: [
-          {
-            shaderLocation: 0,
-            offset: 0,
-            format: Format.F32_RGB,
-          },
-        ],
-      },
-    ],
-    indexBufferFormat: null,
-    program,
-  });
+  //   const inputLayout = device.createInputLayout({
+  //     vertexBufferDescriptors: [
+  //       {
+  //         arrayStride: cubeVertexSize,
+  //         stepMode: VertexStepMode.VERTEX,
+  //         attributes: [
+  //           {
+  //             shaderLocation: 0,
+  //             offset: 0,
+  //             format: Format.F32_RGB,
+  //           },
+  //         ],
+  //       },
+  //     ],
+  //     indexBufferFormat: null,
+  //     program,
+  //   });
 
-  const pipeline = device.createRenderPipeline({
-    inputLayout,
-    program,
-    colorAttachmentFormats: [Format.U8_RGBA_RT],
-    depthStencilAttachmentFormat: Format.D24_S8,
-    megaStateDescriptor: {
-      attachmentsState: [
-        {
-          channelWriteMask: ChannelWriteMask.ALL,
-          rgbBlendState: {
-            blendMode: BlendMode.ADD,
-            blendSrcFactor: BlendFactor.SRC_ALPHA,
-            blendDstFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
-          },
-          alphaBlendState: {
-            blendMode: BlendMode.ADD,
-            blendSrcFactor: BlendFactor.ONE,
-            blendDstFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
-          },
-        },
-      ],
-      blendConstant: TransparentBlack,
-      depthWrite: true,
-      depthCompare: CompareFunction.LESS,
-      cullMode: CullMode.BACK,
-      stencilWrite: false,
-    },
-  });
+  //   const pipeline = device.createRenderPipeline({
+  //     inputLayout,
+  //     program,
+  //     colorAttachmentFormats: [Format.U8_RGBA_RT],
+  //     depthStencilAttachmentFormat: Format.D24_S8,
+  //     megaStateDescriptor: {
+  //       attachmentsState: [
+  //         {
+  //           channelWriteMask: ChannelWriteMask.ALL,
+  //           rgbBlendState: {
+  //             blendMode: BlendMode.ADD,
+  //             blendSrcFactor: BlendFactor.SRC_ALPHA,
+  //             blendDstFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
+  //           },
+  //           alphaBlendState: {
+  //             blendMode: BlendMode.ADD,
+  //             blendSrcFactor: BlendFactor.ONE,
+  //             blendDstFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
+  //           },
+  //         },
+  //       ],
+  //       blendConstant: TransparentBlack,
+  //       depthWrite: true,
+  //       depthCompare: CompareFunction.LESS,
+  //       cullMode: CullMode.BACK,
+  //       stencilWrite: false,
+  //     },
+  //   });
 
-  const bindings = device.createBindings({
-    pipeline,
-    uniformBufferBindings: [
-      {
-        binding: 0,
-        buffer: uniformBuffer,
-        size: 16 * 4,
-      },
-    ],
-  });
+  //   const bindings = device.createBindings({
+  //     pipeline,
+  //     uniformBufferBindings: [
+  //       {
+  //         binding: 0,
+  //         buffer: uniformBuffer,
+  //         size: 16 * 4,
+  //       },
+  //     ],
+  //   });
 
-  const mainColorRT = device.createRenderTargetFromTexture(
-    device.createTexture({
-      format: Format.U8_RGBA_RT,
-      width: $canvas.width,
-      height: $canvas.height,
-      usage: TextureUsage.RENDER_TARGET,
-    }),
-  );
-  const mainDepthRT = device.createRenderTargetFromTexture(
-    device.createTexture({
-      format: Format.D24_S8,
-      width: $canvas.width,
-      height: $canvas.height,
-      usage: TextureUsage.RENDER_TARGET,
-    }),
-  );
+  //   const mainColorRT = device.createRenderTargetFromTexture(
+  //     device.createTexture({
+  //       format: Format.U8_RGBA_RT,
+  //       width: $canvas.width,
+  //       height: $canvas.height,
+  //       usage: TextureUsage.RENDER_TARGET,
+  //     }),
+  //   );
+  //   const mainDepthRT = device.createRenderTargetFromTexture(
+  //     device.createTexture({
+  //       format: Format.D24_S8,
+  //       width: $canvas.width,
+  //       height: $canvas.height,
+  //       usage: TextureUsage.RENDER_TARGET,
+  //     }),
+  //   );
 
   const activateXR = async () => {
     // Initialize a WebXR session using "immersive-ar".
@@ -181,11 +181,11 @@ void main() {
         gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
       }
 
-      swapChain.configureSwapChain(
-        $canvas.width,
-        $canvas.height,
-        layer.framebuffer,
-      );
+      // swapChain.configureSwapChain(
+      //   $canvas.width,
+      //   $canvas.height,
+      //   layer.framebuffer,
+      // );
 
       // Retrieve the pose of the device.
       // XRFrame.getViewerPose can return null while the session attempts to establish tracking.
@@ -207,44 +207,44 @@ void main() {
           modelViewMatrix,
         );
 
-        uniformBuffer.setSubData(
-          0,
-          new Uint8Array((modelViewProjectionMatrix as Float32Array).buffer),
-        );
-        // WebGL1 need this
-        program.setUniformsLegacy({
-          u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
-        });
+        // uniformBuffer.setSubData(
+        //   0,
+        //   new Uint8Array((modelViewProjectionMatrix as Float32Array).buffer),
+        // );
+        // // WebGL1 need this
+        // program.setUniformsLegacy({
+        //   u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
+        // });
 
-        /**
-         * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
-         * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
-         */
-        const onscreenTexture = swapChain.getOnscreenTexture();
+        // /**
+        //  * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
+        //  * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
+        //  */
+        // const onscreenTexture = swapChain.getOnscreenTexture();
 
-        const renderPass = device.createRenderPass({
-          colorAttachment: [mainColorRT],
-          colorResolveTo: [onscreenTexture],
-          colorClearColor: [TransparentWhite],
-          depthStencilAttachment: mainDepthRT,
-          depthClearValue: 1,
-        });
+        // const renderPass = device.createRenderPass({
+        //   colorAttachment: [mainColorRT],
+        //   colorResolveTo: [onscreenTexture],
+        //   colorClearColor: [TransparentWhite],
+        //   depthStencilAttachment: mainDepthRT,
+        //   depthClearValue: 1,
+        // });
 
-        renderPass.setPipeline(pipeline);
-        renderPass.setVertexInput(
-          inputLayout,
-          [
-            {
-              buffer: vertexBuffer,
-            },
-          ],
-          null,
-        );
-        renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-        renderPass.setBindings(bindings);
-        renderPass.draw(cubeVertexCount);
+        // renderPass.setPipeline(pipeline);
+        // renderPass.setVertexInput(
+        //   inputLayout,
+        //   [
+        //     {
+        //       buffer: vertexBuffer,
+        //     },
+        //   ],
+        //   null,
+        // );
+        // renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+        // renderPass.setBindings(bindings);
+        // renderPass.draw(cubeVertexCount);
 
-        device.submitPass(renderPass);
+        // device.submitPass(renderPass);
       }
     };
     session.requestAnimationFrame(onXRFrame);
