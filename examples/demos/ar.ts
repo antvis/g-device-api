@@ -162,13 +162,13 @@ export async function render(
 
     const modelViewProjectionMatrix = mat4.create();
     const modelViewMatrix = mat4.create();
-    // const modelMatrix = mat4.fromRotationTranslationScale(
-    //   mat4.create(),
-    //   quat.create(),
-    //   vec3.fromValues(0, 0, 0),
-    //   vec3.fromValues(0.2, 0.2, 0.2),
-    // );
-    const modelMatrix = mat4.identity(mat4.create());
+    const modelMatrix = mat4.fromRotationTranslationScale(
+      mat4.create(),
+      quat.create(),
+      vec3.fromValues(0, 0, -4),
+      vec3.fromValues(1, 1, 1),
+    );
+    // const modelMatrix = mat4.identity(mat4.create());
 
     let xrTempWidth = -1;
     let xrTempHeight = -1;
