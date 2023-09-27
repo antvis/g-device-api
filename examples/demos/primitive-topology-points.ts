@@ -7,7 +7,6 @@ import {
   BufferUsage,
   BufferFrequencyHint,
   TextureUsage,
-  colorNewFromRGBA,
 } from '../../src';
 import { initExample } from './utils';
 
@@ -96,21 +95,21 @@ void main() {
     const renderPass = device.createRenderPass({
       colorAttachment: [renderTarget],
       colorResolveTo: [onscreenTexture],
-      colorClearColor: [colorNewFromRGBA(255, 0, 0, 0.1)],
+      colorClearColor: [TransparentWhite],
     });
 
-    // renderPass.setPipeline(pipeline);
-    // renderPass.setVertexInput(
-    //   inputLayout,
-    //   [
-    //     {
-    //       buffer: vertexBuffer,
-    //     },
-    //   ],
-    //   null,
-    // );
-    // renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-    // renderPass.draw(3);
+    renderPass.setPipeline(pipeline);
+    renderPass.setVertexInput(
+      inputLayout,
+      [
+        {
+          buffer: vertexBuffer,
+        },
+      ],
+      null,
+    );
+    renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+    renderPass.draw(3);
 
     device.submitPass(renderPass);
 

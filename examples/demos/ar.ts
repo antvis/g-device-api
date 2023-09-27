@@ -153,9 +153,11 @@ export async function render(
     const session = await navigator.xr!.requestSession('immersive-ar', {
       requiredFeatures: ['local'],
     });
-    await gl.makeXRCompatible();
     session.updateRenderState({
-      baseLayer: new XRWebGLLayer(session, gl, { antialias: false }),
+      baseLayer: new XRWebGLLayer(session, gl, {
+        antialias: false,
+        depth: false,
+      }),
       depthNear: 5,
       depthFar: 1000000.0,
     });
@@ -249,25 +251,25 @@ export async function render(
 
         const renderPass = device.createRenderPass({
           colorAttachment: [mainColorRT],
-          colorResolveTo: [onscreenTexture],
+          colorResolveTo: [tempRT],
           colorClearColor: [colorNewFromRGBA(255, 0, 0, 0.1)],
           depthStencilAttachment: mainDepthRT,
           depthClearValue: 1,
         });
 
-        // renderPass.setPipeline(pipeline);
-        // renderPass.setVertexInput(
-        //   inputLayout,
-        //   [
-        //     {
-        //       buffer: vertexBuffer,
-        //     },
-        //   ],
-        //   null,
-        // );
-        // renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-        // renderPass.setBindings(bindings);
-        // renderPass.draw(cubeVertexCount);
+        renderPass.setPipeline(pipeline);
+        renderPass.setVertexInput(
+          inputLayout,
+          [
+            {
+              buffer: vertexBuffer,
+            },
+          ],
+          null,
+        );
+        renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+        renderPass.setBindings(bindings);
+        renderPass.draw(cubeVertexCount);
 
         device.submitPass(renderPass);
 
