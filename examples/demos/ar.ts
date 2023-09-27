@@ -169,7 +169,7 @@ export async function render(
     const modelMatrix = mat4.fromRotationTranslationScale(
       mat4.create(),
       quat.create(),
-      vec3.fromValues(0, 0, -4),
+      vec3.fromValues(0, 0, 8),
       vec3.fromValues(1, 1, 1),
     );
 
@@ -196,9 +196,6 @@ export async function render(
     };
 
     const onXRFrame: XRFrameRequestCallback = (time, frame) => {
-      // Queue up the next draw request.
-      session.requestAnimationFrame(onXRFrame);
-
       // Assumed to be a XRWebGLLayer for now.
       let layer = session.renderState.baseLayer;
       if (!layer) {
@@ -231,7 +228,7 @@ export async function render(
         const tempRT = getXRTempRT(viewport.width, viewport.height);
 
         // Use the view's transform matrix and projection matrix
-        const viewMatrix = view.transform.matrix;
+        const viewMatrix = view.transform.inverse.matrix;
         const projectionMatrix = view.projectionMatrix;
 
         mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
@@ -283,6 +280,9 @@ export async function render(
           0,
         );
       }
+
+      // Queue up the next draw request.
+      session.requestAnimationFrame(onXRFrame);
     };
     session.requestAnimationFrame(onXRFrame);
   };
