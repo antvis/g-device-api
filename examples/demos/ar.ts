@@ -149,7 +149,9 @@ export async function render(
 
   const activateXR = async () => {
     // Initialize a WebXR session using "immersive-ar".
-    const session = await navigator.xr!.requestSession('immersive-ar');
+    const session = await navigator.xr!.requestSession('immersive-ar', {
+      requiredFeatures: ['local'],
+    });
     session.updateRenderState({
       baseLayer: new XRWebGLLayer(session, gl),
     });

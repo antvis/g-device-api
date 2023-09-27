@@ -40,6 +40,7 @@ export async function render(
       context: gl,
     });
     renderer.autoClear = false;
+    renderer.xr.enabled = true;
 
     // The API directly updates the camera matrices.
     // Disable matrix auto updates so three.js doesn't attempt
