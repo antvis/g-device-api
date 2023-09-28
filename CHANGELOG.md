@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.0
+
+### Minor Changes
+
+-   5d930c0: Support multiple render targets.
+
 ## 1.2.3
 
 ### Patch Changes
