@@ -2,7 +2,6 @@ import {
   DeviceContribution,
   VertexStepMode,
   Format,
-  TransparentWhite,
   BufferUsage,
   BufferFrequencyHint,
   BlendMode,
@@ -12,8 +11,7 @@ import {
   ChannelWriteMask,
   TransparentBlack,
   CompareFunction,
-  Texture,
-  colorNewFromRGBA,
+  TransparentWhite,
 } from '../../src';
 import { initExample } from './utils';
 import { vec3, mat4, quat } from 'gl-matrix';
@@ -131,22 +129,21 @@ export async function render(
     ],
   });
 
-  const mainColorRT = device.createRenderTargetFromTexture(
+  const mainColorTexture = device.createTexture({
+    format: Format.U8_RGBA_RT,
+    width: $canvas.width,
+    height: $canvas.height,
+    usage: TextureUsage.RENDER_TARGET,
+  });
+  const mainColorRT = device.createRenderTargetFromTexture(mainColorTexture);
+  const mainDepthRT = device.createRenderTargetFromTexture(
     device.createTexture({
-      format: Format.U8_RGBA_RT,
+      format: Format.D24_S8,
       width: $canvas.width,
       height: $canvas.height,
       usage: TextureUsage.RENDER_TARGET,
     }),
   );
-  // const mainDepthRT = device.createRenderTargetFromTexture(
-  //   device.createTexture({
-  //     format: Format.D24_S8,
-  //     width: $canvas.width,
-  //     height: $canvas.height,
-  //     usage: TextureUsage.RENDER_TARGET,
-  //   }),
-  // );
 
   const activateXR = async () => {
     // Initialize a WebXR session using "immersive-ar".
@@ -158,8 +155,6 @@ export async function render(
         antialias: false,
         depth: false,
       }),
-      // depthNear: 5,
-      // depthFar: 1000000.0,
     });
 
     // A 'local' reference space has a native origin that is located
@@ -174,28 +169,6 @@ export async function render(
       vec3.fromValues(0, 0, -4),
       vec3.fromValues(1, 1, 1),
     );
-
-    let xrTempWidth = -1;
-    let xrTempHeight = -1;
-    let xrTempRT: Texture | null = null;
-    const getXRTempRT = (width: number, height: number) => {
-      if (xrTempWidth !== width || xrTempHeight !== height) {
-        if (xrTempRT !== null) {
-          xrTempRT.destroy();
-        }
-
-        xrTempRT = device.createTexture({
-          format: Format.U8_RGBA_RT,
-          width,
-          height,
-          usage: TextureUsage.SAMPLED,
-        });
-        xrTempWidth = width;
-        xrTempHeight = height;
-      }
-
-      return xrTempRT!;
-    };
 
     const onXRFrame: XRFrameRequestCallback = (time, frame) => {
       // Assumed to be a XRWebGLLayer for now.
@@ -227,7 +200,6 @@ export async function render(
         const view = pose.views[0];
 
         const viewport = session.renderState.baseLayer!.getViewport(view)!;
-        const tempRT = getXRTempRT(viewport.width, viewport.height);
 
         // Use the view's transform matrix and projection matrix
         const viewMatrix = mat4.invert(mat4.create(), view.transform.matrix);
@@ -254,25 +226,25 @@ export async function render(
 
         const renderPass = device.createRenderPass({
           colorAttachment: [mainColorRT],
-          colorResolveTo: [tempRT],
-          colorClearColor: [colorNewFromRGBA(255, 0, 0, 0.1)],
-          // depthStencilAttachment: mainDepthRT,
-          // depthClearValue: 1,
+          colorResolveTo: [null],
+          colorClearColor: [TransparentWhite],
+          depthStencilAttachment: mainDepthRT,
+          depthClearValue: 1,
         });
 
-        // renderPass.setPipeline(pipeline);
-        // renderPass.setVertexInput(
-        //   inputLayout,
-        //   [
-        //     {
-        //       buffer: vertexBuffer,
-        //     },
-        //   ],
-        //   null,
-        // );
-        // renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-        // renderPass.setBindings(bindings);
-        // renderPass.draw(cubeVertexCount);
+        renderPass.setPipeline(pipeline);
+        renderPass.setVertexInput(
+          inputLayout,
+          [
+            {
+              buffer: vertexBuffer,
+            },
+          ],
+          null,
+        );
+        renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+        renderPass.setBindings(bindings);
+        renderPass.draw(cubeVertexCount);
 
         device.submitPass(renderPass);
 
@@ -280,7 +252,7 @@ export async function render(
           onscreenTexture,
           viewport.x,
           viewport.y,
-          tempRT,
+          mainColorTexture,
           0,
           0,
         );

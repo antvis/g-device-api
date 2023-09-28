@@ -1024,6 +1024,11 @@ export class Device_GL implements SwapChain, Device {
 
       gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
       gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+    } else {
+      if (dst === this.scTexture) {
+        const rt = this.createRenderTargetFromTexture(src_) as RenderTarget_GL;
+        this.submitBlitRenderPass(rt, dst);
+      }
     }
   }
 
