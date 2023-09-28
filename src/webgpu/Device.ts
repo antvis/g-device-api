@@ -46,6 +46,7 @@ import {
   defaultMegaState,
   PrimitiveTopology,
   copyMegaState,
+  copyAttachmentState,
 } from '../api';
 import type { glsl_compile as glsl_compile_ } from '../../rust/pkg/glsl_wgsl_compiler';
 import { Bindings_WebGPU } from './Bindings';
@@ -565,6 +566,15 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
       },
       ...rest,
     };
+
+    const defaultAttachmentState =
+      descriptor.megaStateDescriptor.attachmentsState[0];
+    descriptor.colorAttachmentFormats.forEach((format, i) => {
+      if (!descriptor.megaStateDescriptor.attachmentsState[i]) {
+        descriptor.megaStateDescriptor.attachmentsState[i] =
+          copyAttachmentState(undefined, defaultAttachmentState);
+      }
+    });
 
     const primitive = translatePrimitiveState(
       descriptor.topology ?? PrimitiveTopology.TRIANGLES,

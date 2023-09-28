@@ -2,6 +2,7 @@ export { PrimitiveTopologyPoints } from './primitive-topology-points';
 export { PrimitiveTopologyTriangles } from './primitive-topology-triangles';
 export { DrawIndex } from './draw-index';
 export { MSAA } from './msaa';
+export { MultipleRenderTargets } from './multiple-render-targets';
 export { Blit } from './blit';
 export { RotatingCube } from './rotating-cube';
 export { Stencil } from './stencil';

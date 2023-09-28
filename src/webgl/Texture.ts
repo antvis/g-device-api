@@ -28,6 +28,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
   gl_texture: WebGLTexture;
   gl_target: GLenum;
   format: Format;
+  dimension: TextureDimension;
   width: number;
   height: number;
   depthOrArrayLayers: number;
@@ -71,6 +72,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
     this.immutable = descriptor.usage === TextureUsage.RENDER_TARGET;
     this.pixelStore = descriptor.pixelStore;
     this.format = descriptor.format;
+    this.dimension = descriptor.dimension;
     this.formatKind = getFormatSamplerKind(descriptor.format);
     this.width = descriptor.width;
     this.height = descriptor.height;
