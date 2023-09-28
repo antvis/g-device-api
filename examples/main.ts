@@ -1,4 +1,5 @@
 import * as demos from './demos';
+import { initExample } from './utils';
 
 const select = document.createElement('select');
 select.id = 'example-select';
@@ -32,7 +33,7 @@ async function render() {
   $container.innerHTML = '';
 
   const demo = demos[select.value];
-  callback = await demo($container);
+  callback = await initExample($container, demo);
 }
 
 function onChange() {

@@ -7,7 +7,6 @@ import {
   BufferFrequencyHint,
   TextureUsage,
 } from '../../src';
-import { initExample } from './utils';
 
 export async function render(
   deviceContribution: DeviceContribution,
@@ -142,9 +141,7 @@ void main() {
   };
 }
 
-export async function DrawIndex($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2', 'webgpu'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2', 'webgpu'],
+  default: 'webgl2',
+};

@@ -399,8 +399,8 @@ ${rest}
         concat =
           concat.substring(0, lastIndexOfMain) +
           `
-    gl_FragColor = vec4(${glFragColor});
-  ` +
+  gl_FragColor = vec4(${glFragColor});
+` +
           concat.substring(lastIndexOfMain);
       }
     }

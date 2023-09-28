@@ -13,7 +13,6 @@ import {
   TransparentBlack,
   CompareFunction,
 } from '../../src';
-import { initExample } from './utils';
 import {
   cubeVertexArray,
   cubeVertexSize,
@@ -291,9 +290,7 @@ void main() {
   };
 }
 
-export async function TwoCubes($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl2', 'webgpu'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl2', 'webgpu'],
+  default: 'webgl2',
+};

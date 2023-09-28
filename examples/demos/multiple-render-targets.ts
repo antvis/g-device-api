@@ -7,7 +7,6 @@ import {
   BufferFrequencyHint,
   TextureUsage,
 } from '../../src';
-import { initExample } from './utils';
 
 /**
  * @see https://github.com/shrekshao/MoveWebGL1EngineToWebGL2/blob/master/Move-a-WebGL-1-Engine-To-WebGL-2-Blog-1.md#multiple-render-targets
@@ -168,9 +167,7 @@ void main() {
   };
 }
 
-export async function MultipleRenderTargets($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2', 'webgpu'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2', 'webgpu'],
+  default: 'webgl2',
+};
