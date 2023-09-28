@@ -1,13 +1,4 @@
-import {
-  DeviceContribution,
-  VertexStepMode,
-  Format,
-  TransparentWhite,
-  Buffer,
-  Bindings,
-  BufferUsage,
-} from '../../src';
-import { initExample } from './utils';
+import { DeviceContribution, BufferUsage } from '../../src';
 
 /**
  * Use Compute Shader with WebGPU
@@ -94,9 +85,7 @@ export async function render(
   };
 }
 
-export async function Add2Vectors($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgpu'],
-    default: 'webgpu',
-  });
-}
+render.params = {
+  targets: ['webgpu'],
+  default: 'webgpu',
+};

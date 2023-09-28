@@ -7,7 +7,6 @@ import {
   BufferFrequencyHint,
   TextureUsage,
 } from '../../src';
-import { initExample } from './utils';
 
 // Low-res, pixelated render target so it's easier to see fine details.
 const kCanvasSize = 200;
@@ -230,9 +229,7 @@ void main() {
   };
 }
 
-export async function Sampler($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2', 'webgpu'],
-    default: 'webgpu',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2', 'webgpu'],
+  default: 'webgpu',
+};

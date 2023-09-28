@@ -14,7 +14,6 @@ import {
   CompareFunction,
   StencilOp,
 } from '../../src';
-import { initExample } from './utils';
 import { vec3, mat4 } from 'gl-matrix';
 import {
   cubeVertexArray,
@@ -359,9 +358,7 @@ void main() {
   };
 }
 
-export async function Stencil($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2', 'webgpu'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2', 'webgpu'],
+  default: 'webgl2',
+};

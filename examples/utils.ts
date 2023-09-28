@@ -3,21 +3,19 @@ import {
   WebGLDeviceContribution,
   WebGPUDeviceContribution,
   DeviceContribution,
-} from '../../src';
+} from '../src';
 
 export async function initExample(
-  $container: HTMLDivElement,
+  $container: HTMLElement,
   render: (
     deviceContribution: DeviceContribution,
     $canvas: HTMLCanvasElement,
     useRAF?: boolean,
   ) => Promise<() => void>,
-  params: {
-    targets: ('webgl1' | 'webgl2' | 'webgpu')[];
-    xrCompatible?: boolean;
-    default: 'webgl1' | 'webgl2' | 'webgpu';
-  },
 ) {
+  // @ts-ignore
+  const { params } = render;
+
   const deviceContributionWebGL1 = new WebGLDeviceContribution({
     targets: ['webgl1'],
     xrCompatible: params.xrCompatible,
@@ -33,7 +31,7 @@ export async function initExample(
     onContextRestored(e) {},
   });
   const shaderCompilerPath = new URL(
-    '../public/glsl_wgsl_compiler_bg.wasm',
+    './public/glsl_wgsl_compiler_bg.wasm',
     import.meta.url,
   ).href;
   const deviceContributionWebGPU = new WebGPUDeviceContribution({
@@ -44,7 +42,7 @@ export async function initExample(
 
   const rerender = async (
     deviceContribution: DeviceContribution,
-    $container: HTMLDivElement,
+    $container: HTMLElement,
   ) => {
     let $canvasContainer = document.getElementById('canvas')!;
     if ($canvasContainer) {
@@ -102,21 +100,4 @@ export async function initExample(
   rendererFolder.open();
 
   return disposeCallback;
-}
-
-export async function loadImage(
-  url: string,
-): Promise<HTMLImageElement | ImageBitmap> {
-  if (!!window.createImageBitmap) {
-    const response = await fetch(url);
-    const imageBitmap = await createImageBitmap(await response.blob());
-    return imageBitmap;
-  } else {
-    const image = new window.Image();
-    return new Promise((res) => {
-      image.onload = () => res(image);
-      image.src = url;
-      image.crossOrigin = 'Anonymous';
-    });
-  }
 }

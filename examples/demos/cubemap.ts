@@ -17,7 +17,7 @@ import {
   MipmapFilterMode,
   TextureDimension,
 } from '../../src';
-import { initExample, loadImage } from './utils';
+import { loadImage } from '../utils/image';
 import { vec3, mat4 } from 'gl-matrix';
 import {
   cubeVertexArray,
@@ -314,9 +314,7 @@ void main() {
   };
 }
 
-export async function Cubemap($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2', 'webgpu'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2', 'webgpu'],
+  default: 'webgl2',
+};

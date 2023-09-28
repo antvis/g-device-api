@@ -7,7 +7,6 @@ import {
   Bindings,
   BufferUsage,
 } from '../../src';
-import { initExample } from './utils';
 
 /**
  * Use Compute Shader with WebGPU
@@ -350,9 +349,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   };
 }
 
-export async function ComputeBoids($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgpu'],
-    default: 'webgpu',
-  });
-}
+render.params = {
+  targets: ['webgpu'],
+  default: 'webgpu',
+};

@@ -1,5 +1,4 @@
 import { ARButton } from 'three/examples/jsm/webxr/ARButton';
-import { initExample } from './utils';
 import { DeviceContribution } from '../../src';
 import {
   AmbientLight,
@@ -65,10 +64,8 @@ export async function render(
   return () => {};
 }
 
-export async function ARThree($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2'],
-    xrCompatible: true,
-    default: 'webgl1',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2'],
+  xrCompatible: true,
+  default: 'webgl1',
+};
