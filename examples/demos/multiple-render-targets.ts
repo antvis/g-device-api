@@ -8,6 +8,10 @@ import {
   TextureUsage,
 } from '../../src';
 
+/**
+ * @see https://github.com/shrekshao/MoveWebGL1EngineToWebGL2/blob/master/Move-a-WebGL-1-Engine-To-WebGL-2-Blog-1.md#multiple-render-targets
+ */
+
 export async function render(
   deviceContribution: DeviceContribution,
   $canvas: HTMLCanvasElement,
@@ -31,10 +35,14 @@ void main() {
     },
     fragment: {
       glsl: `
-out vec4 outputColor;
+layout(location = 0) out vec4 outputColor1;
+layout(location = 1) out vec4 outputColor2;
+layout(location = 2) out vec4 outputColor3;
 
 void main() {
-  outputColor = vec4(1.0, 0.0, 0.0, 1.0);
+  outputColor1 = vec4(1.0, 0.0, 0.0, 1.0);
+  outputColor2 = vec4(0.0, 1.0, 0.0, 1.0);
+  outputColor3 = vec4(0.0, 0.0, 1.0, 1.0);
 }
 `,
     },
@@ -46,12 +54,6 @@ void main() {
     hint: BufferFrequencyHint.DYNAMIC,
   });
   device.setResourceName(vertexBuffer, 'a_Position');
-
-  const indexBuffer = device.createBuffer({
-    viewOrSize: new Uint32Array([0, 1, 2]),
-    usage: BufferUsage.INDEX,
-    hint: BufferFrequencyHint.STATIC,
-  });
 
   const inputLayout = device.createInputLayout({
     vertexBufferDescriptors: [
@@ -67,17 +69,21 @@ void main() {
         ],
       },
     ],
-    indexBufferFormat: Format.U32_R,
+    indexBufferFormat: null,
     program,
   });
 
   const pipeline = device.createRenderPipeline({
     inputLayout,
     program,
-    colorAttachmentFormats: [Format.U8_RGBA_RT],
+    colorAttachmentFormats: [
+      Format.U8_RGBA_RT,
+      Format.U8_RGBA_RT,
+      Format.U8_RGBA_RT,
+    ],
   });
 
-  const renderTarget = device.createRenderTargetFromTexture(
+  const renderTarget1 = device.createRenderTargetFromTexture(
     device.createTexture({
       format: Format.U8_RGBA_RT,
       width: $canvas.width,
@@ -85,7 +91,27 @@ void main() {
       usage: TextureUsage.RENDER_TARGET,
     }),
   );
-  device.setResourceName(renderTarget, 'Main Render Target');
+  device.setResourceName(renderTarget1, 'Main Render Target1');
+
+  const renderTarget2 = device.createRenderTargetFromTexture(
+    device.createTexture({
+      format: Format.U8_RGBA_RT,
+      width: $canvas.width,
+      height: $canvas.height,
+      usage: TextureUsage.RENDER_TARGET,
+    }),
+  );
+  device.setResourceName(renderTarget2, 'Main Render Target2');
+
+  const renderTarget3 = device.createRenderTargetFromTexture(
+    device.createTexture({
+      format: Format.U8_RGBA_RT,
+      width: $canvas.width,
+      height: $canvas.height,
+      usage: TextureUsage.RENDER_TARGET,
+    }),
+  );
+  device.setResourceName(renderTarget3, 'Main Render Target3');
 
   let id: number;
   const frame = () => {
@@ -96,9 +122,10 @@ void main() {
     const onscreenTexture = swapChain.getOnscreenTexture();
 
     const renderPass = device.createRenderPass({
-      colorAttachment: [renderTarget],
-      colorResolveTo: [onscreenTexture],
-      colorClearColor: [TransparentWhite],
+      colorAttachment: [renderTarget1, renderTarget2, renderTarget3],
+      colorResolveTo: [null, onscreenTexture, null],
+      colorClearColor: [TransparentWhite, TransparentWhite, TransparentWhite],
+      colorStore: [true, true, true],
     });
 
     renderPass.setPipeline(pipeline);
@@ -109,9 +136,7 @@ void main() {
           buffer: vertexBuffer,
         },
       ],
-      {
-        buffer: indexBuffer,
-      },
+      null,
     );
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
     renderPass.draw(3);
@@ -130,10 +155,11 @@ void main() {
     }
     program.destroy();
     vertexBuffer.destroy();
-    indexBuffer.destroy();
     inputLayout.destroy();
     pipeline.destroy();
-    renderTarget.destroy();
+    renderTarget1.destroy();
+    renderTarget2.destroy();
+    renderTarget3.destroy();
     device.destroy();
 
     // For debug.

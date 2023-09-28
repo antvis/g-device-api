@@ -156,8 +156,10 @@ export function preprocessShader_GLSL(
   defines: Record<string, string> | null = null,
 ): string {
   const isGLSL100 = vendorInfo.glslVersion === '#version 100';
-  // const supportMRT = vendorInfo.supportMRT && !!features.MRT;
-  const supportMRT = false;
+  const useMRT =
+    type === 'frag' &&
+    source.match(/^\s*layout\(location\s*=\s*\d*\)\s*out\s+vec4\s*(.*);$/gm)
+      ?.length > 1;
 
   const lines = source
     .split('\n')
@@ -299,7 +301,7 @@ layout(set = ${set}, binding = ${
   // headless-gl will throw the following error if we prepend `#version 100`:
   // #version directive must occur before anything else, except for comments and white space
   let concat = `${isGLSL100 ? '' : vendorInfo.glslVersion}
-${isGLSL100 && supportMRT ? '#extension GL_EXT_draw_buffers : require\n' : ''}
+${isGLSL100 && useMRT ? '#extension GL_EXT_draw_buffers : require\n' : ''}
 ${
   isGLSL100 && type === 'frag'
     ? '#extension GL_OES_standard_derivatives : enable\n'
@@ -362,49 +364,46 @@ ${rest}
     );
 
     if (type === 'frag') {
-      let glFragColor: string;
-      concat = concat.replace(
-        /^\s*out\s+(\S+)\s*(.*);$/gm,
-        (_, dataType, name) => {
-          glFragColor = name;
-          return `${dataType} ${name};\n`;
-        },
-      );
+      if (useMRT) {
+        const gBuffers = [];
+        concat = concat.replace(
+          /^\s*layout\(location\s*=\s*\d*\)\s*out\s+vec4\s*(.*);$/gm,
+          (_, buffer) => {
+            gBuffers.push(buffer);
+            return `vec4 ${buffer};\n`;
+          },
+        );
 
-      const lastIndexOfMain = concat.lastIndexOf('}');
-      concat =
-        concat.substring(0, lastIndexOfMain) +
-        `
+        const lastIndexOfMain = concat.lastIndexOf('}');
+        concat =
+          concat.substring(0, lastIndexOfMain) +
+          `
+    ${gBuffers
+      .map(
+        (gBuffer, i) => `gl_FragData[${i}] = ${gBuffer};
+    `,
+      )
+      .join('\n')}` +
+          concat.substring(lastIndexOfMain);
+      } else {
+        let glFragColor: string;
+        concat = concat.replace(
+          /^\s*out\s+(\S+)\s*(.*);$/gm,
+          (_, dataType, name) => {
+            glFragColor = name;
+            return `${dataType} ${name};\n`;
+          },
+        );
+
+        const lastIndexOfMain = concat.lastIndexOf('}');
+        concat =
+          concat.substring(0, lastIndexOfMain) +
+          `
   gl_FragColor = vec4(${glFragColor});
 ` +
-        concat.substring(lastIndexOfMain);
+          concat.substring(lastIndexOfMain);
+      }
     }
-
-    // MRT
-    // if (supportMRT) {
-    //   if (type === 'frag') {
-    //     const gBuffers = [];
-    //     concat = concat.replace(
-    //       /^\s*layout\(location\s*=\s*\d*\)\s*out\s+vec4\s*(.*);$/gm,
-    //       (_, buffer) => {
-    //         gBuffers.push(buffer);
-    //         return `vec4 ${buffer};\n`;
-    //       },
-    //     );
-
-    //     const lastIndexOfMain = concat.lastIndexOf('}');
-    //     concat =
-    //       concat.substring(0, lastIndexOfMain) +
-    //       `
-    // ${gBuffers
-    //   .map(
-    //     (gBuffer, i) => `gl_FragData[${i}] = ${gBuffer};
-    // `,
-    //   )
-    //   .join('\n')}` +
-    //       concat.substring(lastIndexOfMain);
-    //   }
-    // }
 
     // remove layout(location = 0)
     concat = concat.replace(/^\s*layout\((.*)\)/gm, '');

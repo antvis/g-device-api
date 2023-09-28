@@ -13,7 +13,6 @@ import {
   CompareFunction,
   CullMode,
 } from '../../src';
-import { initExample } from './utils';
 import { vec3, mat4 } from 'gl-matrix';
 import {
   cubeVertexArray,
@@ -277,9 +276,7 @@ void main() {
   };
 }
 
-export async function InstancedCubes($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl2', 'webgpu'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl2', 'webgpu'],
+  default: 'webgl2',
+};

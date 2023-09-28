@@ -8,7 +8,6 @@ import {
   BufferFrequencyHint,
   TextureUsage,
 } from '../../src';
-import { initExample } from './utils';
 
 /**
  * WebGPU doesn't support gl_PointSize
@@ -136,9 +135,7 @@ void main() {
   };
 }
 
-export async function PrimitiveTopologyPoints($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2'],
+  default: 'webgl2',
+};

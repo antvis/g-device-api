@@ -13,7 +13,6 @@ import {
   CompareFunction,
   TransparentWhite,
 } from '../../src';
-import { initExample } from './utils';
 import { vec3, mat4, quat } from 'gl-matrix';
 import {
   cubeVertexArray,
@@ -279,10 +278,8 @@ export async function render(
   };
 }
 
-export async function AR($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl1', 'webgl2'],
-    xrCompatible: true,
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl1', 'webgl2'],
+  xrCompatible: true,
+  default: 'webgl2',
+};

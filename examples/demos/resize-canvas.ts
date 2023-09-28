@@ -6,7 +6,6 @@ import {
   BufferUsage,
   BufferFrequencyHint,
 } from '../../src';
-import { initExample } from './utils';
 
 export async function render(
   deviceContribution: DeviceContribution,
@@ -131,9 +130,7 @@ void main() {
   };
 }
 
-export async function MSAA($container: HTMLDivElement) {
-  return initExample($container, render, {
-    targets: ['webgl2', 'webgpu'],
-    default: 'webgl2',
-  });
-}
+render.params = {
+  targets: ['webgl2', 'webgpu'],
+  default: 'webgl2',
+};
