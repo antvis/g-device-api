@@ -1264,6 +1264,7 @@ export class Device_GL implements SwapChain, Device {
     binding: GLenum,
     attachment: RenderTarget_GL | Texture_GL | null,
     level: number,
+    layer = 0,
   ): void {
     const gl = this.gl;
 
@@ -1300,8 +1301,14 @@ export class Device_GL implements SwapChain, Device {
         isWebGL2(gl) &&
         attachment.dimension === TextureDimension.TEXTURE_2D_ARRAY
       ) {
-        // TODO: use Tex2D array with gl.framebufferTextureLayer
-        // gl.framebufferTextureLayer(gl.DRAW_FRAMEBUFFER, binding, texture, 0, 0);
+        // use Tex2D array with gl.framebufferTextureLayer
+        gl.framebufferTextureLayer(
+          gl.DRAW_FRAMEBUFFER,
+          binding,
+          texture,
+          level,
+          layer,
+        );
       }
     }
   }

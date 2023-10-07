@@ -76,7 +76,7 @@ npm install @antv/g-device-api
     -   Program
         -   [setUniformsLegacy](#setUniformsLegacy)
     -   QueryPool
-        -   queryResultOcclusion
+        -   queryPoolResultOcclusion
     -   [Readback](#readback)
         -   [readTexture](#readTexture)
         -   [readTextureSync](#readTextureSync)
@@ -446,7 +446,15 @@ createQueryPool: (type: QueryPoolType, elemCount: number) => QueryPool;
 ```
 
 ```ts
-queryResultOcclusion(dstOffs: number): boolean | null
+export enum QueryPoolType {
+    ANY_SAMPLES_PASSED,
+    ANY_SAMPLES_PASSED_CONSERVATIVE,
+    TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,
+}
+```
+
+```ts
+queryPoolResultOcclusion(dstOffs: number): any | null
 ```
 
 ### <a id="createRenderPipeline" />createRenderPipeline

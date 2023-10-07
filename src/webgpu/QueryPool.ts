@@ -43,9 +43,10 @@ export class QueryPool_WebGPU extends ResourceBase_WebGPU implements QueryPool {
     this.results = null;
   }
 
-  queryResultOcclusion(dstOffs: number): boolean | null {
+  // eslint-disable-next-line
+  queryPoolResultOcclusion(dstOffs: number): any | null {
     if (this.results === null) return null;
-    return this.results[dstOffs] !== BigInt(0);
+    return this.results[dstOffs];
   }
 
   destroy(): void {
