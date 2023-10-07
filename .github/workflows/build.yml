@@ -1,10 +1,10 @@
-name: 🚀 Test
+name: build
 
-on: [pull_request]
+on: ['pull_request']
 
 jobs:
-  test:
-    name: Test
+  build:
+    name: build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -22,7 +22,7 @@ jobs:
       - name: Use Node.js 16
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 16 # semantic-release 需要 >= 16 的 Node.js 环境
           cache: 'pnpm'
 
       - name: Install headless-gl dependencies
@@ -32,6 +32,12 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Build
+        run: pnpm build
 
       - name: Cov
         run: |
