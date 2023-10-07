@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.0
+
+### Minor Changes
+
+-   276a7ab: Support occlusion query for both WebGL & WebGPU.
+
 ## 1.3.0
 
 ### Minor Changes
