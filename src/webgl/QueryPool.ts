@@ -35,7 +35,8 @@ export class QueryPool_GL extends ResourceBase_GL implements QueryPool {
     }
   }
 
-  queryResultOcclusion(dstOffs: number): boolean | null {
+  // eslint-disable-next-line
+  queryPoolResultOcclusion(dstOffs: number): any | null {
     const gl = this.device.gl;
     if (isWebGL2(gl)) {
       const gl_query = this.gl_query[dstOffs];
@@ -43,7 +44,7 @@ export class QueryPool_GL extends ResourceBase_GL implements QueryPool {
       if (!gl.getQueryParameter(gl_query, gl.QUERY_RESULT_AVAILABLE)) {
         return null;
       }
-      return !!gl.getQueryParameter(gl_query, gl.QUERY_RESULT);
+      return gl.getQueryParameter(gl_query, gl.QUERY_RESULT);
     }
     return null;
   }

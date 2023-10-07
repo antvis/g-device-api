@@ -196,7 +196,11 @@ export function getPlatformQuerySet(queryPool_: QueryPool): GPUQuerySet {
 }
 
 export function translateQueryPoolType(type: QueryPoolType): GPUQueryType {
-  if (type === QueryPoolType.OcclusionConservative) return 'occlusion';
+  if (
+    type === QueryPoolType.ANY_SAMPLES_PASSED ||
+    type === QueryPoolType.ANY_SAMPLES_PASSED_CONSERVATIVE
+  )
+    return 'occlusion';
   else throw new Error('whoops');
 }
 

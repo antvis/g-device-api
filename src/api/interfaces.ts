@@ -67,7 +67,7 @@ export interface RenderPipeline extends ResourceBase {
 export interface QueryPool extends ResourceBase {
   type: ResourceType.QueryPool;
 
-  queryResultOcclusion: (dstOffs: number) => boolean | null;
+  queryPoolResultOcclusion: (dstOffs: number) => boolean | null;
 }
 export interface Readback extends ResourceBase {
   type: ResourceType.Readback;
@@ -743,7 +743,9 @@ export interface ComputePass extends DebugCommandsMixin {
 }
 
 export enum QueryPoolType {
-  OcclusionConservative,
+  ANY_SAMPLES_PASSED,
+  ANY_SAMPLES_PASSED_CONSERVATIVE,
+  TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN,
 }
 /**
  * Device represents a "virtual GPU"

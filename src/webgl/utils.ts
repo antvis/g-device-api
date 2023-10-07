@@ -272,8 +272,12 @@ export function isBlendStateNone(blendState: ChannelBlendState): boolean {
 
 export function translateQueryPoolType(type: QueryPoolType): GLenum {
   switch (type) {
-    case QueryPoolType.OcclusionConservative:
+    case QueryPoolType.ANY_SAMPLES_PASSED:
+      return GL.ANY_SAMPLES_PASSED;
+    case QueryPoolType.ANY_SAMPLES_PASSED_CONSERVATIVE:
       return GL.ANY_SAMPLES_PASSED_CONSERVATIVE;
+    case QueryPoolType.TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN:
+      return GL.TRANSFORM_FEEDBACK_PRIMITIVES_WRITTEN;
     default:
       throw new Error('whoops');
   }

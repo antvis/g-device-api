@@ -16,11 +16,11 @@ describe('QueryPool', () => {
 
   it('should create QueryPool correctly.', () => {
     const queryPool = device.createQueryPool(
-      QueryPoolType.OcclusionConservative,
+      QueryPoolType.ANY_SAMPLES_PASSED_CONSERVATIVE,
       0,
     ) as QueryPool_GL;
 
-    expect(queryPool.queryResultOcclusion(0)).toBeNull();
+    expect(queryPool.queryPoolResultOcclusion(0)).toBeNull();
     queryPool.destroy();
   });
 });
