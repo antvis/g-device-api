@@ -3,6 +3,12 @@
 This is a set of Device API also known as the hardware adaptation layer(HAL).
 It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](https://github.com/magcius/noclip.website).
 
+[![Build Status](https://github.com/antvis/g-device-api/workflows/build/badge.svg?branch=master)](https://github.com/antvis/g-device-api/actions)
+[![Coverage Status](https://img.shields.io/coveralls/github/antvis/g-device-api/master.svg)](https://coveralls.io/github/antvis/g-device-api?branch=master)
+[![npm Version](https://img.shields.io/npm/v/@antv/g-device-api.svg)](https://www.npmjs.com/package/@antv/g-device-api)
+[![npm Download](https://img.shields.io/npm/dm/@antv/g-device-api.svg)](https://www.npmjs.com/package/@antv/g-device-api)
+[![npm License](https://img.shields.io/npm/l/@antv/g-device-api.svg)](https://www.npmjs.com/package/@antv/g-device-api)
+
 -   [API](#api)
 -   [Shader Language](#shader-language)
 -   [Observable Examples](https://observablehq.com/@antv/g-device-api)
