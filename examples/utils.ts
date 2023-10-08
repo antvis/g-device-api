@@ -24,7 +24,7 @@ export async function initExample(
     onContextRestored(e) {},
   });
   const deviceContributionWebGL2 = new WebGLDeviceContribution({
-    targets: ['webgl2'],
+    targets: ['webgl2', 'webgl1'],
     xrCompatible: params.xrCompatible,
     onContextCreationError: () => {},
     onContextLost: () => {},
@@ -54,10 +54,10 @@ export async function initExample(
 
     $canvasContainer.innerHTML = '';
     const $canvas = document.createElement('canvas');
-    $canvas.width = 1000;
-    $canvas.height = 1000;
-    $canvas.style.width = '500px';
-    $canvas.style.height = '500px';
+    $canvas.width = params.width || 1000;
+    $canvas.height = params.height || 1000;
+    $canvas.style.width = `${$canvas.width / window.devicePixelRatio}px`;
+    $canvas.style.height = `${$canvas.height / window.devicePixelRatio}px`;
     $canvasContainer.appendChild($canvas);
 
     disposeCallback = await render(deviceContribution, $canvas);

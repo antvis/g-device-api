@@ -139,7 +139,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
 
               // @see https://stackoverflow.com/questions/21954036/dartweb-gl-render-warning-texture-bound-to-texture-unit-0-is-not-renderable
               // [.WebGL-0x106ad0400]RENDER WARNING: texture bound to texture unit 0 is not renderable. It might be non-power-of-2 or have incompatible texture filtering (maybe)?
-              if (this.mipmaps && this.isNPOT()) {
+              if (this.mipmaps) {
                 this.mipmaps = false;
                 gl.texParameteri(
                   GL.TEXTURE_2D,

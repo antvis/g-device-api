@@ -1049,19 +1049,30 @@ readTextureSync: (
 Read buffer data.
 
 -   src `required` Source buffer.
--   srcOffset `optional` Offset in bytes of src buffer. Defaulting to `0`.
--   dst `optional` Dest buffer view.
+-   srcOffset `required` Offset in bytes of src buffer. Defaulting to `0`.
+-   dst `required` Dest buffer view.
 -   dstOffset `optional` Offset in bytes of dst buffer. Defaulting to `0`.
 -   length `optional` Length in bytes of dst buffer. Defaulting to its whole size.
 
 ```ts
 readBuffer: (
     src: Buffer,
-    srcOffset?: number,
-    dst?: ArrayBufferView,
+    srcOffset: number,
+    dst: ArrayBufferView,
     dstOffset?: number,
     length?: number,
 ) => Promise<ArrayBufferView>;
+```
+
+`BufferUsage.COPY_SRC` must be used if this buffer will be read later:
+
+```ts
+const vertexBuffer = device.createBuffer({
+    viewOrSize: new Float32Array([0, 0.5, -0.5, -0.5, 0.5, -0.5]),
+    usage: BufferUsage.VERTEX | BufferUsage.COPY_SRC,
+    hint: BufferFrequencyHint.DYNAMIC,
+});
+const data = await readback.readBuffer(vertexBuffer, 0, new Float32Array(6));
 ```
 
 ## <a id='shader-language' />Shader Language

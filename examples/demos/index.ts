@@ -12,6 +12,8 @@ export { render as TexturedCube } from './textured-cube';
 export { render as Sampler } from './sampler';
 export { render as InstancedCubes } from './instanced-cubes';
 export { render as Cubemap } from './cubemap';
+export { render as ReadBuffer } from './read-buffer';
+export { render as ReadPixel } from './read-pixel';
 export { render as Add2Vectors } from './add-2-vectors';
 export { render as ComputeBoids } from './compute-boids';
 export { render as AR } from './ar';
