@@ -17,6 +17,7 @@ import type { Attachment_WebGPU, TextureShared_WebGPU } from './interfaces';
 import type { RenderPipeline_WebGPU } from './RenderPipeline';
 import type { Texture_WebGPU } from './Texture';
 import { getPlatformBuffer, getPlatformQuerySet } from './utils';
+import { Device_WebGPU } from './Device';
 
 export class RenderPass_WebGPU implements RenderPass {
   commandEncoder: GPUCommandEncoder | null = null;
@@ -32,7 +33,7 @@ export class RenderPass_WebGPU implements RenderPass {
   private gfxDepthStencilAttachment: TextureShared_WebGPU | null = null;
   private gfxDepthStencilResolveTo: TextureShared_WebGPU | null = null;
 
-  constructor() {
+  constructor(private device: Device_WebGPU) {
     this.gpuColorAttachments = [];
 
     this.gpuDepthStencilAttachment = {
@@ -205,6 +206,11 @@ export class RenderPass_WebGPU implements RenderPass {
     );
   }
 
+  private flipY(y: number, h: number) {
+    const height = this.device['swapChainHeight'];
+    return height - y - h;
+  }
+
   setViewport(
     x: number,
     y: number,
@@ -213,11 +219,18 @@ export class RenderPass_WebGPU implements RenderPass {
     minDepth = 0,
     maxDepth = 1,
   ): void {
-    this.gpuRenderPassEncoder.setViewport(x, y, w, h, minDepth, maxDepth);
+    this.gpuRenderPassEncoder.setViewport(
+      x,
+      this.flipY(y, h),
+      w,
+      h,
+      minDepth,
+      maxDepth,
+    );
   }
 
   setScissorRect(x: number, y: number, w: number, h: number): void {
-    this.gpuRenderPassEncoder.setScissorRect(x, y, w, h);
+    this.gpuRenderPassEncoder.setScissorRect(x, this.flipY(y, h), w, h);
   }
 
   setPipeline(pipeline_: RenderPipeline): void {

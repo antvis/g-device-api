@@ -653,7 +653,7 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
   createRenderPass(renderPassDescriptor: RenderPassDescriptor): RenderPass {
     let pass = this.renderPassPool.pop();
     if (pass === undefined) {
-      pass = new RenderPass_WebGPU();
+      pass = new RenderPass_WebGPU(this);
     }
     pass.commandEncoder = this.device.createCommandEncoder();
     pass.beginRenderPass(renderPassDescriptor);

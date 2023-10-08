@@ -49,8 +49,8 @@ export class Readback_GL extends ResourceBase_GL implements Readback {
     buffer: WebGLBuffer,
     srcByteOffset: number,
     dstBuffer: ArrayBufferView,
-    dstOffset = 0,
-    length = dstBuffer.byteLength || 0,
+    dstOffset?: number,
+    length?: number,
   ) {
     const gl = this.device.gl;
     if (isWebGL2(gl)) {
