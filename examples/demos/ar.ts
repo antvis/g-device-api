@@ -151,8 +151,10 @@ export async function render(
     });
     session.updateRenderState({
       baseLayer: new XRWebGLLayer(session, gl, {
+        alpha: true,
         antialias: false,
-        depth: false,
+        depth: true,
+        stencil: false,
       }),
     });
 
