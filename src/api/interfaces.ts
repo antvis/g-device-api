@@ -96,8 +96,8 @@ export interface Readback extends ResourceBase {
 
   readBuffer: (
     b: Buffer,
-    srcByteOffset?: number,
-    dst?: ArrayBufferView,
+    srcByteOffset: number,
+    dst: ArrayBufferView,
     dstOffset?: number,
     length?: number,
   ) => Promise<ArrayBufferView>;
