@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.1
+
+### Patch Changes
+
+-   c0f1220: Use lowerleft as origin in setViewport & setScissorRect.
+
 ## 1.3.0
 
 ### Minor Changes
