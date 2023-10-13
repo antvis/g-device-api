@@ -1,8 +1,10 @@
 export { render as PrimitiveTopologyPoints } from './primitive-topology-points';
+export { render as PrimitiveTopologyLines } from './primitive-topology-lines';
 export { render as PrimitiveTopologyTriangles } from './primitive-topology-triangles';
 export { render as DrawIndex } from './draw-index';
 export { render as MSAA } from './msaa';
 export { render as MultipleRenderTargets } from './multiple-render-targets';
+export { render as MultipleRenderPasses } from './multiple-render-passes';
 export { render as Blit } from './blit';
 export { render as RotatingCube } from './rotating-cube';
 export { render as Stencil } from './stencil';
