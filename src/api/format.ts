@@ -62,6 +62,21 @@ export function makeFormat(
 
 export enum Format {
   ALPHA = makeFormat(FormatTypeFlags.U8, FormatCompFlags.A, FormatFlags.None),
+  U8_LUMINANCE = makeFormat(
+    FormatTypeFlags.U8,
+    FormatCompFlags.A,
+    FormatFlags.None,
+  ),
+  F16_LUMINANCE = makeFormat(
+    FormatTypeFlags.F16,
+    FormatCompFlags.A,
+    FormatFlags.None,
+  ),
+  F32_LUMINANCE = makeFormat(
+    FormatTypeFlags.F32,
+    FormatCompFlags.A,
+    FormatFlags.None,
+  ),
   F16_R = makeFormat(FormatTypeFlags.F16, FormatCompFlags.R, FormatFlags.None),
   F16_RG = makeFormat(
     FormatTypeFlags.F16,

@@ -31,7 +31,7 @@ export async function initExample(
     onContextRestored(e) {},
   });
   const shaderCompilerPath = new URL(
-    './public/glsl_wgsl_compiler_bg.wasm',
+    '/public/glsl_wgsl_compiler_bg.wasm',
     import.meta.url,
   ).href;
   const deviceContributionWebGPU = new WebGPUDeviceContribution({
