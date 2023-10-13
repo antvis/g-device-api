@@ -496,6 +496,12 @@ export class Device_GL implements SwapChain, Device {
     switch (fmt) {
       case Format.ALPHA:
         return GL.ALPHA;
+      case Format.U8_LUMINANCE:
+      case Format.F16_LUMINANCE:
+      case Format.F32_LUMINANCE:
+        return GL.LUMINANCE;
+      // case Format.LUMINANCE_ALPHA:
+      //   return GL.LUMINANCE_ALPHA;
       case Format.F16_R:
         return GL.R16F;
       case Format.F16_RG:
