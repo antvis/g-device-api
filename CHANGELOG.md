@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.2
+
+### Patch Changes
+
+-   ae4f84b: Support luminance pixel format.
+
 ## 1.3.1
 
 ### Patch Changes
