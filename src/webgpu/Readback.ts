@@ -1,4 +1,4 @@
-import type { Buffer, Readback, RenderTarget, Texture } from '../api';
+import type { Buffer, Readback, Texture } from '../api';
 import {
   BufferFrequencyHint,
   BufferUsage,
@@ -18,28 +18,6 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
 
   constructor({ id, device }: { id: number; device: IDevice_WebGPU }) {
     super({ id, device });
-  }
-
-  async readRenderTarget(
-    t: RenderTarget,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    dst: ArrayBufferView,
-    dstOffset?: number,
-    length?: number,
-  ): Promise<ArrayBufferView> {
-    return this.readTexture(
-      t as unknown as Texture,
-      x,
-      y,
-      width,
-      height,
-      dst,
-      dstOffset,
-      length,
-    );
   }
 
   async readTexture(
