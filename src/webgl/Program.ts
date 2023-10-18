@@ -11,6 +11,7 @@ import type { Device_GL } from './Device';
 import { ResourceBase_GL } from './ResourceBase';
 import { Texture_GL } from './Texture';
 import { isWebGL2 } from './utils';
+import { RenderTarget_GL } from './RenderTarget';
 
 // const quadVert = `
 // layout(location = 0) in vec2 a_Position;
@@ -199,6 +200,8 @@ export class Program_GL extends ResourceBase_GL implements Program {
           let value = uniform;
           if (value instanceof Texture_GL) {
             value = value.textureIndex;
+          } else if (value instanceof RenderTarget_GL) {
+            // value = value.
           }
           uniformSetter(value);
         }

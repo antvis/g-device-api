@@ -86,6 +86,7 @@ npm install @antv/g-device-api
     -   [Readback](#readback)
         -   [readTexture](#readTexture)
         -   [readTextureSync](#readTextureSync)
+        -   [readRenderTarget](#readRenderTarget)
         -   [readBuffer](#readBuffer)
 
 ### <a id='createDevice' />Create Device
@@ -1040,6 +1041,31 @@ readTextureSync: (
     dstOffset?: number,
     length?: number,
 ) => ArrayBufferView;
+```
+
+### <a id='readRenderTarget' />readRenderTarget
+
+Read pixels from render target.
+
+-   t `required` Render target.
+-   x `required` X coordinate.
+-   y `required` Y coordinate.
+-   width `required` Width of dimension.
+-   height `required` Height of dimension.
+-   dst `required` Dst buffer view.
+-   length `optional`
+
+```ts
+readRenderTarget: (
+    t: RenderTarget,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    dst: ArrayBufferView,
+    dstOffset?: number,
+    length?: number,
+) => Promise<ArrayBufferView>;
 ```
 
 ### <a id='readBuffer' />readBuffer
