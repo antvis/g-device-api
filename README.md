@@ -3,8 +3,8 @@
 This is a set of Device API also known as the hardware adaptation layer(HAL).
 It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](https://github.com/magcius/noclip.website).
 
-[![Build Status](https://github.com/antvis/g-device-api/actions/workflows/build.yml/badge.svg?branch=master)](https://github.com/antvis/g-device-api/actions/workflows/build.yml)
-[![Coverage Status](https://coveralls.io/repos/github/antvis/g-device-api/badge.svg?branch=master)](https://coveralls.io/github/antvis/g-device-api?branch=master)
+[![Build Status](https://github.com/antvis/g-device-api/actions/workflows/build.yml/badge.svg)](https://github.com/antvis/g-device-api/actions/workflows/build.yml)
+[![Coverage Status](https://coveralls.io/repos/github/antvis/g-device-api/badge.svg)](https://coveralls.io/github/antvis/g-device-api?branch=master)
 [![npm Version](https://img.shields.io/npm/v/@antv/g-device-api.svg)](https://www.npmjs.com/package/@antv/g-device-api)
 [![npm Download](https://img.shields.io/npm/dm/@antv/g-device-api.svg)](https://www.npmjs.com/package/@antv/g-device-api)
 [![npm License](https://img.shields.io/npm/l/@antv/g-device-api.svg)](https://www.npmjs.com/package/@antv/g-device-api)
