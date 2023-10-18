@@ -5,6 +5,7 @@ import {
   BufferUsage,
   BufferFrequencyHint,
   TransparentWhite,
+  TextureUsage,
 } from '../../src';
 
 const width = 1000;
@@ -72,11 +73,19 @@ void main() {
     colorAttachmentFormats: [Format.F32_RGBA],
   });
 
-  const renderTarget = device.createRenderTarget({
-    format: Format.F32_RGBA,
-    width: $canvas.width,
-    height: $canvas.height,
-  });
+  const renderTarget = device.createRenderTargetFromTexture(
+    device.createTexture({
+      format: Format.F32_RGBA,
+      width: $canvas.width,
+      height: $canvas.height,
+      usage: TextureUsage.RENDER_TARGET,
+    }),
+  );
+  // const renderTarget = device.createRenderTarget({
+  //   format: Format.F32_RGBA,
+  //   width: $canvas.width,
+  //   height: $canvas.height,
+  // });
   device.setResourceName(renderTarget, 'Main Render Target');
 
   const readback = device.createReadback();
@@ -84,7 +93,7 @@ void main() {
   const onscreenTexture = swapChain.getOnscreenTexture();
   const renderPass = device.createRenderPass({
     colorAttachment: [renderTarget],
-    colorResolveTo: [null],
+    colorResolveTo: [onscreenTexture],
     colorClearColor: [TransparentWhite],
   });
 
@@ -129,7 +138,7 @@ void main() {
 
 render.params = {
   targets: ['webgl1', 'webgl2', 'webgpu'],
-  default: 'webgl2',
+  default: 'webgl1',
   width,
   height,
 };
