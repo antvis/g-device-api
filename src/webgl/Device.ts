@@ -532,7 +532,9 @@ export class Device_GL implements SwapChain, Device {
         // @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_color_buffer_float
         return isWebGL2(this.gl)
           ? GL.RGBA32F
-          : this.WEBGL_color_buffer_float.RGBA32F_EXT;
+          : isRenderbufferStorage
+          ? this.WEBGL_color_buffer_float.RGBA32F_EXT
+          : GL.RGBA;
       case Format.U8_R_NORM:
         return GL.R8;
       case Format.U8_RG_NORM:
