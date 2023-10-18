@@ -1,10 +1,17 @@
-import { Buffer, Readback, Texture, getFormatByteSize } from '../api';
+import {
+  Buffer,
+  Readback,
+  RenderTarget,
+  Texture,
+  getFormatByteSize,
+} from '../api';
 import { GL, ResourceType } from '../api';
 import { clamp } from '@antv/util';
 import type { Device_GL } from './Device';
 import { ResourceBase_GL } from './ResourceBase';
 import type { Texture_GL } from './Texture';
 import { getPlatformBuffer, isWebGL2 } from './utils';
+import { RenderTarget_GL } from './RenderTarget';
 
 export class Readback_GL extends ResourceBase_GL implements Readback {
   type: ResourceType.Readback = ResourceType.Readback;
@@ -145,6 +152,45 @@ export class Readback_GL extends ResourceBase_GL implements Readback {
       gl.readPixels(x, y, width, height, gl.RGBA, gl_type, dstBuffer);
       return dstBuffer;
     }
+  }
+
+  async readRenderTarget(
+    t: RenderTarget,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    dstBuffer: ArrayBufferView,
+    dstOffset = 0,
+    length = dstBuffer.byteLength || 0,
+  ): Promise<ArrayBufferView> {
+    const gl = this.device.gl;
+
+    const rt = t as RenderTarget_GL;
+    const gl_type = this.device.translateTextureType(rt.format);
+
+    gl.bindFramebuffer(GL.FRAMEBUFFER, this.device['readbackFramebuffer']);
+    if (rt.texture) {
+      gl.framebufferTexture2D(
+        GL.FRAMEBUFFER,
+        GL.COLOR_ATTACHMENT0,
+        GL.TEXTURE_2D,
+        (rt.texture as Texture_GL).gl_texture,
+        0,
+      );
+    } else if (rt.gl_renderbuffer) {
+      gl.framebufferRenderbuffer(
+        GL.FRAMEBUFFER,
+        GL.COLOR_ATTACHMENT0,
+        GL.RENDERBUFFER,
+        rt.gl_renderbuffer,
+      );
+    }
+    // slow requires roundtrip to GPU
+    // @see https://developer.mozilla.org/en-US/docs/Web/API/WebGLRenderingContext/pixelStorei
+    gl.pixelStorei(gl.PACK_ALIGNMENT, 4);
+    gl.readPixels(x, y, width, height, gl.RGBA, gl_type, dstBuffer);
+    return dstBuffer;
   }
 
   readTextureSync(

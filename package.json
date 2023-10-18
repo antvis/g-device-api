@@ -96,7 +96,17 @@
     "ts-jest": "^29.1.0",
     "typescript": "^5.2.2",
     "vite": "^4.4.9",
-    "three": "^0.156.0"
+    "three": "^0.156.0",
+    "ndarray": "^1.0.19",
+    "ndarray-fill": "latest",
+    "ndarray-ops": "latest",
+    "ndarray-pack": "latest",
+    "ndarray-gradient": "latest",
+    "dirichlet": "latest",
+    "orbit-camera": "latest",
+    "typedarray-pool": "latest",
+    "bit-twiddle": "latest",
+    "colormap": "latest"
   },
   "lint-staged": {
     "*.{md,json}": [

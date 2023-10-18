@@ -128,6 +128,9 @@ export class Device_GL implements SwapChain, Device {
   WEBGL_draw_buffers: WEBGL_draw_buffers | null = null;
   // @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
   WEBGL_depth_texture: WEBGL_depth_texture | null = null;
+  // @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_color_buffer_float
+  WEBGL_color_buffer_float: WEBGL_color_buffer_float | null = null;
+  EXT_color_buffer_half_float: EXT_color_buffer_half_float | null = null;
   WEBGL_compressed_texture_s3tc: WEBGL_compressed_texture_s3tc | null = null;
   WEBGL_compressed_texture_s3tc_srgb: WEBGL_compressed_texture_s3tc_srgb | null =
     null;
@@ -136,6 +139,8 @@ export class Device_GL implements SwapChain, Device {
   KHR_parallel_shader_compile: KHR_parallel_shader_compile | null = null;
   // @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_texture_norm16
   EXT_texture_norm16: EXT_texture_norm16 | null = null;
+  // @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_color_buffer_float
+  EXT_color_buffer_float: EXT_color_buffer_float | null = null;
   OES_texture_float_linear: OES_texture_float_linear | null = null;
   OES_texture_half_float_linear: OES_texture_half_float_linear | null = null;
 
@@ -240,6 +245,12 @@ export class Device_GL implements SwapChain, Device {
       this.WEBGL_draw_buffers = gl.getExtension('WEBGL_draw_buffers');
       // @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_depth_texture
       this.WEBGL_depth_texture = gl.getExtension('WEBGL_depth_texture');
+      this.WEBGL_color_buffer_float = gl.getExtension(
+        'WEBGL_color_buffer_float',
+      );
+      this.EXT_color_buffer_half_float = gl.getExtension(
+        'EXT_color_buffer_half_float',
+      );
       // @see https://developer.mozilla.org/en-US/docs/Web/API/EXT_frag_depth
       gl.getExtension('EXT_frag_depth');
       // @see https://developer.mozilla.org/en-US/docs/Web/API/OES_element_index_uint
@@ -248,6 +259,7 @@ export class Device_GL implements SwapChain, Device {
       gl.getExtension('OES_standard_derivatives');
     } else {
       this.EXT_texture_norm16 = gl.getExtension('EXT_texture_norm16');
+      this.EXT_color_buffer_float = gl.getExtension('EXT_color_buffer_float');
     }
 
     this.WEBGL_compressed_texture_s3tc = gl.getExtension(
@@ -517,7 +529,10 @@ export class Device_GL implements SwapChain, Device {
       case Format.F32_RGB:
         return GL.RGB32F;
       case Format.F32_RGBA:
-        return GL.RGBA32F;
+        // @see https://developer.mozilla.org/en-US/docs/Web/API/WEBGL_color_buffer_float
+        return isWebGL2(this.gl)
+          ? GL.RGBA32F
+          : this.WEBGL_color_buffer_float.RGBA32F_EXT;
       case Format.U8_R_NORM:
         return GL.R8;
       case Format.U8_RG_NORM:
@@ -538,6 +553,8 @@ export class Device_GL implements SwapChain, Device {
           : isRenderbufferStorage
           ? GL.RGBA4
           : GL.RGBA;
+      case Format.U8_RGBA:
+        return GL.RGBA;
       case Format.U8_RGBA_SRGB:
       case Format.U8_RGBA_RT_SRGB:
         return GL.SRGB8_ALPHA8;
@@ -2021,7 +2038,7 @@ export class Device_GL implements SwapChain, Device {
     for (let i = 0; i < this.currentColorAttachments.length; i++) {
       const attachment = this.currentColorAttachments[i];
       if (attachment === null) continue;
-      assert(attachment.format === pipeline.colorAttachmentFormats[i]);
+      // assert(attachment.format === pipeline.colorAttachmentFormats[i]);
     }
 
     if (this.currentDepthStencilAttachment) {
@@ -2294,7 +2311,7 @@ export class Device_GL implements SwapChain, Device {
             colorResolveFrom.width === colorResolveTo.width &&
               colorResolveFrom.height === colorResolveTo.height,
           );
-          assert(colorResolveFrom.format === colorResolveTo.format);
+          // assert(colorResolveFrom.format === colorResolveTo.format);
 
           this.setScissorRectEnabled(false);
           if (gl2) {
@@ -2372,11 +2389,11 @@ export class Device_GL implements SwapChain, Device {
               );
           }
 
-          if (gl2) {
-            gl.invalidateFramebuffer(gl.READ_FRAMEBUFFER, [
-              gl.COLOR_ATTACHMENT0,
-            ]);
-          }
+          // if (gl2) {
+          //   gl.invalidateFramebuffer(gl.READ_FRAMEBUFFER, [
+          //     gl.COLOR_ATTACHMENT0,
+          //   ]);
+          // }
         }
 
         gl.bindFramebuffer(gl2 ? GL.READ_FRAMEBUFFER : GL.FRAMEBUFFER, null);

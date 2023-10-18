@@ -44,6 +44,7 @@ export async function render(
       glsl: `
 layout(std140) uniform Uniforms {
   mat4 u_ModelViewProjectionMatrix;
+  float u_Test;
 };
 
 layout(location = 0) in vec4 a_Position;
@@ -76,7 +77,7 @@ void main() {
   });
 
   const uniformBuffer = device.createBuffer({
-    viewOrSize: 16 * 4, // mat4
+    viewOrSize: 16 * 4 + 4 * 4, // mat4
     usage: BufferUsage.UNIFORM,
     hint: BufferFrequencyHint.DYNAMIC,
   });
@@ -97,7 +98,7 @@ void main() {
   const sampler = device.createSampler({
     addressModeU: AddressMode.CLAMP_TO_EDGE,
     addressModeV: AddressMode.CLAMP_TO_EDGE,
-    minFilter: FilterMode.POINT,
+    minFilter: FilterMode.BILINEAR,
     magFilter: FilterMode.BILINEAR,
     mipmapFilter: MipmapFilterMode.LINEAR,
     lodMinClamp: 0,
@@ -162,7 +163,6 @@ void main() {
       {
         binding: 0,
         buffer: uniformBuffer,
-        size: 16 * 4,
       },
     ],
     samplerBindings: [
