@@ -73,19 +73,14 @@ void main() {
     colorAttachmentFormats: [Format.F32_RGBA],
   });
 
-  const renderTarget = device.createRenderTargetFromTexture(
-    device.createTexture({
-      format: Format.F32_RGBA,
-      width: $canvas.width,
-      height: $canvas.height,
-      usage: TextureUsage.RENDER_TARGET,
-    }),
-  );
-  // const renderTarget = device.createRenderTarget({
-  //   format: Format.F32_RGBA,
-  //   width: $canvas.width,
-  //   height: $canvas.height,
-  // });
+  const floatingPointTexture = device.createTexture({
+    format: Format.F32_RGBA,
+    width: $canvas.width,
+    height: $canvas.height,
+    usage: TextureUsage.RENDER_TARGET,
+  });
+  const renderTarget =
+    device.createRenderTargetFromTexture(floatingPointTexture);
   device.setResourceName(renderTarget, 'Main Render Target');
 
   const readback = device.createReadback();
@@ -112,8 +107,8 @@ void main() {
 
   device.submitPass(renderPass);
 
-  const result = await readback.readRenderTarget(
-    renderTarget,
+  const result = await readback.readTexture(
+    floatingPointTexture,
     250,
     250,
     1,
@@ -138,7 +133,7 @@ void main() {
 
 render.params = {
   targets: ['webgl1', 'webgl2', 'webgpu'],
-  default: 'webgl1',
+  default: 'webgl2',
   width,
   height,
 };
