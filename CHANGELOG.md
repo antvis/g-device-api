@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.5
+
+### Patch Changes
+
+-   42d3a0d: Fix readTexture in WebGL2.
+
 ## 1.3.4
 
 ### Patch Changes
