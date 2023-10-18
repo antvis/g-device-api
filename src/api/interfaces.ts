@@ -72,6 +72,17 @@ export interface QueryPool extends ResourceBase {
 export interface Readback extends ResourceBase {
   type: ResourceType.Readback;
 
+  readRenderTarget: (
+    t: RenderTarget,
+    x: number,
+    y: number,
+    width: number,
+    height: number,
+    dst: ArrayBufferView,
+    dstOffset?: number,
+    length?: number,
+  ) => Promise<ArrayBufferView>;
+
   readTexture: (
     t: Texture,
     x: number,

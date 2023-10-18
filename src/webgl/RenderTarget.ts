@@ -55,14 +55,18 @@ export class RenderTarget_GL extends ResourceBase_GL implements RenderTarget {
       );
 
       if (isWebGL2(gl)) {
-        // @see https://github.com/shrekshao/MoveWebGL1EngineToWebGL2/blob/master/Move-a-WebGL-1-Engine-To-WebGL-2-Blog-2.md#multisampled-renderbuffers
-        gl.renderbufferStorageMultisample(
-          GL.RENDERBUFFER,
-          sampleCount,
-          gl_format,
-          width,
-          height,
-        );
+        if (sampleCount > 1) {
+          // @see https://github.com/shrekshao/MoveWebGL1EngineToWebGL2/blob/master/Move-a-WebGL-1-Engine-To-WebGL-2-Blog-2.md#multisampled-renderbuffers
+          gl.renderbufferStorageMultisample(
+            GL.RENDERBUFFER,
+            sampleCount,
+            gl_format,
+            width,
+            height,
+          );
+        } else {
+          gl.renderbufferStorage(GL.RENDERBUFFER, gl_format, width, height);
+        }
       } else {
         // WebGL1 can only use FXAA or other post-processing methods
         gl.renderbufferStorage(GL.RENDERBUFFER, gl_format, width, height);

@@ -4,8 +4,7 @@ import {
   Format,
   BufferUsage,
   BufferFrequencyHint,
-  TextureUsage,
-  colorNewFromRGBA,
+  TransparentWhite,
 } from '../../src';
 
 const width = 1000;
@@ -36,7 +35,7 @@ void main() {
 out vec4 outputColor;
 
 void main() {
-  outputColor = vec4(1.0, 0.0, 0.0, 1.0);
+  outputColor = vec4(0.5, 0.4, 0.3, 1.0);
 }
 `,
     },
@@ -70,31 +69,23 @@ void main() {
   const pipeline = device.createRenderPipeline({
     inputLayout,
     program,
-    colorAttachmentFormats: [Format.U8_RGBA_RT],
+    colorAttachmentFormats: [Format.F32_RGBA],
   });
 
-  const renderTargetTexture = device.createTexture({
-    format: Format.U8_RGBA_RT,
+  const renderTarget = device.createRenderTarget({
+    format: Format.F32_RGBA,
     width: $canvas.width,
     height: $canvas.height,
-    usage: TextureUsage.RENDER_TARGET,
   });
-  const renderTarget =
-    device.createRenderTargetFromTexture(renderTargetTexture);
   device.setResourceName(renderTarget, 'Main Render Target');
 
   const readback = device.createReadback();
 
-  /**
-   * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
-   * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
-   */
   const onscreenTexture = swapChain.getOnscreenTexture();
-
   const renderPass = device.createRenderPass({
     colorAttachment: [renderTarget],
-    colorResolveTo: [onscreenTexture],
-    colorClearColor: [colorNewFromRGBA(0, 0, 255, 1)],
+    colorResolveTo: [null],
+    colorClearColor: [TransparentWhite],
   });
 
   renderPass.setPipeline(pipeline);
@@ -112,33 +103,15 @@ void main() {
 
   device.submitPass(renderPass);
 
-  const length = width * height * 4;
-  const pixel = await readback.readTexture(
-    renderTargetTexture,
-    0,
-    0,
-    width,
-    height,
-    new Uint8ClampedArray(length),
+  const result = await readback.readRenderTarget(
+    renderTarget,
+    250,
+    250,
+    1,
+    1,
+    new Float32Array(4),
   );
-  let data = new Uint8ClampedArray(pixel.buffer);
-  // data = data.slice(0, length);
-
-  const $c = document.createElement('canvas');
-  $c.width = width;
-  $c.height = height;
-  $c.style.width = `${width / 2}px`;
-  $c.style.height = `${height / 2}px`;
-  $canvas.parentElement?.appendChild($c);
-
-  const context = $c.getContext('2d')!;
-  const ci = context.createImageData(width, height);
-  const row = width * 4;
-  const end = (height - 1) * row;
-  for (let i = 0; i < length; i += row) {
-    ci.data.set(data.subarray(i, i + row), i);
-  }
-  context.putImageData(ci, 0, 0);
+  console.log(result); // [0.5, 0.4, 0.3, 1.0]
 
   return () => {
     program.destroy();
