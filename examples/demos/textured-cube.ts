@@ -98,7 +98,7 @@ void main() {
   const sampler = device.createSampler({
     addressModeU: AddressMode.CLAMP_TO_EDGE,
     addressModeV: AddressMode.CLAMP_TO_EDGE,
-    minFilter: FilterMode.BILINEAR,
+    minFilter: FilterMode.POINT,
     magFilter: FilterMode.BILINEAR,
     mipmapFilter: MipmapFilterMode.LINEAR,
     lodMinClamp: 0,
