@@ -6,7 +6,7 @@ select.id = 'example-select';
 select.style.margin = '1em';
 select.onchange = onChange;
 select.style.display = 'block';
-document.body.prepend(select);
+document.body.append(select);
 
 const options = Object.keys(demos).map((d) => {
   const option = document.createElement('option');
