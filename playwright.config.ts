@@ -20,7 +20,7 @@ export default defineConfig({
     {
       name: 'chromium',
       use: {
-        ...devices['Desktop Chrome'],
+        ...devices['Desktop Firefox'],
         headless: true,
         screenshot: 'on',
         launchOptions: {

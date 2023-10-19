@@ -26,9 +26,6 @@ test.describe('Testing', () => {
 
     await expect(page.locator('canvas')).toHaveScreenshot(
       'PrimitiveTopologyPoints.png',
-      {
-        maxDiffPixels: 50,
-      },
     );
   });
 
@@ -50,9 +47,6 @@ test.describe('Testing', () => {
 
     await expect(page.locator('canvas')).toHaveScreenshot(
       'PrimitiveTopologyTriangles.png',
-      {
-        maxDiffPixels: 50,
-      },
     );
   });
 });
