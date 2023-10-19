@@ -46,6 +46,7 @@
     "version": "changeset version",
     "release": "changeset publish",
     "test": "jest",
+    "test:e2e": "npx playwright test",
     "cov": "jest --coverage",
     "wasm": "wasm-pack build ./rust --target web",
     "sync": "tnpm sync"
@@ -59,6 +60,7 @@
     "tslib": "^2.5.3"
   },
   "devDependencies": {
+    "@playwright/test": "^1.39.0",
     "@commitlint/cli": "^8.3.6",
     "@commitlint/config-angular": "^9.1.2",
     "@changesets/cli": "^2.26.2",

@@ -6,7 +6,7 @@ select.id = 'example-select';
 select.style.margin = '1em';
 select.onchange = onChange;
 select.style.display = 'block';
-document.body.append(select);
+document.body.prepend(select);
 
 const options = Object.keys(demos).map((d) => {
   const option = document.createElement('option');
@@ -34,6 +34,12 @@ async function render() {
 
   const demo = demos[select.value];
   callback = await initExample($container, demo);
+
+  // @ts-ignore
+  if (window.screenshot) {
+    // @ts-ignore
+    window.screenshot();
+  }
 }
 
 function onChange() {
