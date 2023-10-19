@@ -38,7 +38,7 @@ async function render() {
   // @ts-ignore
   if (window.screenshot) {
     // @ts-ignore
-    window.screenshot();
+    await window.screenshot();
   }
 }
 
