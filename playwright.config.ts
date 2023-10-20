@@ -9,12 +9,12 @@ export default defineConfig({
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 3 : undefined,
+  workers: process.env.CI ? 10 : undefined,
   reporter: 'html',
   use: {
     actionTimeout: 0,
     trace: 'on-first-retry',
-    baseURL: 'http://127.0.0.1:8080',
+    baseURL: 'http://localhost:8080',
   },
   projects: [
     {
@@ -32,7 +32,7 @@ export default defineConfig({
   // Run your local dev server before starting the tests
   webServer: {
     command: 'npm run dev',
-    url: 'http://127.0.0.1:8080',
+    url: 'http://localhost:8080',
     reuseExistingServer: !process.env.CI,
     stdout: 'ignore',
     stderr: 'pipe',
