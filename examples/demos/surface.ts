@@ -138,12 +138,13 @@ var field = ndarray(new Float32Array(4 * (size + 1) * (size + 1)), [
 ]);
 
 fill(field, function (x, y) {
-  return (
-    0.5 *
-    size *
-    diric(10, (5.0 * (x - size)) / size) *
-    diric(10, (5.0 * (y - size)) / size)
-  );
+  // return (
+  //   0.5 *
+  //   size *
+  //   diric(10, (5.0 * (x - size)) / size) *
+  //   diric(10, (5.0 * (y - size)) / size)
+  // );
+  return Math.random() * 10;
 });
 
 // var coords = [
@@ -504,17 +505,17 @@ in vec3 surfaceNormal;
 out vec4 outputColor;
 
 void main() {
-  if (
-    kill > 0.0
-  ) discard;
+  // if (
+  //   kill > 0.0
+  // ) discard;
 
-  vec3 N = normalize(surfaceNormal);
-  vec3 V = normalize(eyeDirection);
-  vec3 L = normalize(lightDirection);
+  // vec3 N = normalize(surfaceNormal);
+  // vec3 V = normalize(eyeDirection);
+  // vec3 L = normalize(lightDirection);
 
-  if (gl_FrontFacing) {
-    N = -N;
-  }
+  // if (gl_FrontFacing) {
+  //   N = -N;
+  // }
 
   vec4 surfaceColor = texture(SAMPLER_2D(u_Texture), vec2(value, value));
 

@@ -10,3 +10,5 @@ coverage
 # tests
 __tests__/integration/**/*-diff.png
 __tests__/integration/**/*-actual.png
+test-results
+playwright-report

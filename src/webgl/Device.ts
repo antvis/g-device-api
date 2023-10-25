@@ -676,7 +676,11 @@ export class Device_GL implements SwapChain, Device {
   }
 
   translateTextureFormat(fmt: Format): GLenum {
-    if (isTextureFormatCompressed(fmt)) {
+    if (
+      isTextureFormatCompressed(fmt) ||
+      fmt === Format.F32_LUMINANCE ||
+      fmt === Format.U8_LUMINANCE
+    ) {
       return this.translateTextureInternalFormat(fmt);
     }
 

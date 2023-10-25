@@ -34,6 +34,12 @@ async function render() {
 
   const demo = demos[select.value];
   callback = await initExample($container, demo);
+
+  // @ts-ignore
+  if (window.screenshot) {
+    // @ts-ignore
+    await window.screenshot();
+  }
 }
 
 function onChange() {

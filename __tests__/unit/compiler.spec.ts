@@ -36,6 +36,18 @@ const WebGPUVendorInfo = {
   supportMRT: true,
 };
 
+const glsl100Vert = `
+attribute vec2 a_Position;
+void main() {
+  gl_Position = vec4(a_Position, 0.0, 1.0);
+  gl_PointSize = 10.0;
+}`;
+const glsl100Frag = `
+in vec4 v_Color;
+void main() {
+  gl_FragColor = v_Color;
+}`;
+
 const simpleVert = `
 layout(location = 0) in vec2 a_Position;
 void main() {
@@ -67,7 +79,30 @@ void main() {
 }`;
 
 describe('Shader Compiler', () => {
-  it('should compiler GLSL 100 vert correctly.', () => {
+  it('should compile raw GLSL 100 vert correctly.', () => {
+    const vert = preprocessShader_GLSL(WebGL1VendorInfo, 'vert', glsl100Vert);
+
+    expect(vert).toBe(`precision mediump float;
+
+attribute vec2 a_Position;
+void main() {
+  gl_Position = vec4(a_Position, 0.0, 1.0);
+  gl_PointSize = 10.0;
+}`);
+  });
+  it('should compile raw GLSL 100 frag correctly.', () => {
+    const frag = preprocessShader_GLSL(WebGL1VendorInfo, 'frag', glsl100Frag);
+
+    expect(frag).toBe(`#extension GL_OES_standard_derivatives : enable
+precision mediump float;
+varying vec4 v_Color;
+
+void main() {
+  gl_FragColor = v_Color;
+}`);
+  });
+
+  it('should compile GLSL 100 vert correctly.', () => {
     const vert = preprocessShader_GLSL(WebGL1VendorInfo, 'vert', simpleVert);
 
     expect(vert).toBe(`precision mediump float;
@@ -79,7 +114,24 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 300 vert correctly.', () => {
+  it('should compile GLSL 100 vert without precision correctly.', () => {
+    const vert = preprocessShader_GLSL(
+      WebGL1VendorInfo,
+      'vert',
+      simpleVert,
+      null,
+      false,
+    );
+
+    expect(vert).toBe(`attribute vec2 a_Position;
+
+void main() {
+  gl_Position = vec4(a_Position, 0.0, 1.0);
+  gl_PointSize = 10.0;
+}`);
+  });
+
+  it('should compile GLSL 300 vert correctly.', () => {
     const vert = preprocessShader_GLSL(WebGL2VendorInfo, 'vert', simpleVert);
 
     expect(vert).toBe(`#version 300
@@ -93,7 +145,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 440 vert correctly.', () => {
+  it('should compile GLSL 440 vert correctly.', () => {
     const vert = preprocessShader_GLSL(WebGPUVendorInfo, 'vert', simpleVert);
 
     expect(vert).toBe(`#version 440
@@ -111,7 +163,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 100 frag correctly.', () => {
+  it('should compile GLSL 100 frag correctly.', () => {
     const frag = preprocessShader_GLSL(WebGL1VendorInfo, 'frag', simpleFrag);
     expect(frag).toBe(`#extension GL_OES_standard_derivatives : enable
 precision mediump float;
@@ -124,7 +176,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 300 frag correctly.', () => {
+  it('should compile GLSL 300 frag correctly.', () => {
     const frag = preprocessShader_GLSL(WebGL2VendorInfo, 'frag', simpleFrag);
     expect(frag).toBe(`#version 300
 
@@ -136,7 +188,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 440 frag correctly.', () => {
+  it('should compile GLSL 440 frag correctly.', () => {
     const frag = preprocessShader_GLSL(WebGPUVendorInfo, 'frag', simpleFrag);
     expect(frag).toBe(`#version 440
 
@@ -152,7 +204,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL with defines correctly.', () => {
+  it('should compile GLSL with defines correctly.', () => {
     const vert = preprocessShader_GLSL(WebGL1VendorInfo, 'vert', simpleVert, {
       DEFINE_TEST1: '1',
     });
@@ -167,7 +219,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL with precision correctly.', () => {
+  it('should compile GLSL with precision correctly.', () => {
     const vert = preprocessShader_GLSL(
       WebGL1VendorInfo,
       'vert',
@@ -183,7 +235,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 100 with sampler2D correctly.', () => {
+  it('should compile GLSL 100 with sampler2D correctly.', () => {
     const vert = preprocessShader_GLSL(WebGL1VendorInfo, 'frag', sampler2DFrag);
 
     expect(vert).toBe(`#extension GL_OES_standard_derivatives : enable
@@ -200,7 +252,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 300 with sampler2D correctly.', () => {
+  it('should compile GLSL 300 with sampler2D correctly.', () => {
     const vert = preprocessShader_GLSL(WebGL2VendorInfo, 'frag', sampler2DFrag);
 
     expect(vert).toBe(`#version 300
@@ -215,7 +267,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 440 with sampler2D correctly.', () => {
+  it('should compile GLSL 440 with sampler2D correctly.', () => {
     const vert = preprocessShader_GLSL(WebGPUVendorInfo, 'frag', sampler2DFrag);
 
     expect(vert).toBe(`#version 440
@@ -235,7 +287,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 100 with samplerCube correctly.', () => {
+  it('should compile GLSL 100 with samplerCube correctly.', () => {
     const vert = preprocessShader_GLSL(
       WebGL1VendorInfo,
       'frag',
@@ -259,7 +311,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 300 with samplerCube correctly.', () => {
+  it('should compile GLSL 300 with samplerCube correctly.', () => {
     const vert = preprocessShader_GLSL(
       WebGL2VendorInfo,
       'frag',
@@ -280,7 +332,7 @@ void main() {
 }`);
   });
 
-  it('should compiler GLSL 440 with samplerCube correctly.', () => {
+  it('should compile GLSL 440 with samplerCube correctly.', () => {
     const vert = preprocessShader_GLSL(
       WebGPUVendorInfo,
       'frag',
