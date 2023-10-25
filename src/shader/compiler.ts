@@ -154,6 +154,7 @@ export function preprocessShader_GLSL(
   type: 'vert' | 'frag',
   source: string,
   defines: Record<string, string> | null = null,
+  usePrecision = true,
 ): string {
   const isGLSL100 = vendorInfo.glslVersion === '#version 100';
   const useMRT =
@@ -183,7 +184,9 @@ export function preprocessShader_GLSL(
   let precision =
     lines.find((line) => line.startsWith('precision')) ||
     'precision mediump float;';
-  let rest = lines.filter((line) => !line.startsWith('precision')).join('\n');
+  let rest = usePrecision
+    ? lines.filter((line) => !line.startsWith('precision')).join('\n')
+    : lines.join('\n');
   let extraDefines = '';
 
   if (vendorInfo.viewportOrigin === ViewportOrigin.UPPER_LEFT) {
@@ -306,7 +309,7 @@ ${
   isGLSL100 && type === 'frag'
     ? '#extension GL_OES_standard_derivatives : enable\n'
     : ''
-}${precision}
+}${usePrecision ? precision : ''}
 ${extraDefines ? extraDefines : ''}${definesString ? definesString + '\n' : ''}
 ${rest}
 `.trim();
@@ -395,13 +398,15 @@ ${rest}
           },
         );
 
-        const lastIndexOfMain = concat.lastIndexOf('}');
-        concat =
-          concat.substring(0, lastIndexOfMain) +
-          `
+        if (glFragColor) {
+          const lastIndexOfMain = concat.lastIndexOf('}');
+          concat =
+            concat.substring(0, lastIndexOfMain) +
+            `
   gl_FragColor = vec4(${glFragColor});
 ` +
-          concat.substring(lastIndexOfMain);
+            concat.substring(lastIndexOfMain);
+        }
       }
     }
 

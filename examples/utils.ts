@@ -58,6 +58,9 @@ export async function initExample(
     $canvas.height = params.height || 1000;
     $canvas.style.width = `${$canvas.width / window.devicePixelRatio}px`;
     $canvas.style.height = `${$canvas.height / window.devicePixelRatio}px`;
+    $canvas.style.outline = 'none';
+    $canvas.style.padding = '0px';
+    $canvas.style.margin = '0px';
     $canvasContainer.appendChild($canvas);
 
     disposeCallback = await render(deviceContribution, $canvas);
