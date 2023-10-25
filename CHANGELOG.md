@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.6
+
+### Patch Changes
+
+-   efa1878: Compile raw GLSL100 shader correctly.
+
 ## 1.3.5
 
 ### Patch Changes
