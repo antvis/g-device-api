@@ -395,6 +395,10 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     });
   }
 
+  private createProgramSimple(descriptor: ProgramDescriptor): Program {
+    return this.createProgram(descriptor);
+  }
+
   createTextureShared(
     descriptor: TextureSharedDescriptor,
     texture: TextureShared_WebGPU,

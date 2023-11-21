@@ -65,6 +65,7 @@ export function getUniforms(vert: string) {
       const uniforms = [];
       uniformStr
         .trim()
+        .replace('\r\n', '\n')
         .split('\n')
         .forEach((line) => {
           const [type, name] = line.trim().split(/\s+/);
@@ -84,6 +85,7 @@ export function getUniforms(vert: string) {
   vert.replace(/\s*uniform\s*.*\s*{((?:\s*.*\s*)*?)};/g, (_, uniforms) => {
     uniforms
       .trim()
+      .replace('\r\n', '\n')
       .split('\n')
       .forEach((line: string) => {
         const result = line.trim().split(' ');
@@ -163,6 +165,7 @@ export function preprocessShader_GLSL(
       ?.length > 1;
 
   const lines = source
+    .replace('\r\n', '\n')
     .split('\n')
     .map((n) => {
       // Remove comments.
