@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.9
+
+### Patch Changes
+
+-   94a3fda: Compiler should account for space when transpiling shaders.
+
 ## 1.3.8
 
 ### Patch Changes
