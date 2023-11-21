@@ -78,6 +78,22 @@ void main() {
   outputColor = texture(SAMPLER_Cube(u_Texture), cubemapVec);
 }`;
 
+const uniformVert = `
+layout(std140) uniform commonUniforms {
+  vec3 u_blur_height_fixed;
+  float u_stroke_width;
+  float u_additive;
+  float u_stroke_opacity;
+  float u_size_unit;
+};
+
+layout(location = 0) in vec2 a_Position;
+
+void main() {
+  gl_Position = vec4(a_Position, 0.0, 1.0);
+  gl_PointSize = 10.0;
+}`;
+
 describe('Shader Compiler', () => {
   it('should compile raw GLSL 100 vert correctly.', () => {
     const vert = preprocessShader_GLSL(WebGL1VendorInfo, 'vert', glsl100Vert);
@@ -355,6 +371,23 @@ out vec4 outputColor;
 void main() {
   vec3 cubemapVec = v_Position.xyz - vec3(0.5);
   outputColor = texture(samplerCube(T_u_Texture, S_u_Texture), cubemapVec);
+}`);
+  });
+
+  it('should compile GLSL 100 with uniforms correctly.', () => {
+    const vert = preprocessShader_GLSL(WebGL1VendorInfo, 'vert', uniformVert);
+
+    expect(vert).toBe(`precision mediump float;
+uniform vec3 u_blur_height_fixed;
+uniform float u_stroke_width;
+uniform float u_additive;
+uniform float u_stroke_opacity;
+uniform float u_size_unit;
+attribute vec2 a_Position;
+
+void main() {
+  gl_Position = vec4(a_Position, 0.0, 1.0);
+  gl_PointSize = 10.0;
 }`);
   });
 
