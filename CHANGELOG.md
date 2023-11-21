@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.7
+
+### Patch Changes
+
+-   12c25d1: Use compatible newline char in shader compiler.
+
 ## 1.3.6
 
 ### Patch Changes
