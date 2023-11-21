@@ -76,6 +76,24 @@ This project has two parts of automated testing:
 
 For all changes, unit tests or integration tests should be submitted to cover the modified parts. Additionally, run `npm run test` locally to ensure the CI runs successfully.
 
+### Automation release
+
+It can automatically create GitHub Releases and automatically associate the release to the corresponding issue.
+
+-   Create `release` branch from `next`
+-   Checkout dev branch from `release`, run changeset and commit
+
+```bash
+pnpm run changeset
+git add ./
+git commit -a -m "chore: commit changeset"
+```
+
+-   Merge dev branch into `release` branch, CI version process will create a `Version Package` PR
+-   Merge `release` into `next` branch
+
+In addition, all API deprecations need to be `deprecate` prompted on the current stable version and guaranteed to be compatible on the current stable version until a new version is released.
+
 ### Pull Request guidelines
 
 Since no one can guarantee how long it will be until they remember, please provide the following information when submitting a Pull Request for convenient historical reference:

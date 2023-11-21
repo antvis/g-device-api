@@ -21,4 +21,4 @@ export { render as Add2Vectors } from './add-2-vectors';
 export { render as ComputeBoids } from './compute-boids';
 export { render as AR } from './ar';
 export { render as ARThree } from './ar-three';
-// export { render as Surface } from './surface';
+export { render as Test } from './test-wgsl';
