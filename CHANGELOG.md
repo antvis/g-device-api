@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.3.8
+
+### Patch Changes
+
+-   ff7fbb5: Create simple program in WebGPU device.
+
 ## 1.3.7
 
 ### Patch Changes
