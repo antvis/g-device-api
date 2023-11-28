@@ -7,11 +7,27 @@
 * @returns {string}
 */
 export function glsl_compile(source: string, stage: string, validation_enabled: boolean): string;
+/**
+*/
+export class WGSLComposer {
+  free(): void;
+/**
+*/
+  constructor();
+/**
+* @param {string} source
+* @returns {string}
+*/
+  wgsl_compile(source: string): string;
+}
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
   readonly memory: WebAssembly.Memory;
+  readonly __wbg_wgslcomposer_free: (a: number) => void;
+  readonly wgslcomposer_new: () => number;
+  readonly wgslcomposer_wgsl_compile: (a: number, b: number, c: number, d: number) => void;
   readonly glsl_compile: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
   readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;

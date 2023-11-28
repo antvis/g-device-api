@@ -10,12 +10,48 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
-  const code = device['glsl_compile'](
-    '#version 440\n#define VIEWPORT_ORIGIN_TL 1\n#define CLIPSPACE_NEAR_ZERO 1\n#define gl_VertexID gl_VertexIndex\n#define gl_InstanceID gl_InstanceIndex\n#define MODEL_MATRIX0 0\n#define MODEL_MATRIX1 1\n#define MODEL_MATRIX2 2\n#define MODEL_MATRIX3 3\n#define PACKED_COLOR 4\n#define PACKED_STYLE1 5\n#define PACKED_STYLE2 6\n#define PICKING_COLOR 7\n#define POSITION 8\n#define NORMAL 9\n#define UV 10\n#define BARYCENTRIC 11\n#define MAX 12\n#define PACKED_STYLE3 12\n#define SIZE 13\n#define toneMapping none\n#define GLSLIFY 1\nlayout(std140, set = 0, binding = 0, set = 0, binding = 0) uniform   ub_SceneParams {\n  mat4 u_ProjectionMatrix;\n  mat4 u_ViewMatrix;\n  vec3 u_CameraPosition;\n  float u_DevicePixelRatio;\n  vec2 u_Viewport;\n  float u_IsOrtho;\n  float u_IsPicking;\n};\nlayout(location = MODEL_MATRIX0) in vec4 a_ModelMatrix0;\nlayout(location = MODEL_MATRIX1) in vec4 a_ModelMatrix1;\nlayout(location = MODEL_MATRIX2) in vec4 a_ModelMatrix2;\nlayout(location = MODEL_MATRIX3) in vec4 a_ModelMatrix3;\nlayout(location = PACKED_COLOR) in vec4 a_PackedColor;\nlayout(location = PACKED_STYLE1) in vec4 a_StylePacked1;\nlayout(location = PACKED_STYLE2) in vec4 a_StylePacked2;\nlayout(location = PICKING_COLOR) in vec4 a_PickingColor;\nlayout(location = 0) out vec4 v_PickingResult;\nlayout(location = 1) out vec4 v_Color;\nlayout(location = 2) out vec4 v_StrokeColor;\nlayout(location = 3) out vec4 v_StylePacked1;\nlayout(location = 4) out vec4 v_StylePacked2;\n#define COLOR_SCALE 1. / 255.\nvoid setPickingColor(vec3 pickingColor) {\n  v_PickingResult.rgb = pickingColor * COLOR_SCALE;\n}\nvec2 unpack_float(const float packedValue) {\n  int packedIntValue = int(packedValue);\n  int v0 = packedIntValue / 256;\n  return vec2(v0, packedIntValue - v0 * 256);\n}\nvec4 decode_color(const vec2 encodedColor) {\n  return vec4(\n    unpack_float(encodedColor[0]) / 255.0,\n    unpack_float(encodedColor[1]) / 255.0\n  );\n}\nvec4 project(vec4 pos, mat4 pm, mat4 vm, mat4 mm) {\n  return pm * vm * mm * pos;\n}\nbool isPerspectiveMatrix(mat4 m) {\n  return m[2][3] == -1.0;\n}\nvec4 billboard(vec2 offset, float rotation, bool isSizeAttenuation, mat4 pm, mat4 vm, mat4 mm) {\n  vec4 mvPosition = vm * mm * vec4(0.0, 0.0, 0.0, 1.0);\n  vec2 scale;\n  scale.x = length(vec3(mm[0][0], mm[0][1], mm[0][2]));\n  scale.y = length(vec3(mm[1][0], mm[1][1], mm[1][2]));\n  if (isSizeAttenuation) {\n    bool isPerspective = isPerspectiveMatrix(pm);\n    if (isPerspective) {\n      scale *= -mvPosition.z / 250.0;\n    }\n  }\n  vec2 alignedPosition = offset * scale;\n  vec2 rotatedPosition;\n  rotatedPosition.x = cos(rotation) * alignedPosition.x - sin(rotation) * alignedPosition.y;\n  rotatedPosition.y = sin(rotation) * alignedPosition.x + cos(rotation) * alignedPosition.y;\n  mvPosition.xy += rotatedPosition;\n  return pm * mvPosition;\n}\nlayout(location = POSITION) in vec2 a_Extrude;\nlayout(location = PACKED_STYLE3) in vec3 a_StylePacked3;\nlayout(location = SIZE) in vec4 a_Size;\n#ifdef USE_UV\n  layout(location = UV) in vec2 a_Uv;\n  out vec2 v_Uv;\n#endif\nlayout(location = 5) out vec2 v_Data;\nlayout(location = 6) out vec2 v_Radius;\nlayout(location = 7) out vec3 v_StylePacked3;\nvoid main() {\n  vec4 a_Color = decode_color(a_PackedColor.xy);\nvec4 a_StrokeColor = decode_color(a_PackedColor.zw);\nmat4 u_ModelMatrix = mat4(a_ModelMatrix0, a_ModelMatrix1, a_ModelMatrix2, a_ModelMatrix3);\nvec4 u_StrokeColor = a_StrokeColor;\nfloat u_Opacity = a_StylePacked1.x;\nfloat u_FillOpacity = a_StylePacked1.y;\nfloat u_StrokeOpacity = a_StylePacked1.z;\nfloat u_StrokeWidth = a_StylePacked1.w;\nfloat u_ZIndex = a_PickingColor.w;\nvec2 u_Anchor = a_StylePacked2.yz;\nfloat u_IncreasedLineWidthForHitTesting = a_StylePacked2.w;\nsetPickingColor(a_PickingColor.xyz);\nv_Color = a_Color;\nv_StrokeColor = a_StrokeColor;\nv_StylePacked1 = a_StylePacked1;\nv_StylePacked2 = a_StylePacked2;\n  #ifdef USE_UV\n  v_Uv = a_Uv;\n  #ifdef VIEWPORT_ORIGIN_TL\n    v_Uv.y = 1.0 - v_Uv.y;\n  #endif\n#endif\n  float strokeWidth;\n  if (u_IsPicking > 0.5) {\n    strokeWidth = u_IncreasedLineWidthForHitTesting + u_StrokeWidth;\n  } else {\n    strokeWidth = u_StrokeWidth;\n  }\n  bool omitStroke = a_StylePacked3.z == 1.0;\n  vec2 radius = a_Size.xy + vec2(omitStroke ? 0.0 : strokeWidth / 2.0);\n  vec2 offset = (a_Extrude + vec2(1.0) - 2.0 * u_Anchor.xy) * a_Size.xy + a_Extrude * vec2(omitStroke ? 0.0 : strokeWidth / 2.0);\n  bool isBillboard = a_Size.z > 0.5;\n  if (isBillboard) {\n    float rotation = 0.0;\n    bool isSizeAttenuation = a_Size.w > 0.5;\n    gl_Position = billboard(offset, rotation, isSizeAttenuation, u_ProjectionMatrix, u_ViewMatrix, u_ModelMatrix);\n  } else {\n    gl_Position = project(vec4(offset, u_ZIndex, 1.0), u_ProjectionMatrix, u_ViewMatrix, u_ModelMatrix);\n  }\n  v_Radius = radius;\n  v_Data = vec2(a_Extrude * radius / radius.y);\n  v_StylePacked3 = a_StylePacked3;\n}',
-    'vertex',
-    false,
+  const compiler = device['WGSLComposer'];
+  const code1 = compiler.wgsl_compile(
+    `
+#define_import_path my_module
+
+fn my_func() -> f32 {
+	return 1.0;
+}
+
+struct FullscreenVertexOutput {
+  @builtin(position)
+  position: vec4<f32>,
+  @location(0)
+  uv: vec2<f32>,
+};
+    `,
+  );
+
+  const code = compiler.wgsl_compile(
+    `
+    #import my_module;
+  
+  @group(0) @binding(0) var screenTexture: texture_2d<f32>;
+  @group(0) @binding(1) var samp: sampler;
+  
+  #define EDGE_THRESH_MIN_LOW 1
+  #define EDGE_THRESH_LOW 1
+  
+  // Trims the algorithm from processing darks.
+  #ifdef EDGE_THRESH_MIN_LOW
+      const EDGE_THRESHOLD_MIN: f32 = 0.0833;
+  #endif
+  
+  fn main() -> f32 {
+    let x = my_module::my_func();
+
+    return x;
+}
+  `,
   );
   console.log(code);
+  console.log(code1);
 }
 
 render.params = {

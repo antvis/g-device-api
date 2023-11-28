@@ -1,6 +1,7 @@
 use std::error::Error;
 use wasm_bindgen::prelude::*;
 use web_sys::console;
+use naga_oil::compose::{Composer, NagaModuleDescriptor, ComposableModuleDescriptor};
 
 fn show_error(place: &str, error: impl Error) {
     console::log_2(&place.into(), &error.to_string().into());
@@ -9,6 +10,56 @@ fn show_error(place: &str, error: impl Error) {
     while let Some(source) = e {
         console::log_1(&source.to_string().into());
         e = source.source();
+    }
+}
+
+#[wasm_bindgen]
+pub struct WGSLComposer {
+    composer: Composer,
+}
+
+#[wasm_bindgen]
+impl WGSLComposer {
+    #[wasm_bindgen(constructor)]
+    pub fn new() -> WGSLComposer {
+        WGSLComposer {
+            composer: naga_oil::compose::Composer::default()
+        }
+    }
+
+    pub fn wgsl_compile(&mut self, source: &str) -> String {
+        self.composer.add_composable_module(
+            ComposableModuleDescriptor {
+                source: &source,
+                ..Default::default()
+            }
+        );
+
+        let module = self.composer.make_naga_module(
+            NagaModuleDescriptor {
+                source: &source,
+                ..Default::default()
+            },
+        ).unwrap();
+
+        let info = match naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all())
+            .validate(&module)
+        {
+            Ok(v) => v,
+            Err(e) => {
+                show_error(&"validator", e);
+                panic!();
+            }
+        };
+
+        let writer_flags = naga::back::wgsl::WriterFlags::empty();
+        match naga::back::wgsl::write_string(&module, &info, writer_flags) {
+            Ok(v) => v,
+            Err(e) => {
+                show_error(&"wgsl::write_string", e);
+                panic!();
+            }
+        }
     }
 }
 
