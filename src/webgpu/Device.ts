@@ -128,13 +128,13 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     canvas: HTMLCanvasElement | OffscreenCanvas,
     canvasContext: GPUCanvasContext,
     glsl_compile: typeof glsl_compile_,
-    WGSLComposer: WGSLComposer,
+    wGSLComposer: WGSLComposer,
   ) {
     this.device = device;
     this.canvas = canvas;
     this.canvasContext = canvasContext;
     this.glsl_compile = glsl_compile;
-    this.WGSLComposer = WGSLComposer;
+    this.WGSLComposer = wGSLComposer;
 
     this.fallbackTexture2D = this.createFallbackTexture(
       TextureDimension.TEXTURE_2D,
