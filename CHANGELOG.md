@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.1
+
+### Patch Changes
+
+-   d473bdf: Export wasm pkg.
+
 ## 1.4.0
 
 ### Minor Changes
