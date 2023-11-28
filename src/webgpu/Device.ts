@@ -48,7 +48,10 @@ import {
   copyMegaState,
   copyAttachmentState,
 } from '../api';
-import type { glsl_compile as glsl_compile_ } from '../../rust/pkg/glsl_wgsl_compiler';
+import type {
+  glsl_compile as glsl_compile_,
+  WGSLComposer,
+} from '../../rust/pkg/glsl_wgsl_compiler';
 import { Bindings_WebGPU } from './Bindings';
 import { Buffer_WebGPU } from './Buffer';
 import { ComputePass_WebGPU } from './ComputePass';
@@ -117,6 +120,7 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
   private canvas: HTMLCanvasElement | OffscreenCanvas;
   private canvasContext: GPUCanvasContext;
   private glsl_compile: typeof glsl_compile_;
+  private WGSLComposer: WGSLComposer;
 
   constructor(
     adapter: GPUAdapter,
@@ -124,11 +128,13 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     canvas: HTMLCanvasElement | OffscreenCanvas,
     canvasContext: GPUCanvasContext,
     glsl_compile: typeof glsl_compile_,
+    wGSLComposer: WGSLComposer,
   ) {
     this.device = device;
     this.canvas = canvas;
     this.canvasContext = canvasContext;
     this.glsl_compile = glsl_compile;
+    this.WGSLComposer = wGSLComposer;
 
     this.fallbackTexture2D = this.createFallbackTexture(
       TextureDimension.TEXTURE_2D,

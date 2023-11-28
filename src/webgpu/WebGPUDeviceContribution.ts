@@ -1,4 +1,7 @@
-import init, { glsl_compile } from '../../rust/pkg/glsl_wgsl_compiler';
+import init, {
+  glsl_compile,
+  WGSLComposer,
+} from '../../rust/pkg/glsl_wgsl_compiler';
 import { DeviceContribution } from '../api';
 import { Device_WebGPU } from './Device';
 
@@ -59,7 +62,13 @@ export class WebGPUDeviceContribution implements DeviceContribution {
       await init(this.pluginOptions.shaderCompilerPath);
     } catch (e) {}
 
-    // @ts-ignore
-    return new Device_WebGPU(adapter, device, $canvas, context, glsl_compile);
+    return new Device_WebGPU(
+      adapter,
+      device,
+      $canvas,
+      context,
+      glsl_compile,
+      new WGSLComposer(),
+    );
   }
 }

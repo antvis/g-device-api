@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.0
+
+### Minor Changes
+
+-   aacebe6: Use naga-oil to combine and manipulate WGSL shaders.
+
 ## 1.3.9
 
 ### Patch Changes
