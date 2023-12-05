@@ -2094,7 +2094,7 @@ export class Device_GL implements SwapChain, Device {
       }
 
       const samplers = findall(
-        deviceProgram.vertex.glsl,
+        deviceProgram.fragment.glsl,
         /^uniform .*sampler\S+ (\w+);\s* \/\/ BINDING=(\d+)$/gm,
       );
       for (let i = 0; i < samplers.length; i++) {

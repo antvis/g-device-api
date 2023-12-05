@@ -11,6 +11,7 @@ export { render as Stencil } from './stencil';
 export { render as Scissor } from './scissor';
 export { render as TwoCubes } from './two-cubes';
 export { render as TexturedCube } from './textured-cube';
+export { render as MultiTexturedCube } from './multi-textured-cube';
 export { render as Sampler } from './sampler';
 export { render as InstancedCubes } from './instanced-cubes';
 export { render as Cubemap } from './cubemap';
