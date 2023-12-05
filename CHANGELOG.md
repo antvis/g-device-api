@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.2
+
+### Patch Changes
+
+-   d150566: Support multi textures in WebGL2.
+
 ## 1.4.1
 
 ### Patch Changes
