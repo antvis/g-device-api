@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.3
+
+### Patch Changes
+
+-   f28757e: Support nested render pass in WebGL2.
+
 ## 1.4.2
 
 ### Patch Changes
