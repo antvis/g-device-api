@@ -68,7 +68,7 @@ export class WebGPUDeviceContribution implements DeviceContribution {
       $canvas,
       context,
       glsl_compile,
-      new WGSLComposer(),
+      WGSLComposer && new WGSLComposer(),
     );
   }
 }
