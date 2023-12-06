@@ -162,7 +162,7 @@ export class Device_GL implements SwapChain, Device {
   private currentColorResolveTos: (Texture_GL | null)[] = [];
   private currentColorResolveToLevels: number[] = [];
   private currentDepthStencilAttachment: RenderTarget_GL | null;
-  private currentDepthStencilResolveTo: Texture_GL | null = null;
+  private currentDepthStencilResolveTo: Texture_GL | null | undefined;
   private currentSampleCount = -1;
   private currentPipeline: RenderPipeline_GL;
   private currentIndexBufferByteOffset: number | null = null;
@@ -180,6 +180,7 @@ export class Device_GL implements SwapChain, Device {
 
   // Pass Execution
   private currentRenderPassDescriptor: RenderPassDescriptor | null = null;
+  private currentRenderPassDescriptorStack: RenderPassDescriptor[] = [];
   private debugGroupStack: DebugGroup[] = [];
   private resolveColorAttachmentsChanged = false;
   private resolveColorReadFramebuffer: WebGLFramebuffer;
@@ -937,7 +938,12 @@ export class Device_GL implements SwapChain, Device {
   }
 
   createRenderPass(descriptor: RenderPassDescriptor): RenderPass {
-    assert(this.currentRenderPassDescriptor === null);
+    if (this.currentRenderPassDescriptor !== null) {
+      // Save current renderpass descriptor.
+      this.currentRenderPassDescriptorStack.push(
+        this.currentRenderPassDescriptor,
+      );
+    }
     this.currentRenderPassDescriptor = descriptor;
 
     // Format renderpass descriptor
@@ -990,7 +996,14 @@ export class Device_GL implements SwapChain, Device {
   submitPass(pass: RenderPass | ComputePass): void {
     assert(this.currentRenderPassDescriptor !== null);
     this.endPass();
-    this.currentRenderPassDescriptor = null;
+
+    if (this.currentRenderPassDescriptorStack.length) {
+      // Restore previous renderpass descriptor.
+      this.currentRenderPassDescriptor =
+        this.currentRenderPassDescriptorStack.pop();
+    } else {
+      this.currentRenderPassDescriptor = null;
+    }
   }
 
   copySubTexture2D(
@@ -1291,12 +1304,12 @@ export class Device_GL implements SwapChain, Device {
   private bindFramebufferAttachment(
     framebuffer: GLenum,
     binding: GLenum,
-    attachment: RenderTarget_GL | Texture_GL | null,
+    attachment: RenderTarget_GL | Texture_GL | null | undefined,
     level: number,
   ): void {
     const gl = this.gl;
 
-    if (attachment === null) {
+    if (isNil(attachment)) {
       gl.framebufferRenderbuffer(framebuffer, binding, gl.RENDERBUFFER, null);
     } else if (attachment.type === ResourceType.RenderTarget) {
       if ((attachment as RenderTarget_GL).gl_renderbuffer !== null) {
@@ -1341,10 +1354,9 @@ export class Device_GL implements SwapChain, Device {
   ): void {
     const gl = this.gl;
 
-    const flags =
-      attachment !== null
-        ? getFormatFlags(attachment.format)
-        : FormatFlags.Depth | FormatFlags.Stencil;
+    const flags = !isNil(attachment)
+      ? getFormatFlags(attachment.format)
+      : FormatFlags.Depth | FormatFlags.Stencil;
     const depth = !!(flags & FormatFlags.Depth);
     const stencil = !!(flags & FormatFlags.Stencil);
 
