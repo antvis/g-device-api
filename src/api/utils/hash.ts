@@ -276,9 +276,13 @@ export function bindingsDescriptorCopy(
   const uniformBufferBindings =
     a.uniformBufferBindings &&
     arrayCopy(a.uniformBufferBindings, bufferBindingCopy);
+  const storageBufferBindings =
+    a.storageBufferBindings &&
+    arrayCopy(a.storageBufferBindings, bufferBindingCopy);
   return {
     samplerBindings,
     uniformBufferBindings,
+    storageBufferBindings,
     pipeline: a.pipeline,
   };
 }
