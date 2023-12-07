@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.4
+
+### Patch Changes
+
+-   38d0b8e: Copy storage bindings correctly.
+
 ## 1.4.3
 
 ### Patch Changes
