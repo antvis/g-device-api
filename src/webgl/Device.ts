@@ -110,6 +110,18 @@ import { preprocessShader_GLSL } from '../shader';
 // https://bugs.chromium.org/p/angleproject/issues/detail?id=3388
 const UBO_PAGE_MAX_BYTE_SIZE = 0x10000;
 
+/**
+ * Extract uniform blocks from shader source.
+ * 
+ * @example
+ * ```glsl
+ * layout(std140) uniform CommonUniforms {
+    float u_blur;
+  };
+ * ```
+ */
+export const UNIFROM_BLOCK_REGEXP = /uniform(?:\s+)(\w+)(?:\s?){([^]*?)}/g;
+
 export class Device_GL implements SwapChain, Device {
   // Configuration
   private shaderDebug = false;
@@ -2090,7 +2102,7 @@ export class Device_GL implements SwapChain, Device {
 
       const uniformBlocks = findall(
         deviceProgram.vertex.glsl,
-        /uniform (\w+) {([^]*?)}/g,
+        UNIFROM_BLOCK_REGEXP,
       );
 
       if (isWebGL2(gl)) {

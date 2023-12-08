@@ -5,6 +5,8 @@ import {
   preprocessShader_GLSL,
 } from '../../src/shader';
 import { ClipSpaceNearZ, ViewportOrigin } from '../../src';
+import { findall } from '../../src/webgl/utils';
+import { UNIFROM_BLOCK_REGEXP } from '../../src/webgl/Device';
 
 const WebGL1VendorInfo = {
   platformString: 'WebGL1',
@@ -80,6 +82,26 @@ void main() {
 
 const uniformVert = `
 layout(std140) uniform commonUniforms {
+  vec3 u_blur_height_fixed;
+  float u_stroke_width;
+  float u_additive;
+  float u_stroke_opacity;
+  float u_size_unit;
+};
+
+layout(location = 0) in vec2 a_Position;
+
+void main() {
+  gl_Position = vec4(a_Position, 0.0, 1.0);
+  gl_PointSize = 10.0;
+}`;
+
+const compatibleUniformVert = `
+layout(std140) uniform commonUniforms1
+{
+  vec3 u_blur_height_fixed;
+};
+layout(std140) uniform commonUniforms2{ // space can be ignored
   vec3 u_blur_height_fixed;
   float u_stroke_width;
   float u_additive;
@@ -389,6 +411,14 @@ void main() {
   gl_Position = vec4(a_Position, 0.0, 1.0);
   gl_PointSize = 10.0;
 }`);
+
+    let uniformBlocks = findall(uniformVert, UNIFROM_BLOCK_REGEXP);
+    expect(uniformBlocks.length).toBe(1);
+
+    uniformBlocks = findall(compatibleUniformVert, UNIFROM_BLOCK_REGEXP);
+    expect(uniformBlocks.length).toBe(2);
+    expect(uniformBlocks[0][1]).toBe('commonUniforms1');
+    expect(uniformBlocks[1][1]).toBe('commonUniforms2');
   });
 
   it('should getDefines correctly.', () => {
@@ -420,7 +450,7 @@ layout(std140) uniform ub_ObjectParams {
   #ifdef NUM_DIR_LIGHTS
   DirectionalLight directionalLights[ NUM_DIR_LIGHTS ];
   #endif
-};
+}
 `);
     expect(uniforms).toEqual([
       'u_ModelMatrix',

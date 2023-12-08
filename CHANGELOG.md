@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.5
+
+### Patch Changes
+
+-   ca5eb24: Space before uniform block can be ignored.
+
 ## 1.4.4
 
 ### Patch Changes
