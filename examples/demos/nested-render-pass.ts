@@ -119,6 +119,32 @@ void main() {
     },
   });
 
+  const pipeline2 = device.createRenderPipeline({
+    inputLayout,
+    program,
+    colorAttachmentFormats: [Format.U8_RGBA_RT],
+    megaStateDescriptor: {
+      attachmentsState: [
+        {
+          channelWriteMask: ChannelWriteMask.ALL,
+          rgbBlendState: {
+            blendMode: BlendMode.ADD,
+            blendSrcFactor: BlendFactor.SRC_ALPHA,
+            blendDstFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
+          },
+          alphaBlendState: {
+            blendMode: BlendMode.ADD,
+            blendSrcFactor: BlendFactor.ONE,
+            blendDstFactor: BlendFactor.ONE_MINUS_SRC_ALPHA,
+          },
+        },
+      ],
+      blendConstant: TransparentBlack,
+      depthWrite: false,
+      cullMode: CullMode.BACK,
+    },
+  });
+
   const bindings = device.createBindings({
     pipeline,
     uniformBufferBindings: [
@@ -209,10 +235,9 @@ void main() {
         colorAttachment: [mainColorRT],
         colorResolveTo: [onscreenTexture],
         colorClearColor: [TransparentWhite],
-        depthStencilAttachment: mainDepthRT,
-        depthClearValue: 1,
+        depthStencilAttachment: null,
       });
-      renderPass2.setPipeline(pipeline);
+      renderPass2.setPipeline(pipeline2);
       renderPass2.setVertexInput(
         inputLayout,
         [
@@ -226,7 +251,7 @@ void main() {
       renderPass2.setBindings(bindings);
       renderPass2.draw(cubeVertexCount);
 
-      device.submitPass(renderPass2);
+      // device.submitPass(renderPass2);
     }
 
     device.submitPass(renderPass);

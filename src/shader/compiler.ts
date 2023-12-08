@@ -82,7 +82,7 @@ export function getUniforms(vert: string) {
     },
   );
 
-  vert.replace(/\s*uniform\s*.*\s*{((?:\s*.*\s*)*?)};/g, (_, uniforms) => {
+  vert.replace(/\s*uniform(?:\s+)(?:\w+)(?:\s?){([^]*?)};?/g, (_, uniforms) => {
     uniforms
       .trim()
       .replace('\r\n', '\n')
