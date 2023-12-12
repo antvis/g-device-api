@@ -50,6 +50,7 @@ export enum FormatFlags {
   Depth = 0b00000100,
   Stencil = 0b00001000,
   RenderTarget = 0b00010000,
+  Luminance = 0b00100000,
 }
 
 export function makeFormat(
@@ -65,17 +66,17 @@ export enum Format {
   U8_LUMINANCE = makeFormat(
     FormatTypeFlags.U8,
     FormatCompFlags.A,
-    FormatFlags.None,
+    FormatFlags.Luminance,
   ),
   F16_LUMINANCE = makeFormat(
     FormatTypeFlags.F16,
     FormatCompFlags.A,
-    FormatFlags.None,
+    FormatFlags.Luminance,
   ),
   F32_LUMINANCE = makeFormat(
     FormatTypeFlags.F32,
     FormatCompFlags.A,
-    FormatFlags.None,
+    FormatFlags.Luminance,
   ),
   F16_R = makeFormat(FormatTypeFlags.F16, FormatCompFlags.R, FormatFlags.None),
   F16_RG = makeFormat(

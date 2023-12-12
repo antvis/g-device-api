@@ -10,7 +10,7 @@ Firstly, it's important to understand that contributing to an open-source projec
 6. Feature submission: Based on discussions in issues and discussions, submit a PR after implementation for the benefit of all open-source users.
 7. Ecosystem operation: Adding ecosystem content to an open-source project through your abilities, such as blogs, case studies, solutions, and extensions.
 
-If you have any questions, feel free to submit an issue (<https://github.com/strawberry-vis/g-device-api/issues>) or directly modify and submit a PR (<https://github.com/strawberry-vis/g-device-api/pulls>). The following mainly introduces the operational guidelines for several types of open-source contributions.
+If you have any questions, feel free to submit an issue (<https://github.com/antvis/g-device-api/issues>) or directly modify and submit a PR (<https://github.com/antvis/g-device-api/pulls>). The following mainly introduces the operational guidelines for several types of open-source contributions.
 
 ## How to debug project code?
 
@@ -19,7 +19,7 @@ If you have any questions, feel free to submit an issue (<https://github.com/str
 -   Clone the project and install dependencies:
 
 ```bash
-git clone git@github.com:strawberry-vis/g-device-api.git
+git clone git@github.com:antvis/g-device-api.git
 
 cd g-device-api
 
