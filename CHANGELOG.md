@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.6
+
+### Patch Changes
+
+-   82c8d04: Split Format.ALPHA and LUMINANCE.
+
 ## 1.4.5
 
 ### Patch Changes
