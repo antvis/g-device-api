@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.8
+
+### Patch Changes
+
+-   e2e8ffa: Add flipY option in webgpu texture.
+
 ## 1.4.7
 
 ### Patch Changes

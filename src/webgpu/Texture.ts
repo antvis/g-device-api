@@ -20,6 +20,7 @@ export class Texture_WebGPU
   usage: GPUTextureUsageFlags;
   gpuTexture: GPUTexture;
   gpuTextureView: GPUTextureView;
+  private flipY = false;
 
   constructor({
     id,
@@ -44,7 +45,10 @@ export class Texture_WebGPU
       depthOrArrayLayers,
       mipLevelCount,
       usage,
+      pixelStore,
     } = descriptor;
+
+    this.flipY = !!pixelStore?.unpackFlipY;
 
     this.device.createTextureShared(
       {
@@ -84,7 +88,7 @@ export class Texture_WebGPU
 
     for (let i = 0; i < sources.length; i++) {
       device.queue.copyExternalImageToTexture(
-        { source: sources[i] },
+        { source: sources[i], flipY: this.flipY },
         { texture, origin: [0, 0, i] },
         [width, height],
       );
@@ -94,7 +98,7 @@ export class Texture_WebGPU
   }
 
   private isImageBitmapOrCanvases(
-    datas: (TexImageSource | ArrayBufferView)[],
+    datas: (TexImageSource | BufferSource)[],
   ): datas is (ImageBitmap | HTMLCanvasElement | OffscreenCanvas)[] {
     const data = datas[0];
     return (
@@ -105,7 +109,7 @@ export class Texture_WebGPU
   }
 
   private isVideo(
-    datas: (TexImageSource | ArrayBufferView)[],
+    datas: (TexImageSource | BufferSource)[],
   ): datas is HTMLVideoElement[] {
     const data = datas[0];
     return data instanceof HTMLVideoElement;
@@ -114,7 +118,7 @@ export class Texture_WebGPU
   /**
    * @see https://toji.dev/webgpu-best-practices/img-textures
    */
-  setImageData(datas: (TexImageSource | ArrayBufferView)[], lod = 0) {
+  setImageData(datas: (TexImageSource | BufferSource)[], lod = 0) {
     const { device } = this.device;
     let texture: GPUTexture;
     let width: number;
@@ -133,6 +137,17 @@ export class Texture_WebGPU
       }) as unknown as GPUTexture;
     } else {
       // TODO: support ArrayBufferView[]
+      datas.forEach((data) => {
+        device.queue.writeTexture(
+          { texture: this.gpuTexture },
+          data as BufferSource,
+          {},
+          {
+            width: this.width,
+            height: this.height,
+          },
+        );
+      });
     }
 
     this.width = width;
