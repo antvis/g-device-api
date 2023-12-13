@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.7
+
+### Patch Changes
+
+-   72ddd05: Use internal format in webgl2 when calling texImage2D.
+
 ## 1.4.6
 
 ### Patch Changes

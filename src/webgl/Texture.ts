@@ -253,6 +253,10 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
     gl.bindTexture(this.gl_target, this.gl_texture);
 
     const gl_format = this.device.translateTextureFormat(this.format);
+    // In WebGL 1, this must be the same as internalformat
+    const gl_internal_format = isWebGL2(gl)
+      ? this.device.translateInternalTextureFormat(this.format)
+      : gl_format;
     const gl_type = this.device.translateTextureType(this.format);
 
     this.preprocessImage();
@@ -289,7 +293,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
             gl.texImage3D(
               gl_target,
               lod,
-              gl_format,
+              gl_internal_format,
               width,
               height,
               this.depthOrArrayLayers,
@@ -303,7 +307,7 @@ export class Texture_GL extends ResourceBase_GL implements Texture {
             gl.texImage2D(
               gl_target,
               lod,
-              gl_format,
+              gl_internal_format,
               width,
               height,
               0, // border must be 0
