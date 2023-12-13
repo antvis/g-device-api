@@ -688,6 +688,35 @@ export class Device_GL implements SwapChain, Device {
     }
   }
 
+  /**
+   * Only works in WebGL2
+   * @see https://webgl2fundamentals.org/webgl/lessons/webgl-data-textures.html
+   */
+  translateInternalTextureFormat(fmt: Format): GLenum {
+    switch (fmt) {
+      case Format.F32_R:
+        return GL.R32F;
+      case Format.F32_RG:
+        return GL.RG32F;
+      case Format.F32_RGB:
+        return GL.RGB32F;
+      case Format.F32_RGBA:
+        return GL.RGBA32F;
+      case Format.F16_R:
+        return GL.R16F;
+      case Format.F16_RG:
+        return GL.RG16F;
+      case Format.F16_RGB:
+        return GL.RGB16F;
+      case Format.F16_RGBA:
+        return GL.RGBA16F;
+      default:
+        break;
+    }
+
+    return this.translateTextureFormat(fmt);
+  }
+
   translateTextureFormat(fmt: Format): GLenum {
     if (
       isTextureFormatCompressed(fmt) ||

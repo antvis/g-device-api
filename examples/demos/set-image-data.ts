@@ -13,21 +13,35 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
-  const dataTexture = device.createTexture({
-    format: Format.U8_LUMINANCE,
+  // const luminance = device.createTexture({
+  //   format: Format.U8_LUMINANCE,
+  //   width: 1,
+  //   height: 1,
+  //   usage: TextureUsage.SAMPLED,
+  //   pixelStore: {
+  //     unpackFlipY: false,
+  //     packAlignment: 1,
+  //   },
+  //   mipLevelCount: 0,
+  // });
+  // luminance.setImageData([new Uint8Array([10])]);
+
+  const floatRGB = device.createTexture({
+    format: Format.F32_RGB,
     width: 1,
     height: 1,
     usage: TextureUsage.SAMPLED,
     pixelStore: {
       unpackFlipY: false,
-      packAlignment: 1,
+      packAlignment: 4,
     },
     mipLevelCount: 0,
   });
-  dataTexture.setImageData([new Uint8Array([10])]);
+  floatRGB.setImageData([new Float32Array([10, 20, 30])]);
 
   return () => {
-    dataTexture.destroy();
+    // luminance.destroy();
+    floatRGB.destroy();
     device.destroy();
 
     // For debug.
