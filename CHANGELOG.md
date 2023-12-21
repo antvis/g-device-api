@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.9
+
+### Patch Changes
+
+-   d24939d: Add storage texture binding for webgpu.
+
 ## 1.4.8
 
 ### Patch Changes
