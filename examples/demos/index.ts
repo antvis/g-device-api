@@ -22,6 +22,7 @@ export { render as ReadPixel } from './read-pixel';
 export { render as FloatTexture } from './float-texture';
 export { render as Add2Vectors } from './add-2-vectors';
 export { render as ComputeBoids } from './compute-boids';
+export { render as Blur } from './blur';
 // export { render as AR } from './ar';
 // export { render as ARThree } from './ar-three';
 // export { render as Test } from './test-wgsl';

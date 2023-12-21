@@ -60,6 +60,12 @@ export class ComputePass_WebGPU implements ComputePass {
   setBindings(bindings_: Bindings): void {
     const bindings = bindings_ as Bindings_WebGPU;
     this.gpuComputePassEncoder.setBindGroup(0, bindings.gpuBindGroup[0]);
+    if (bindings.gpuBindGroup[1]) {
+      this.gpuComputePassEncoder.setBindGroup(1, bindings.gpuBindGroup[1]);
+    }
+    if (bindings.gpuBindGroup[2]) {
+      this.gpuComputePassEncoder.setBindGroup(2, bindings.gpuBindGroup[2]);
+    }
   }
 
   pushDebugGroup(name: string): void {
