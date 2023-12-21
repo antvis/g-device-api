@@ -85,9 +85,9 @@ struct SimParams {
 struct Particles {
   particles : array<Particle>,
 }
-@binding(0) @group(0) var<uniform> params : SimParams;
-@binding(1) @group(0) var<storage, read> particlesA : Particles;
-@binding(2) @group(0) var<storage, read_write> particlesB : Particles;
+@group(0) @binding(0) var<uniform> params : SimParams;
+@group(2) @binding(0) var<storage, read> particlesA : Particles;
+@group(2) @binding(1) var<storage, read_write> particlesB : Particles;
 
 // https://github.com/austinEng/Project6-Vulkan-Flocking/blob/master/data/shaders/computeparticles/particle.comp
 @compute @workgroup_size(64)
@@ -254,11 +254,11 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
       ],
       storageBufferBindings: [
         {
-          binding: 1,
+          binding: 0,
           buffer: particleBuffers[i],
         },
         {
-          binding: 2,
+          binding: 1,
           buffer: particleBuffers[(i + 1) % 2],
         },
       ],
