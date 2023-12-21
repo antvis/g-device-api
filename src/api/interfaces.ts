@@ -435,7 +435,7 @@ export interface RenderTargetDescriptor {
 }
 
 export interface TextureBinding {
-  binding: number;
+  binding?: number;
   texture: Texture;
 }
 
@@ -448,7 +448,7 @@ export interface BufferBinding {
    * @example
    * @binding(0) @group(0) var<uniform> params : SimParams;
    */
-  binding: number;
+  binding?: number;
   /**
    * @{Buffer}
    */
@@ -472,6 +472,8 @@ export interface SamplerBinding {
   dimension?: TextureDimension;
   formatKind?: SamplerFormatKind;
   comparison?: boolean;
+  textureBinding?: number;
+  samplerBinding?: number;
 }
 
 export enum SamplerFormatKind {
@@ -809,6 +811,7 @@ export interface Device {
     src: Texture,
     srcX: number,
     srcY: number,
+    depthOrArrayLayers?: number,
   ) => void;
 
   // Information queries.

@@ -12,6 +12,7 @@ It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](ht
 -   [API](#api)
 -   [Shader Language](#shader-language)
 -   [Observable Examples](https://observablehq.com/@antv/g-device-api)
+    -   [Compute Toys](https://observablehq.com/d/0361c83b691a32b5)
 -   [Limitations](#limitations)
 
 ## Installing
@@ -108,6 +109,8 @@ const deviceContribution = new WebGLDeviceContribution({
 // Or create a WebGPU based device contribution.
 const deviceContribution = new WebGPUDeviceContribution({
     shaderCompilerPath: '/glsl_wgsl_compiler_bg.wasm',
+    // shaderCompilerPath:
+    //   'https://unpkg.com/@antv/g-device-api@1.4.9/rust/pkg/glsl_wgsl_compiler_bg.wasm',
 });
 
 const swapChain = await deviceContribution.createSwapChain($canvas);
@@ -575,6 +578,7 @@ copySubTexture2D: (
   src: Texture,
   srcX: number,
   srcY: number,
+  depthOrArrayLayers?: number,
 ) => void;
 ```
 
@@ -1273,20 +1277,24 @@ It is worth mentioning that since WGSL is not natively supported, naga does cond
 
 ## <a id='limitations' /> Limitations
 
-`@group(x)` in WGSL should obey the following order: storage/uniform and texture/sampler pair.
+`@group(x)` in WGSL should obey the following order:
+
+-   `group(0)` Uniform eg. `var<uniform> time : Time;`
+-   `group(1)` Texture & Sampler pair
+-   `group(2)` StorageBuffer eg. `var<storage, read_write> atomic_storage : array<atomic<i32>>;`
+-   `group(3)` StorageTexture eg. `var screen : texture_storage_2d<rgba16float, write>;`
 
 For example:
 
 ```wgsl
-@group(0) @binding(0) var myTexture : texture_2d<f32>;
-@group(0) @binding(1) var mySampler : sampler;
+@group(1) @binding(0) var myTexture : texture_2d<f32>;
+@group(1) @binding(1) var mySampler : sampler;
 ```
 
 ```wgsl
-@group(0) @binding(0) var<storage, read_write> input : array<i32>;
-
 @group(1) @binding(0) var myTexture : texture_2d<f32>;
 @group(1) @binding(1) var mySampler : sampler;
+@group(2) @binding(0) var<storage, read_write> input : array<i32>;
 ```
 
 Uniform and storage buffer can be assigned binding number:
