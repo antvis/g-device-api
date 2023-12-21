@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.10
+
+### Patch Changes
+
+-   703db62: SamplerBindings can ignore sampler in webgpu compute shader.
+
 ## 1.4.9
 
 ### Patch Changes
