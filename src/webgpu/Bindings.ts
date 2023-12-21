@@ -32,12 +32,16 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
     const { pipeline } = descriptor;
     assert(!!pipeline);
 
-    const { uniformBufferBindings, storageBufferBindings, samplerBindings } =
-      descriptor;
+    const {
+      uniformBufferBindings,
+      storageBufferBindings,
+      samplerBindings,
+      storageTextureBindings,
+    } = descriptor;
     this.numUniformBuffers = uniformBufferBindings?.length || 0;
 
     // entries orders: Storage(read-only storage) Uniform Sampler
-    const gpuBindGroupEntries: GPUBindGroupEntry[][] = [[], []];
+    const gpuBindGroupEntries: GPUBindGroupEntry[][] = [[], [], []];
     let numBindings = 0;
 
     if (storageBufferBindings && storageBufferBindings.length) {
@@ -105,6 +109,20 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
         gpuBindGroupEntries[1].push({
           binding: numBindings++,
           resource: gpuSampler,
+        });
+      }
+    }
+
+    if (storageTextureBindings && storageTextureBindings.length) {
+      numBindings = 0;
+      for (let i = 0; i < storageTextureBindings.length; i++) {
+        const binding = descriptor.storageTextureBindings[i];
+        const texture = binding.texture;
+
+        const gpuTextureView = (texture as Texture_WebGPU).gpuTextureView;
+        gpuBindGroupEntries[2].push({
+          binding: numBindings++,
+          resource: gpuTextureView,
         });
       }
     }
