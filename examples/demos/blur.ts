@@ -1,10 +1,7 @@
 import {
   DeviceContribution,
-  VertexStepMode,
   Format,
   TransparentWhite,
-  Buffer,
-  Bindings,
   BufferUsage,
   TextureUsage,
   AddressMode,
@@ -70,8 +67,8 @@ export async function render(
     vertex: {
       entryPoint: 'vert_main',
       wgsl: `
-      @group(0) @binding(0) var myTexture : texture_2d<f32>;
-      @group(0) @binding(1) var mySampler : sampler;
+      @group(1) @binding(0) var myTexture : texture_2d<f32>;
+      @group(1) @binding(1) var mySampler : sampler;
       
       struct VertexOutput {
         @builtin(position) Position : vec4<f32>,
@@ -108,8 +105,8 @@ export async function render(
     fragment: {
       entryPoint: 'frag_main',
       wgsl: `
-      @group(0) @binding(0) var myTexture : texture_2d<f32>;
-      @group(0) @binding(1) var mySampler : sampler;
+      @group(1) @binding(0) var myTexture : texture_2d<f32>;
+      @group(1) @binding(1) var mySampler : sampler;
 
       @fragment
       fn frag_main(@location(0) fragUV : vec2<f32>) -> @location(0) vec4<f32> {
@@ -134,7 +131,7 @@ export async function render(
   @group(0) @binding(1) var<uniform> flip : Flip;
   @group(1) @binding(0) var inputTex : texture_2d<f32>;
   @group(1) @binding(1) var samp : sampler;
-  @group(2) @binding(0) var outputTex : texture_storage_2d<rgba8unorm, write>;
+  @group(3) @binding(0) var outputTex : texture_storage_2d<rgba8unorm, write>;
 
   // This shader blurs the input texture in one direction, depending on whether
   // |flip.value| is 0 or 1.

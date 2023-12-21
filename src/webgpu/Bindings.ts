@@ -40,26 +40,9 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
     } = descriptor;
     this.numUniformBuffers = uniformBufferBindings?.length || 0;
 
-    // entries orders: Storage(read-only storage) Uniform Sampler
-    const gpuBindGroupEntries: GPUBindGroupEntry[][] = [[], [], []];
+    // entries orders: Uniform Sampler StorageBuffer StorageTexture
+    const gpuBindGroupEntries: GPUBindGroupEntry[][] = [[], [], [], []];
     let numBindings = 0;
-
-    if (storageBufferBindings && storageBufferBindings.length) {
-      for (let i = 0; i < storageBufferBindings.length; i++) {
-        const { binding, size, offset, buffer } =
-          descriptor.storageBufferBindings[i];
-        const gpuBufferBinding: GPUBufferBinding = {
-          buffer: getPlatformBuffer(buffer),
-          offset: offset ?? 0,
-          size,
-        };
-        gpuBindGroupEntries[0].push({
-          binding: binding ?? numBindings++,
-          resource: gpuBufferBinding,
-        });
-      }
-    }
-
     if (uniformBufferBindings && uniformBufferBindings.length) {
       for (let i = 0; i < uniformBufferBindings.length; i++) {
         const { binding, size, offset, buffer } =
@@ -97,18 +80,37 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
 
         const gpuTextureView = (texture as Texture_WebGPU).gpuTextureView;
         gpuBindGroupEntries[1].push({
-          binding: numBindings++,
+          binding: binding.textureBinding ?? numBindings++,
           resource: gpuTextureView,
         });
 
-        const sampler =
-          binding.sampler !== null
-            ? binding.sampler
-            : this.device['getFallbackSampler'](samplerEntry);
-        const gpuSampler = getPlatformSampler(sampler);
-        gpuBindGroupEntries[1].push({
-          binding: numBindings++,
-          resource: gpuSampler,
+        if (binding.samplerBinding !== -1) {
+          const sampler =
+            binding.sampler !== null
+              ? binding.sampler
+              : this.device['getFallbackSampler'](samplerEntry);
+          const gpuSampler = getPlatformSampler(sampler);
+          gpuBindGroupEntries[1].push({
+            binding: binding.samplerBinding ?? numBindings++,
+            resource: gpuSampler,
+          });
+        }
+      }
+    }
+
+    if (storageBufferBindings && storageBufferBindings.length) {
+      numBindings = 0;
+      for (let i = 0; i < storageBufferBindings.length; i++) {
+        const { binding, size, offset, buffer } =
+          descriptor.storageBufferBindings[i];
+        const gpuBufferBinding: GPUBufferBinding = {
+          buffer: getPlatformBuffer(buffer),
+          offset: offset ?? 0,
+          size,
+        };
+        gpuBindGroupEntries[2].push({
+          binding: binding ?? numBindings++,
+          resource: gpuBufferBinding,
         });
       }
     }
@@ -120,21 +122,25 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
         const texture = binding.texture;
 
         const gpuTextureView = (texture as Texture_WebGPU).gpuTextureView;
-        gpuBindGroupEntries[2].push({
+        gpuBindGroupEntries[3].push({
           binding: numBindings++,
           resource: gpuTextureView,
         });
       }
     }
 
-    this.gpuBindGroup = gpuBindGroupEntries
-      .filter((entries) => entries.length > 0)
-      .map((gpuBindGroupEntries, i) =>
+    const lastGroupIndex = gpuBindGroupEntries.findLastIndex(
+      (group) => !!group.length,
+    );
+
+    this.gpuBindGroup = gpuBindGroupEntries.map((gpuBindGroupEntries, i) => {
+      return (
+        i <= lastGroupIndex &&
         this.device.device.createBindGroup({
-          // layout: bindGroupLayout.gpuBindGroupLayout[i],
           layout: (pipeline as ComputePipeline_WebGPU).getBindGroupLayout(i),
           entries: gpuBindGroupEntries,
-        }),
+        })
       );
+    });
   }
 }

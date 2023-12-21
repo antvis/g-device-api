@@ -45,11 +45,15 @@ export function translateTextureUsage(
   let gpuUsage: GPUTextureUsageFlags = 0;
 
   if (usage & TextureUsage.SAMPLED)
-    gpuUsage |= GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
+    gpuUsage |=
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.COPY_DST |
+      GPUTextureUsage.COPY_SRC;
   if (usage & TextureUsage.STORAGE)
     gpuUsage |=
       GPUTextureUsage.TEXTURE_BINDING |
       GPUTextureUsage.STORAGE_BINDING |
+      GPUTextureUsage.COPY_SRC |
       GPUTextureUsage.COPY_DST;
   if (usage & TextureUsage.RENDER_TARGET)
     gpuUsage |=

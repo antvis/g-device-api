@@ -710,6 +710,7 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     src_: Texture,
     srcX: number,
     srcY: number,
+    depthOrArrayLayers?: number,
   ): void {
     const cmd = this.device.createCommandEncoder();
 
@@ -718,14 +719,22 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     const srcCopy: GPUImageCopyTexture = {
       texture: src.gpuTexture,
       origin: [srcX, srcY, 0],
+      mipLevel: 0,
+      aspect: 'all',
     };
     const dstCopy: GPUImageCopyTexture = {
       texture: dst.gpuTexture,
       origin: [dstX, dstY, 0],
+      mipLevel: 0,
+      aspect: 'all',
     };
     assert(!!(src.usage & GPUTextureUsage.COPY_SRC));
     assert(!!(dst.usage & GPUTextureUsage.COPY_DST));
-    cmd.copyTextureToTexture(srcCopy, dstCopy, [src.width, src.height, 1]);
+    cmd.copyTextureToTexture(srcCopy, dstCopy, [
+      src.width,
+      src.height,
+      depthOrArrayLayers || 1,
+    ]);
 
     this.device.queue.submit([cmd.finish()]);
   }
