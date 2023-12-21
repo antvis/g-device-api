@@ -272,6 +272,9 @@ export class RenderPass_WebGPU implements RenderPass {
     if (bindings.gpuBindGroup[1]) {
       this.gpuRenderPassEncoder.setBindGroup(1, bindings.gpuBindGroup[1]);
     }
+    if (bindings.gpuBindGroup[2]) {
+      this.gpuRenderPassEncoder.setBindGroup(2, bindings.gpuBindGroup[2]);
+    }
   }
 
   setStencilReference(ref: number): void {

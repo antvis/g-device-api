@@ -13,6 +13,7 @@ import type {
   SamplerBinding,
   SamplerDescriptor,
   StencilFaceState,
+  TextureBinding,
   VertexAttributeDescriptor,
 } from '../interfaces';
 import { colorEqual } from './color';
@@ -268,6 +269,14 @@ export function bufferBindingCopy(a: Readonly<BufferBinding>): BufferBinding {
   return { binding, buffer, offset, size };
 }
 
+export function textureBindingCopy(
+  a: Readonly<TextureBinding>,
+): TextureBinding {
+  const binding = a.binding;
+  const texture = a.texture;
+  return { binding, texture };
+}
+
 export function bindingsDescriptorCopy(
   a: Readonly<BindingsDescriptor>,
 ): BindingsDescriptor {
@@ -279,10 +288,14 @@ export function bindingsDescriptorCopy(
   const storageBufferBindings =
     a.storageBufferBindings &&
     arrayCopy(a.storageBufferBindings, bufferBindingCopy);
+  const storageTextureBindings =
+    a.storageTextureBindings &&
+    arrayCopy(a.storageTextureBindings, textureBindingCopy);
   return {
     samplerBindings,
     uniformBufferBindings,
     storageBufferBindings,
+    storageTextureBindings,
     pipeline: a.pipeline,
   };
 }

@@ -46,6 +46,11 @@ export function translateTextureUsage(
 
   if (usage & TextureUsage.SAMPLED)
     gpuUsage |= GPUTextureUsage.TEXTURE_BINDING | GPUTextureUsage.COPY_DST;
+  if (usage & TextureUsage.STORAGE)
+    gpuUsage |=
+      GPUTextureUsage.TEXTURE_BINDING |
+      GPUTextureUsage.STORAGE_BINDING |
+      GPUTextureUsage.COPY_DST;
   if (usage & TextureUsage.RENDER_TARGET)
     gpuUsage |=
       GPUTextureUsage.RENDER_ATTACHMENT |

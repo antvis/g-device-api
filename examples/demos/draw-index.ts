@@ -41,14 +41,14 @@ void main() {
   });
 
   const vertexBuffer = device.createBuffer({
-    viewOrSize: new Float32Array([0, 0.5, -0.5, -0.5, 0.5, -0.5]),
+    viewOrSize: new Float32Array([0, 0.5, -0.5, -0.5, 0.5, -0.5, 1, 0.5]),
     usage: BufferUsage.VERTEX,
     hint: BufferFrequencyHint.DYNAMIC,
   });
   device.setResourceName(vertexBuffer, 'a_Position');
 
   const indexBuffer = device.createBuffer({
-    viewOrSize: new Uint32Array([0, 1, 2]),
+    viewOrSize: new Uint32Array([0, 1, 2, 0, 2, 3]),
     usage: BufferUsage.INDEX,
     hint: BufferFrequencyHint.STATIC,
   });
@@ -114,7 +114,7 @@ void main() {
       },
     );
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-    renderPass.draw(3);
+    renderPass.drawIndexed(6);
 
     device.submitPass(renderPass);
     if (useRAF) {

@@ -303,6 +303,7 @@ export enum TextureDimension {
 export enum TextureUsage {
   SAMPLED = 0x01,
   RENDER_TARGET = 0x02,
+  STORAGE = 0x04,
 }
 
 export enum ChannelWriteMask {
@@ -433,6 +434,11 @@ export interface RenderTargetDescriptor {
   texture?: Texture;
 }
 
+export interface TextureBinding {
+  binding: number;
+  texture: Texture;
+}
+
 /**
  * @see https://www.w3.org/TR/webgpu/#dictdef-gpubindgroupentry
  */
@@ -481,6 +487,7 @@ export interface BindingsDescriptor {
   uniformBufferBindings?: BufferBinding[];
   samplerBindings?: SamplerBinding[];
   storageBufferBindings?: BufferBinding[];
+  storageTextureBindings?: TextureBinding[];
 }
 
 /**
