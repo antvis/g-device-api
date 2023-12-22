@@ -14,7 +14,7 @@ import {
 } from '../utils/compute-toys';
 
 /**
- * @see https://compute.toys/view/76
+ * @see https://compute.toys/view/16
  */
 
 export async function render(
@@ -40,81 +40,89 @@ export async function render(
   const { pipeline: blitPipeline, bindings: blitBindings } =
     createBlitPipelineAndBindings(device, screen);
 
-  const computeWgsl = /* wgsl */ `
-#import prelude::{screen}
-
-@group(2) @binding(0) var<storage, read_write> stor1 : array<float>;
-
-@compute @workgroup_size(16, 16)
-fn pas(@builtin(global_invocation_id) id: uint3) {
-    let idx = id.y * textureDimensions(screen).x + id.x;
-    stor1[idx] = float(id.x) / float(textureDimensions(screen).x);
-}
-
-@compute @workgroup_size(16, 16)
-fn main_image(@builtin(global_invocation_id) id: uint3) {
-    let idx = id.y * textureDimensions(screen).x + id.x;
-    let val = stor1[idx];
-    let col = float3(val);
-    textureStore(screen, int2(id.xy), float4(col, 1.));
-}
-          `;
-
-  const pass1Program = createProgram(device, {
-    compute: {
-      entryPoint: 'pas',
-      wgsl: computeWgsl,
-    },
-  });
-  const mainImageProgram = createProgram(device, {
+  const computeProgram = createProgram(device, {
     compute: {
       entryPoint: 'main_image',
-      wgsl: computeWgsl,
+      wgsl: /* wgsl */ `
+#import prelude::{screen, time}
+
+@compute @workgroup_size(16, 16)
+fn main_image(@builtin(global_invocation_id) id: vec3u) {
+    // Viewport resolution (in pixels)
+    let screen_size = textureDimensions(screen);
+
+    // Prevent overdraw for workgroups on the edge of the viewport
+    if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
+
+    // Pixel coordinates (centre of pixel, origin at bottom left)
+    let p = vec2f(f32(id.x) + .5, f32(screen_size.y - id.y) - .5);
+
+    //Initialize hue and clear fragcolor
+    var h=vec4f(0.0);
+    var c=vec4f(1.0);
+    
+    //Resolution for scaling
+    var r = vec2f(screen_size);
+    //Alpha, length, angle
+    var A=0f;
+    var l=0f;
+    var a=0f;
+    //Loop through layer
+    for(var i=0.6; i>0.1; i-=0.1)
+    {
+        //Smoothly rotate a quarter at a time
+        a=(time.elapsed+i)*4;
+        a-=sin(a); a-=sin(a);
+
+        //Rotate
+        var t = cos(a/4+vec2f(0,11));
+        var R = mat2x2(t.x, -t.y, t.y, t.x);
+
+        //Scale and center
+        var u =(p*2f - r)/ r.y;
+        //Compute round square SDF
+        u -= R*clamp(u*R,-vec2f(i),vec2f(i));
+        l = max(length(u),0.1);
+        //Compute anti-aliased alpha using SDF
+        A = min((l - 0.1) * r.y / 5, 1);
+        //Pick layer color
+        h = sin(i*10+a/3+vec4f(1,3,5,0))/5+0.8;
+        //Color blending and lighting
+        c = mix(h,c,A) * mix(h/h,h+A*u.y/l/2,0.1/l);
+    }
+
+    var color = tanh(c*c);
+    color.a = 1.0;
+
+    // Output to screen (tanh tonemap)
+    textureStore(screen, id.xy, color);
+}
+`,
     },
   });
 
   const uniformBuffer = device.createBuffer({
-    viewOrSize: 1 * Float32Array.BYTES_PER_ELEMENT,
+    viewOrSize: 2 * Float32Array.BYTES_PER_ELEMENT,
     usage: BufferUsage.UNIFORM,
   });
   uniformBuffer.setSubData(0, new Uint8Array(new Float32Array([0]).buffer));
 
-  const storageBuffer = device.createBuffer({
-    viewOrSize: $canvas.width * $canvas.height * Uint32Array.BYTES_PER_ELEMENT,
-    usage: BufferUsage.STORAGE,
-  });
-
-  const pass1Pipeline = device.createComputePipeline({
+  const computePipeline = device.createComputePipeline({
     inputLayout: null,
-    program: pass1Program,
-  });
-  const mainImagePipeline = device.createComputePipeline({
-    inputLayout: null,
-    program: mainImageProgram,
+    program: computeProgram,
   });
 
   const bindings = device.createBindings({
-    pipeline: pass1Pipeline,
-    storageBufferBindings: [
+    pipeline: computePipeline,
+    uniformBufferBindings: [
       {
-        buffer: storageBuffer,
+        binding: 0,
+        buffer: uniformBuffer,
       },
     ],
     storageTextureBindings: [
       {
-        texture: screen,
-      },
-    ],
-  });
-  const bindings2 = device.createBindings({
-    pipeline: mainImagePipeline,
-    storageBufferBindings: [
-      {
-        buffer: storageBuffer,
-      },
-    ],
-    storageTextureBindings: [
-      {
+        binding: 0,
         texture: screen,
       },
     ],
@@ -125,28 +133,22 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
     width: $canvas.width,
     height: $canvas.height,
   });
+  device.setResourceName(renderTarget, 'Main Render Target');
 
   let id;
   let t = 0;
   const frame = (time) => {
     uniformBuffer.setSubData(
       0,
-      new Uint8Array(new Float32Array([time / 1000]).buffer),
+      new Uint8Array(new Float32Array([t, time / 1000]).buffer),
     );
 
     const computePass = device.createComputePass();
-    computePass.setPipeline(pass1Pipeline);
+    computePass.setPipeline(computePipeline);
     computePass.setBindings(bindings);
     computePass.dispatchWorkgroups(
-      Math.floor($canvas.width / 16),
-      Math.floor($canvas.height / 16),
-    );
-
-    computePass.setPipeline(mainImagePipeline);
-    computePass.setBindings(bindings2);
-    computePass.dispatchWorkgroups(
-      Math.floor($canvas.width / 16),
-      Math.floor($canvas.height / 16),
+      Math.ceil($canvas.width / 16),
+      Math.ceil($canvas.height / 16),
     );
     device.submitPass(computePass);
 
@@ -176,13 +178,12 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
     if (useRAF && id) {
       cancelAnimationFrame(id);
     }
-    pass1Program.destroy();
-    pass1Pipeline.destroy();
-    mainImageProgram.destroy();
-    mainImagePipeline.destroy();
+    blitBindings.destroy();
+    computeProgram.destroy();
     screen.destroy();
     uniformBuffer.destroy();
     blitPipeline.destroy();
+    computePipeline.destroy();
     renderTarget.destroy();
     device.destroy();
 
