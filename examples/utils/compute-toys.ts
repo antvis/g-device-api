@@ -4,14 +4,52 @@ import {
   FilterMode,
   Format,
   MipmapFilterMode,
+  ProgramDescriptor,
   Texture,
 } from '../../src';
 
 /**
- * @see https://github.com/compute-toys/wgpu-compute-toy/blob/master/src/lib.rs#L367
- * @see https://github.com/compute-toys/wgpu-compute-toy/blob/master/src/bind.rs#L437
+ * Use naga-oil to combine and manipulate shaders.
+ * The order is important.
  */
-export const prelude = `
+export function registerShaderModule(device: Device, shader: string): string {
+  const compiler = device['WGSLComposer'];
+  return compiler.wgsl_compile(alias + shader);
+}
+
+export function defineStr(k: string, v: string): string {
+  return `#define ${k} ${v}`;
+}
+
+export function createProgram(
+  device: Device,
+  desc: ProgramDescriptor,
+  defines?: Record<string, boolean | number>,
+) {
+  const compiler = device['WGSLComposer'];
+
+  // Prepend defines.
+  const prefix =
+    Object.keys(defines || {})
+      .map((key) => {
+        return defineStr(key, '');
+      })
+      .join('\n') + '\n';
+
+  Object.keys(desc).forEach((key) => {
+    desc[key].wgsl = alias + desc[key].wgsl;
+
+    if (desc[key].defines) {
+      desc[key].wgsl = prefix + desc[key].wgsl;
+    }
+    // Use naga-oil to combine shaders.
+    desc[key].wgsl = compiler.wgsl_compile(desc[key].wgsl);
+  });
+
+  return device.createProgram(desc);
+}
+
+export const alias = /* wgsl */ `
 alias int = i32;
 alias uint = u32;
 alias float = f32;
@@ -36,6 +74,14 @@ alias float3x4 = mat3x4<f32>;
 alias float4x2 = mat4x2<f32>;
 alias float4x3 = mat4x3<f32>;
 alias float4x4 = mat4x4<f32>;
+`;
+
+/**
+ * @see https://github.com/compute-toys/wgpu-compute-toy/blob/master/src/lib.rs#L367
+ * @see https://github.com/compute-toys/wgpu-compute-toy/blob/master/src/bind.rs#L437
+ */
+export const prelude = /* wgsl */ `
+#define_import_path prelude
 
 struct Time {
   frame: u32,
@@ -43,10 +89,9 @@ struct Time {
 }
 
 @group(0) @binding(0) var<uniform> time : Time;
-@group(3) @binding(0) var screen : texture_storage_2d<rgba16float, write>;
-
 @group(1) @binding(0) var pass_in: texture_2d_array<f32>;
 @group(1) @binding(1) var bilinear: sampler;
+@group(3) @binding(0) var screen : texture_storage_2d<rgba16float, write>;
 @group(3) @binding(1) var pass_out: texture_storage_2d_array<rgba16float,write>;
 
 fn passStore(pass_index: int, coord: int2, value: float4) {
@@ -76,80 +121,86 @@ export function createBlitPipelineAndBindings(device: Device, screen: Texture) {
 
   const renderProgram = device.createProgram({
     vertex: {
-      entryPoint: 'vert_main',
-      wgsl: `
-    @group(1) @binding(0) var myTexture : texture_2d<f32>;
-    @group(1) @binding(1) var mySampler : sampler;
-    
-    struct VertexOutput {
-      @builtin(position) Position : vec4<f32>,
-      @location(0) fragUV : vec2<f32>,
-    }
-    
-    @vertex
-    fn vert_main(@builtin(vertex_index) VertexIndex : u32) -> VertexOutput {
-      const pos = array(
-        vec2( 1.0,  1.0),
-        vec2( 1.0, -1.0),
-        vec2(-1.0, -1.0),
-        vec2( 1.0,  1.0),
-        vec2(-1.0, -1.0),
-        vec2(-1.0,  1.0),
-      );
-    
-      const uv = array(
-        vec2(1.0, 0.0),
-        vec2(1.0, 1.0),
-        vec2(0.0, 1.0),
-        vec2(1.0, 0.0),
-        vec2(0.0, 1.0),
-        vec2(0.0, 0.0),
-      );
-    
-      var output : VertexOutput;
-      output.Position = vec4(pos[VertexIndex], 0.0, 1.0);
-      output.fragUV = uv[VertexIndex];
-      return output;
-    }
-          `,
+      entryPoint: 'fullscreen_vertex_shader',
+      wgsl: /* wgsl */ `
+struct FullscreenVertexOutput {
+  @builtin(position)
+  position: vec4<f32>,
+  @location(0)
+  uv: vec2<f32>,
+};
+
+// This vertex shader produces the following, when drawn using indices 0..3:
+//
+//  1 |  0-----x.....2
+//  0 |  |  s  |  . ´
+// -1 |  x_____x´
+// -2 |  :  .´
+// -3 |  1´
+//    +---------------
+//      -1  0  1  2  3
+//
+// The axes are clip-space x and y. The region marked s is the visible region.
+// The digits in the corners of the right-angled triangle are the vertex
+// indices.
+//
+// The top-left has UV 0,0, the bottom-left has 0,2, and the top-right has 2,0.
+// This means that the UV gets interpolated to 1,1 at the bottom-right corner
+// of the clip-space rectangle that is at 1,-1 in clip space.
+@vertex
+fn fullscreen_vertex_shader(@builtin(vertex_index) vertex_index: u32) -> FullscreenVertexOutput {
+  // See the explanation above for how this works
+  let uv = vec2<f32>(f32(vertex_index >> 1u), f32(vertex_index & 1u)) * 2.0;
+  let clip_position = vec4<f32>(uv * vec2<f32>(2.0, -2.0) + vec2<f32>(-1.0, 1.0), 0.0, 1.0);
+
+  return FullscreenVertexOutput(clip_position, uv);
+}
+`,
     },
     fragment: {
       entryPoint: 'fs_main_linear_to_srgb',
-      wgsl: `
-    @group(1) @binding(0) var myTexture : texture_2d<f32>;
-    @group(1) @binding(1) var mySampler : sampler;
+      wgsl: /* wgsl */ `
+struct FullscreenVertexOutput {
+  @builtin(position)
+  position: vec4<f32>,
+  @location(0)
+  uv: vec2<f32>,
+};
+
+@group(1) @binding(0) var in_texture : texture_2d<f32>;
+@group(1) @binding(1) var in_sampler : sampler;
+
+fn srgb_to_linear(rgb: vec3<f32>) -> vec3<f32> {
+  return select(
+      pow((rgb + 0.055) * (1.0 / 1.055), vec3<f32>(2.4)),
+      rgb * (1.0/12.92),
+      rgb <= vec3<f32>(0.04045));
+}
+
+fn linear_to_srgb(rgb: vec3<f32>) -> vec3<f32> {
+  return select(
+      1.055 * pow(rgb, vec3(1.0 / 2.4)) - 0.055,
+      rgb * 12.92,
+      rgb <= vec3<f32>(0.0031308));
+}
     
-    fn srgb_to_linear(rgb: vec3<f32>) -> vec3<f32> {
-      return select(
-          pow((rgb + 0.055) * (1.0 / 1.055), vec3<f32>(2.4)),
-          rgb * (1.0/12.92),
-          rgb <= vec3<f32>(0.04045));
-    }
-    
-    fn linear_to_srgb(rgb: vec3<f32>) -> vec3<f32> {
-      return select(
-          1.055 * pow(rgb, vec3(1.0 / 2.4)) - 0.055,
-          rgb * 12.92,
-          rgb <= vec3<f32>(0.0031308));
-    }
-    
-    @fragment
-    fn fs_main(@location(0) fragUV : vec2<f32>) -> @location(0) vec4<f32> {
-        return textureSample(myTexture, mySampler, fragUV);
-    }
-    
-    @fragment
-    fn fs_main_linear_to_srgb(@location(0) fragUV : vec2<f32>) -> @location(0) vec4<f32> {
-        let rgba = textureSample(myTexture, mySampler, fragUV);
-        return vec4<f32>(linear_to_srgb(rgba.rgb), rgba.a);
-    }
-    
-    @fragment
-    fn fs_main_rgbe_to_linear(@location(0) fragUV : vec2<f32>) -> @location(0) vec4<f32> {
-        let rgbe = textureSample(myTexture, mySampler, fragUV);
-        return vec4<f32>(rgbe.rgb * exp2(rgbe.a * 255. - 128.), 1.);
-    }
-          `,
+@fragment
+fn fs_main(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
+    return textureSample(in_texture, in_sampler, in.uv);
+}
+
+@fragment
+fn fs_main_linear_to_srgb(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
+    let rgba = textureSample(in_texture, in_sampler, in.uv);
+    return vec4<f32>(linear_to_srgb(rgba.rgb), rgba.a);
+}
+
+@fragment
+fn fs_main_rgbe_to_linear(in: FullscreenVertexOutput) -> @location(0) vec4<f32> {
+    let rgbe = textureSample(in_texture, in_sampler, in.uv);
+    return vec4<f32>(rgbe.rgb * exp2(rgbe.a * 255. - 128.), 1.);
+}
+`,
     },
   });
 

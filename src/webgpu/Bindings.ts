@@ -118,12 +118,11 @@ export class Bindings_WebGPU extends ResourceBase_WebGPU implements Bindings {
     if (storageTextureBindings && storageTextureBindings.length) {
       numBindings = 0;
       for (let i = 0; i < storageTextureBindings.length; i++) {
-        const binding = descriptor.storageTextureBindings[i];
-        const texture = binding.texture;
+        const { binding, texture } = descriptor.storageTextureBindings[i];
 
         const gpuTextureView = (texture as Texture_WebGPU).gpuTextureView;
         gpuBindGroupEntries[3].push({
-          binding: numBindings++,
+          binding: binding ?? numBindings++,
           resource: gpuTextureView,
         });
       }
