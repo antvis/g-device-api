@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.11
+
+### Patch Changes
+
+-   77b0479: Storage texture binding can be assigned manually.
+
 ## 1.4.10
 
 ### Patch Changes
