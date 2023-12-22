@@ -6,7 +6,12 @@ import {
   TextureUsage,
   TextureDimension,
 } from '../../src';
-import { createBlitPipelineAndBindings, prelude } from '../utils/compute-toys';
+import {
+  createBlitPipelineAndBindings,
+  createProgram,
+  prelude,
+  registerShaderModule,
+} from '../utils/compute-toys';
 
 /**
  * @see https://compute.toys/view/16
@@ -22,6 +27,8 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
+  registerShaderModule(device, prelude);
+
   const screen = device.createTexture({
     format: Format.F16_RGBA,
     width: $canvas.width,
@@ -33,12 +40,12 @@ export async function render(
   const { pipeline: blitPipeline, bindings: blitBindings } =
     createBlitPipelineAndBindings(device, screen);
 
-  const computeProgram = device.createProgram({
+  const computeProgram = createProgram(device, {
     compute: {
       entryPoint: 'main_image',
-      wgsl:
-        prelude +
-        `
+      wgsl: /* wgsl */ `
+#import prelude::{screen, time}
+
 // Simplex Noise (http://en.wikipedia.org/wiki/Simplex_noise), a type of gradient noise
 // that uses N+1 vertices for random gradient interpolation instead of 2^N as in regular
 // latice based Gradient Noise.
@@ -246,7 +253,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
     renderPass.setPipeline(blitPipeline);
     renderPass.setBindings(blitBindings);
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-    renderPass.draw(6);
+    renderPass.draw(3);
 
     device.submitPass(renderPass);
     ++t;

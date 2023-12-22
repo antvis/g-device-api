@@ -9,7 +9,12 @@ import {
   FilterMode,
   MipmapFilterMode,
 } from '../../src';
-import { createBlitPipelineAndBindings, prelude } from '../utils/compute-toys';
+import {
+  createBlitPipelineAndBindings,
+  createProgram,
+  prelude,
+  registerShaderModule,
+} from '../utils/compute-toys';
 
 /**
  * Water caustics, using the atomic storage buffer for accumulating photons.
@@ -25,6 +30,8 @@ export async function render(
   const swapChain = await deviceContribution.createSwapChain($canvas);
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
+
+  registerShaderModule(device, prelude);
 
   const screen = device.createTexture({
     // Use F32_RGBA
@@ -75,9 +82,9 @@ export async function render(
   const { pipeline: blitPipeline, bindings: blitBindings } =
     createBlitPipelineAndBindings(device, screen);
 
-  const computeWgsl =
-    prelude +
-    `
+  const computeWgsl = /* wgsl */ `
+#import prelude::{screen, time, passStore, passLoad, passSampleLevelBilinearRepeat};
+
 @group(2) @binding(0) var<storage, read_write> atomic_storage : array<atomic<i32>>;
 
 // 2022 David A Roberts <https://davidar.io/>
@@ -172,25 +179,25 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
 
         `;
 
-  const mainVelocityProgram = device.createProgram({
+  const mainVelocityProgram = createProgram(device, {
     compute: {
       entryPoint: 'main_velocity',
       wgsl: computeWgsl,
     },
   });
-  const mainPressureProgram = device.createProgram({
+  const mainPressureProgram = createProgram(device, {
     compute: {
       entryPoint: 'main_pressure',
       wgsl: computeWgsl,
     },
   });
-  const mainCausticsProgram = device.createProgram({
+  const mainCausticsProgram = createProgram(device, {
     compute: {
       entryPoint: 'main_caustics',
       wgsl: computeWgsl,
     },
   });
-  const mainImageProgram = device.createProgram({
+  const mainImageProgram = createProgram(device, {
     compute: {
       entryPoint: 'main_image',
       wgsl: computeWgsl,
@@ -379,7 +386,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
     renderPass.setPipeline(blitPipeline);
     renderPass.setBindings(blitBindings);
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-    renderPass.draw(6);
+    renderPass.draw(3);
 
     device.submitPass(renderPass);
     ++t;
