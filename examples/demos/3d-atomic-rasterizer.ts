@@ -267,14 +267,6 @@ struct Custom {
       return abs(color);
   }
 
-  //to remove canvas aliasing
-  fn SampleBlur(pos: int2) -> float3
-  {
-      let avg = Sample(pos+int2(1,0))+Sample(pos+int2(-1,0))+
-                Sample(pos+int2(0,1))+Sample(pos+int2(0,-1));
-      return mix(Sample(pos), 0.25*avg, custom.Blur);
-  }
-
   @compute @workgroup_size(16, 16)
   fn main_image(@builtin(global_invocation_id) id: uint3)
   {
@@ -284,12 +276,12 @@ struct Custom {
       if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
 
       // Pixel coordinates (centre of pixel, origin at bottom left)
-      let fragCoord = float2(float(id.x) + .5, float(id.y) + .5);
+      // let fragCoord = float2(float(id.x) + .5, float(id.y) + .5);
 
-      let color = SampleBlur(int2(id.xy));
+      let color = float4(Sample(int2(id.xy)),1.0);
 
       // Output to screen (linear colour space)
-      textureStore(screen, int2(id.xy), float4(color, 1.));
+      textureStore(screen, int2(id.xy), color);
   }
           `;
 
@@ -424,27 +416,20 @@ struct Custom {
       new Uint8Array(new Float32Array([t, time / 1000]).buffer),
     );
 
+    const x = Math.ceil($canvas.width / 16);
+    const y = Math.ceil($canvas.height / 16);
     const computePass = device.createComputePass();
     computePass.setPipeline(clearPipeline);
     computePass.setBindings(clearBindings);
-    computePass.dispatchWorkgroups(
-      Math.ceil($canvas.width / 16),
-      Math.ceil($canvas.height / 16),
-    );
+    computePass.dispatchWorkgroups(x, y);
 
     computePass.setPipeline(rasterizePipeline);
     computePass.setBindings(rasterizeBindings);
-    computePass.dispatchWorkgroups(
-      Math.ceil($canvas.width / 16),
-      Math.ceil($canvas.height / 16),
-    );
+    computePass.dispatchWorkgroups(x, y);
 
     computePass.setPipeline(mainImagePipeline);
     computePass.setBindings(mainImageBindings);
-    computePass.dispatchWorkgroups(
-      Math.ceil($canvas.width / 16),
-      Math.ceil($canvas.height / 16),
-    );
+    computePass.dispatchWorkgroups(x, y);
     device.submitPass(computePass);
 
     /**

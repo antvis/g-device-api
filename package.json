@@ -108,7 +108,8 @@
     "orbit-camera": "latest",
     "typedarray-pool": "latest",
     "bit-twiddle": "latest",
-    "colormap": "latest"
+    "colormap": "latest",
+    "@antv/graphlib": "latest"
   },
   "lint-staged": {
     "*.{md,json}": [

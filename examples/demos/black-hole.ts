@@ -34,6 +34,21 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
+  const mouse = { pos: { x: 0, y: 0 }, click: 0 };
+  $canvas.addEventListener('mousemove', (e) => {
+    if (mouse.click) {
+      mouse.pos.x = e.offsetX;
+      mouse.pos.y = e.offsetY;
+      // console.log(e.offsetX - , e.offsetY, $canvas.clientHeight);
+    }
+  });
+  $canvas.addEventListener('mousedown', (e) => {
+    mouse.click = 1;
+  });
+  $canvas.addEventListener('mouseup', (e) => {
+    mouse.click = 0;
+  });
+
   const screen = device.createTexture({
     // Use F32_RGBA
     // @see https://www.w3.org/TR/webgpu/#float32-filterable
@@ -78,17 +93,23 @@ struct Custom {
   Radius: f32,
   TimeStep: f32,
   Samples: f32,
-  BlurRadius: f32,
-  VelocityDecay: f32,
-  Speed: f32,
-  BlurExponentA: f32,
-  BlurExponentB: f32,
   AnimatedNoise: f32,
   Accumulation: f32,
   Exposure: f32,
+  BlurExponentA: f32,
+  BlurExponentB: f32,
+  BlurRadius: f32,
+  KerrA: f32,
+  KerrQ: f32,
+  InitSpeed: f32,
+  InitThick: f32,
+  Steps: f32,
+  FocalPlane: f32,
+  MotionBlur: f32,
+  Gamma: f32
 }
 
-@group(0) @binding(1) var<uniform> custom: Custom;
+@group(0) @binding(2) var<uniform> custom: Custom;
   `;
 
   registerShaderModule(device, prelude);
@@ -98,22 +119,32 @@ struct Custom {
   registerShaderModule(device, particle);
 
   const computeWgsl = /* wgsl */ `
-#import prelude::{screen, time, pass_in, pass_out};
-#import math::{PI, TWO_PI, state, rand4, nrand4, disk};
+#import prelude::{screen, time, mouse, pass_in, pass_out};
+#import math::{PI, TWO_PI, state, rand4, nrand4, sqr, diag, disk};
 #import camera::{Camera, GetCameraMatrix, Project, camera};
 #import particle::{Particle, LoadParticle, SaveParticle, RasterizePoint, atomic_storage};
 #import custom::{Custom, custom};
 
-const MaxSamples = 256.0;
+const MaxSamples = 8.0;
 const FOV = 0.8;
 
 //sqrt of particle count
-const PARTICLE_COUNT = 160;
+const PARTICLE_COUNT = 1000;
 
 const DEPTH_MIN = 0.2;
 const DEPTH_MAX = 5.0;
 const DEPTH_BITS = 16u;
+const dq = float2(0.0, 1.0);
+const eps = 0.01;
 
+const KerrM = 1.0;
+
+struct GeodesicRay
+{    
+    q:  float4,
+    qt: float4,
+    p:  float4,
+}; 
 
 var<private> bokehRad : float;
 
@@ -121,16 +152,103 @@ fn SetCamera(ang: float2, fov: float)
 {
     camera.fov = fov;
     camera.cam = GetCameraMatrix(ang); 
-    camera.pos = - (camera.cam*float3(15.0*custom.Radius+0.5,0.0,0.0));
+    camera.pos = - (camera.cam*float3(50.0*custom.Radius+0.5,0.0,0.0));
     camera.size = float2(textureDimensions(screen));
 }
 
-fn ForceField(pos: float3, t: float) -> float4
+fn KerrGetR2(p: float3) -> float
 {
-    let a0 = float3(sin(t),cos(0.4*t),cos(t));
-    let d = distance(pos, a0);
-    let F = (a0 - pos)*(1.0/(d*d*d + 1e-3) - 0.4/(d*d*d*d + 1e-3)) + 1e-3;
-    return 0.2*float4(F, 0.0);
+    let rho = dot(p,p) - sqr(custom.KerrA);
+    let r2 = 0.5*(rho + sqrt(sqr(rho) + sqr(2.0*custom.KerrA*p.z)));
+    return r2;
+}
+
+fn KerrGetK(p: float3) -> float4
+{
+    let r2 = KerrGetR2(p);
+    let r = sqrt(r2);
+    let invr2 = 1.0 / (r2 + sqr(custom.KerrA) + 1e-3); 
+    let  k = float3((r*p.x - custom.KerrA*p.y) * invr2, (r*p.y + custom.KerrA*p.x) * invr2, p.z/(r + 1e-4));
+    let f = r2 * (2.0 * KerrM * r - sqr(custom.KerrQ)) / (r2 * r2 + sqr(custom.KerrA * p.z) + 1e-3);
+    return float4(k, f);
+}
+
+fn G(q: float4) -> float4x4 
+{
+    //Kerr metric in Kerr-Schild coordinates 
+    let k = KerrGetK(q.yzw);
+    let kf = k.w*float4(1.0, k.xyz);
+    return diag(float4(-1.0,1.0,1.0,1.0)) + float4x4(kf, k.x*kf, k.y*kf, k.z*kf);    
+}
+
+fn Ginv(q: float4) -> float4x4 
+{
+    //inverse of Kerr metric in Kerr-Schild coordinates 
+    let k = KerrGetK(q.yzw);
+    let kf = k.w*vec4(1.0, -k.xyz)/dot(k.xyz, k.xyz);
+    return diag(float4(-1.0,1.0,1.0,1.0)) + float4x4(-kf, k.x*kf, k.y*kf, k.z*kf); 
+}
+
+//lagrangian
+fn Lmat(qt: float4, g: float4x4) -> float 
+{
+    return   g[0][0]*qt.x*qt.x + g[1][1]*qt.y*qt.y + g[2][2]*qt.z*qt.z + g[3][3]*qt.w*qt.w +
+        2.0*(g[0][1]*qt.x*qt.y + g[0][2]*qt.x*qt.z + g[0][3]*qt.x*qt.w +
+                g[1][2]*qt.y*qt.z + g[1][3]*qt.y*qt.w +
+                g[2][3]*qt.z*qt.w);
+}
+
+fn L(qt: float4, q: float4) -> float 
+{
+    return Lmat(qt, G(q));
+}
+
+fn H(p: float4, ginv: float4x4) -> float 
+{
+    return Lmat(p, ginv);
+}
+
+fn  ToMomentum(ray: GeodesicRay) -> float4 
+{
+    return G(ray.q)*ray.qt; 
+}
+
+fn  FromMomentum(ray: GeodesicRay) -> float4 
+{
+    return Ginv(ray.q)*ray.p; 
+}
+
+fn ParticleToGeodesic(particle: Particle) -> GeodesicRay
+{
+    var ray: GeodesicRay;
+    ray.q = particle.position;
+    ray.p = particle.velocity;
+    return ray;
+}
+
+fn GeodesicToParticle(ray: GeodesicRay) -> Particle
+{
+    var particle: Particle;
+    particle.position = ray.q;
+    particle.velocity = ray.p/length(ray.qt);
+    return particle;
+}
+
+fn HamiltonianGradient(ray: GeodesicRay) -> float4 
+{
+    let ginv = Ginv(ray.q);
+    let H0 = H(ray.p, ginv);
+    let delta = 0.1; 
+    return (float4(
+        L(ray.qt,ray.q+delta*dq.yxxx),
+        L(ray.qt,ray.q+delta*dq.xyxx),
+        L(ray.qt,ray.q+delta*dq.xxyx),
+        L(ray.qt,ray.q+delta*dq.xxxy)) - H0)/delta;
+}
+
+fn VelClamp(vel: float4) -> float4
+{
+    return vel;//float4(vel.x, vel.yzw / max(1.0, length(vel.yzw)));
 }
 
 @compute @workgroup_size(16, 16)
@@ -146,29 +264,47 @@ fn SimulateParticles(@builtin(global_invocation_id) id: uint3)
     
     state = uint4(id.x, id.y, id.z, time.frame);
     
-    if(time.frame == 0u)
+    let r = sqrt(KerrGetR2(p.position.yzw));
+
+    if(time.frame == 0u || r < 0.9 || r > 30.0)
     {
         let rng = rand4();
-        p.position = float4(2.0*rng.xyz - 1.0, 0.0);
-        p.velocity = float4(0.0,0.0,0.0,0.0);
+        let rng1 = rand4();
+        p.position = 30.0*float4(1.0, 1.0, 1.0, custom.InitThick) * float4(0.0,2.0*rng.xyz - 1.0);
+
+        let r01 = sqrt(KerrGetR2(p.position.yzw)); 
+        if(r01 < 0.9)
+        {
+            return;
+        }
+
+        var vel = normalize(cross(p.position.yzw, float3(0.0,0.0,1.0)));
+
+        vel += 0.3*(rng1.xyz * 0.5 - 0.25);
+        let vscale = clamp(1.0 / (0.2 + 0.08*r01), 0., 1.0);
+        p.velocity = float4(-1.0,2.0*(custom.InitSpeed - 0.5)*vel*vscale);
     }
-    let t = fract(custom.Speed*float(time.frame)/800.0)*30.0;
+
+   
+    
+    var ray = ParticleToGeodesic(p);
 
     // if(mouse.click == 1) 
     // {
-    //     return;
+    //    // return;
     // }
-
-    if(t < 0.05)
+   
+    for(var i = 0; i < int(custom.Steps*16.0 + 1.0); i++)
     {
-        p.velocity -= 0.5 * p.velocity * length(p.velocity);
+        ray.qt = FromMomentum(ray);
+        let qt0 = ray.qt;
+        let dt = 0.5 * custom.TimeStep / (abs(ray.qt.x) + 0.01);
+        ray.p += HamiltonianGradient(ray)*dt;
+        ray.qt = FromMomentum(ray);
+        ray.q += (ray.qt+qt0)*dt;
     }
-    
-    let dt = custom.Speed * custom.TimeStep;
-    p.velocity += (ForceField(p.position.xyz, t) - custom.VelocityDecay*p.velocity) * dt;
-    p.position += p.velocity * dt;
 
-    SaveParticle(pix, p);
+    SaveParticle(pix, GeodesicToParticle(ray));
 }
 
 @compute @workgroup_size(16, 16)
@@ -188,8 +324,7 @@ fn Rasterize(@builtin(global_invocation_id) id: uint3) {
     let screen_size = int2(textureDimensions(screen));
     let screen_size_f = float2(screen_size);
     
-    let ang = float2(-TWO_PI, PI)/screen_size_f + 1e-4;
-    // let ang = float2(mouse.pos.xy)*float2(-TWO_PI, PI)/screen_size_f + 1e-4;
+    let ang = float2(mouse.pos.xy)*float2(-TWO_PI, PI)/screen_size_f + 1e-4;
     
     SetCamera(ang, FOV);
 
@@ -199,10 +334,10 @@ fn Rasterize(@builtin(global_invocation_id) id: uint3) {
     let rng = rand4();
     bokehRad = pow(rng.x, custom.BlurExponentA);
 
-    // if(mouse.click == 1 && custom.AnimatedNoise > 0.5)
-    // {
-    //     state.w = time.frame;
-    // }
+    if(mouse.click == 1 && custom.AnimatedNoise > 0.5)
+    {
+        state.w = time.frame;
+    }
 
     var pix = int2(id.xy);
 
@@ -213,8 +348,9 @@ fn Rasterize(@builtin(global_invocation_id) id: uint3) {
 
     var p = LoadParticle(pix);
 
-    var pos = p.position.xyz;
-    var col = 5.5*abs(p.velocity.xyz)*dot(p.velocity,p.velocity)+0.1;
+    var pos = p.position.ywz;
+    let vel = abs(p.velocity.ywz);
+    var col = clamp(8.5*abs(vel)*dot(vel,vel)+0.1, float3(0.0), float3(5.0));
     col /= (0.1+bokehRad);
     let impSample = (col.x + col.y + col.z)*bokehRad;
     let sampleCount = clamp(int(impSample*custom.Samples*MaxSamples + 1.0), 1, 1024);
@@ -237,13 +373,11 @@ fn Sample(pos: int2) -> float3
     let idx = pos.x + screen_size.x * pos.y;
 
     var color: float3;
-    let x = float(atomicLoad(&atomic_storage[idx*4+0]))/(256.0);
-    let y = float(atomicLoad(&atomic_storage[idx*4+1]))/(256.0);
-    let z = float(atomicLoad(&atomic_storage[idx*4+2]))/(256.0);
-    
-    color = tanh(
-      custom.Exposure * 0.03 * float(screen_size.y) * float3(x,y,z)
-      / (custom.Samples * MaxSamples + 1.0));
+        let x = float(atomicLoad(&atomic_storage[idx*4+0]))/(256.0);
+        let y = float(atomicLoad(&atomic_storage[idx*4+1]))/(256.0);
+        let z = float(atomicLoad(&atomic_storage[idx*4+2]))/(256.0);
+        
+        color = tanh(custom.Exposure*0.03*float(screen_size.x)*float3(x,y,z)/(custom.Samples*MaxSamples + 1.0));
 
     return abs(color);
 }
@@ -264,11 +398,11 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
 
     let oldColor = textureLoad(pass_in, int2(id.xy), 2, 0);
 
-    // if(mouse.click == 1 && custom.AnimatedNoise > 0.5)
-    // {
-    //     color += oldColor * custom.Accumulation;
-    // }
-    
+    if(mouse.click == 1 && custom.AnimatedNoise > 0.5)
+    {
+        color += oldColor * custom.Accumulation;
+    }
+
     // Output to buffer
     textureStore(pass_out, int2(id.xy), 2, color);
 
@@ -301,27 +435,49 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     },
   });
 
-  const uniformBuffer = device.createBuffer({
+  const timeBuffer = device.createBuffer({
     viewOrSize: 2 * Float32Array.BYTES_PER_ELEMENT,
     usage: BufferUsage.UNIFORM,
   });
-  uniformBuffer.setSubData(0, new Uint8Array(new Float32Array([0, 0]).buffer));
+  timeBuffer.setSubData(0, new Uint8Array(new Float32Array([0, 0]).buffer));
+  const mouseBuffer = device.createBuffer({
+    viewOrSize: 4 * Int32Array.BYTES_PER_ELEMENT,
+    usage: BufferUsage.UNIFORM,
+  });
+  mouseBuffer.setSubData(0, new Uint8Array(new Uint32Array([0, 0, 0]).buffer));
+
   const customUniformBuffer = device.createBuffer({
-    viewOrSize: 11 * Float32Array.BYTES_PER_ELEMENT,
+    viewOrSize: 17 * Float32Array.BYTES_PER_ELEMENT,
     usage: BufferUsage.UNIFORM,
   });
   customUniformBuffer.setSubData(
     0,
     new Uint8Array(
       new Float32Array([
-        0.551, 0.313, 0.632, 0.489, 0.018, 0.697, 0.621, 0, 1, 0.962, 0.224,
+        1, // Radius
+        0.039, // TimeStep
+        0.03, // Samples
+        0, // AnimatedNoise
+        1, // Accumulation
+        0.369, // Exposure
+        0.393, // BlurExponentA
+        0.81, // BlurExponentB
+        0.743, // BlurRadius
+        0.876, // KerrA
+        0, // KerrQ
+        0.719, // InitSpeed
+        0.22, // InitThick
+        0.387, // Steps
+        0.53, // FocalPlane
+        0.829, // MotionBlur
+        0.827, // Gamma
       ]).buffer,
     ),
   );
 
   const storageBuffer = device.createBuffer({
     viewOrSize:
-      $canvas.width * $canvas.height * 4 * Float32Array.BYTES_PER_ELEMENT,
+      $canvas.width * $canvas.height * 20 * Float32Array.BYTES_PER_ELEMENT,
     usage: BufferUsage.STORAGE,
   });
 
@@ -346,9 +502,10 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     pipeline: simulateParticlesPipeline,
     uniformBufferBindings: [
       {
-        buffer: uniformBuffer,
+        buffer: timeBuffer,
       },
       {
+        binding: 2,
         buffer: customUniformBuffer,
       },
     ],
@@ -385,7 +542,15 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     pipeline: rasterizePipeline,
     uniformBufferBindings: [
       {
+        binding: 0,
+        buffer: timeBuffer,
+      },
+      {
         binding: 1,
+        buffer: mouseBuffer,
+      },
+      {
+        binding: 2,
         buffer: customUniformBuffer,
       },
     ],
@@ -414,6 +579,10 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     uniformBufferBindings: [
       {
         binding: 1,
+        buffer: mouseBuffer,
+      },
+      {
+        binding: 2,
         buffer: customUniformBuffer,
       },
     ],
@@ -452,39 +621,36 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
   let id;
   let t = 0;
   const frame = (time) => {
-    uniformBuffer.setSubData(
+    timeBuffer.setSubData(
       0,
       new Uint8Array(new Float32Array([t, time / 1000]).buffer),
     );
+    mouseBuffer.setSubData(
+      0,
+      new Uint8Array(
+        new Uint32Array([mouse.pos.x, mouse.pos.y, mouse.click]).buffer,
+      ),
+    );
+
+    const x = Math.ceil($canvas.width / 16);
+    const y = Math.ceil($canvas.height / 16);
 
     const computePass = device.createComputePass();
     computePass.setPipeline(simulateParticlesPipeline);
     computePass.setBindings(simulateParticlesBindings);
-    computePass.dispatchWorkgroups(
-      Math.ceil($canvas.width / 16),
-      Math.ceil($canvas.height / 16),
-    );
+    computePass.dispatchWorkgroups(x, y);
 
     computePass.setPipeline(clearPipeline);
     computePass.setBindings(clearBindings);
-    computePass.dispatchWorkgroups(
-      Math.ceil($canvas.width / 16),
-      Math.ceil($canvas.height / 16),
-    );
+    computePass.dispatchWorkgroups(x, y);
 
     computePass.setPipeline(rasterizePipeline);
     computePass.setBindings(rasterizeBindings);
-    computePass.dispatchWorkgroups(
-      Math.ceil($canvas.width / 16),
-      Math.ceil($canvas.height / 16),
-    );
+    computePass.dispatchWorkgroups(x, y);
 
     computePass.setPipeline(mainImagePipeline);
     computePass.setBindings(mainImageBindings);
-    computePass.dispatchWorkgroups(
-      Math.ceil($canvas.width / 16),
-      Math.ceil($canvas.height / 16),
-    );
+    computePass.dispatchWorkgroups(x, y);
     device.submitPass(computePass);
     device.copySubTexture2D(pass_in, 0, 0, pass_out, 0, 0, 4);
 
@@ -524,7 +690,8 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     mainImageProgram.destroy();
     mainImagePipeline.destroy();
     screen.destroy();
-    uniformBuffer.destroy();
+    timeBuffer.destroy();
+    mouseBuffer.destroy();
     customUniformBuffer.destroy();
     blitPipeline.destroy();
     renderTarget.destroy();
