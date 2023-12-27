@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.12
+
+### Patch Changes
+
+-   c1255e8: Allow heading spaces when compiling to GLSL 440.
+
 ## 1.4.11
 
 ### Patch Changes
