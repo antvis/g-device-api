@@ -67,5 +67,5 @@ export async function render(
 render.params = {
   targets: ['webgl1', 'webgl2'],
   xrCompatible: true,
-  default: 'webgl1',
+  default: 'webgl2',
 };

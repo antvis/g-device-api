@@ -205,7 +205,7 @@ export function preprocessShader_GLSL(
       location = 0;
 
     rest = rest.replace(
-      /^(layout\((.*)\))?\s*uniform(.+{)$/gm,
+      /^\s*(layout\((.*)\))?\s*uniform(.+{)$/gm,
       (substr, cap, layout, rest) => {
         const layout2 = layout ? `${layout}, ` : ``;
         return `layout(${layout2}set = ${set}, binding = ${implicitBinding++}) uniform ${rest}`;
@@ -218,7 +218,7 @@ export function preprocessShader_GLSL(
 
     assert(vendorInfo.separateSamplerTextures);
     rest = rest.replace(
-      /^(layout\((.*)\))?\s*uniform sampler(\w+) (.*);/gm,
+      /^\s*(layout\((.*)\))?\s*uniform sampler(\w+) (.*);/gm,
       (substr, cap, layout, combinedSamplerType, samplerName) => {
         let binding = parseBinding(layout);
         if (binding === null) binding = implicitBinding++;
@@ -256,7 +256,7 @@ layout(set = ${set}, binding = ${
   } else {
     let implicitBinding = 0;
     rest = rest.replace(
-      /^(layout\((.*)\))?\s*uniform sampler(\w+) (.*);/gm,
+      /^\s*(layout\((.*)\))?\s*uniform sampler(\w+) (.*);/gm,
       (substr, cap, layout, combinedSamplerType, samplerName) => {
         let binding = parseBinding(layout);
         if (binding === null) binding = implicitBinding++;

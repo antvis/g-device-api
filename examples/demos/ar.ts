@@ -53,7 +53,7 @@ export async function render(
   out vec4 outputColor;
 
   void main() {
-    outputColor = v_Position;
+    outputColor = vec4(1.0, 0.0, 0.0, 1.0);
   }
   `,
     },
@@ -167,7 +167,7 @@ export async function render(
     const modelMatrix = mat4.fromRotationTranslationScale(
       mat4.create(),
       quat.create(),
-      vec3.fromValues(0, 0, -4),
+      vec3.fromValues(0, 0, 0),
       vec3.fromValues(1, 1, 1),
     );
 
@@ -208,6 +208,8 @@ export async function render(
 
         const fov = 2.0 * Math.atan(1.0 / projectionMatrix[5]);
         const aspect = projectionMatrix[5] / projectionMatrix[0];
+
+        console.log(fov, aspect, $canvas.width, $canvas.height);
 
         mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
         mat4.multiply(

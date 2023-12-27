@@ -478,4 +478,35 @@ layout(std140) uniform ub_ObjectParams {
       'directionalLights',
     ]);
   });
+
+  it('compile to GLSL 440', () => {
+    let set = 0,
+      implicitBinding = 0,
+      location = 0;
+
+    const rest = `
+layout(std140) uniform AttributeUniforms {
+  vec4 u_stroke;
+};
+
+  layout(std140) uniform CommonUniforms {
+vec3 u_blur_height_fixed;
+};
+`.replace(
+      /^\s*(layout\((.*)\))?\s*uniform(.+{)$/gm,
+      (substr, cap, layout, rest) => {
+        const layout2 = layout ? `${layout}, ` : ``;
+        return `layout(${layout2}set = ${set}, binding = ${implicitBinding++}) uniform ${rest}`;
+      },
+    );
+
+    expect(rest)
+      .toEqual(`layout(std140, set = 0, binding = 0) uniform  AttributeUniforms {
+  vec4 u_stroke;
+};
+layout(std140, set = 0, binding = 1) uniform  CommonUniforms {
+vec3 u_blur_height_fixed;
+};
+`);
+  });
 });
