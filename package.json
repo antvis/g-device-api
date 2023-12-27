@@ -1,6 +1,6 @@
 {
   "name": "@antv/g-device-api",
-  "version": "1.4.11",
+  "version": "1.4.12",
   "description": "A Device API references WebGPU implementations",
   "keywords": [
     "antv",
@@ -108,7 +108,8 @@
     "orbit-camera": "latest",
     "typedarray-pool": "latest",
     "bit-twiddle": "latest",
-    "colormap": "latest"
+    "colormap": "latest",
+    "@antv/graphlib": "latest"
   },
   "lint-staged": {
     "*.{md,json}": [

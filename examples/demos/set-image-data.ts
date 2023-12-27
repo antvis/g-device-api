@@ -26,22 +26,36 @@ export async function render(
   // });
   // luminance.setImageData([new Uint8Array([10])]);
 
-  const floatRGB = device.createTexture({
-    format: Format.F32_RGB,
+  const floatR = device.createTexture({
+    format: Format.F32_R,
     width: 1,
     height: 1,
     usage: TextureUsage.SAMPLED,
     pixelStore: {
       unpackFlipY: false,
-      packAlignment: 4,
+      packAlignment: 1,
     },
     mipLevelCount: 0,
   });
-  floatRGB.setImageData([new Float32Array([10, 20, 30])]);
+  floatR.setImageData([new Float32Array([10.25])]);
+
+  // const floatRGB = device.createTexture({
+  //   format: Format.F32_RGB,
+  //   width: 1,
+  //   height: 1,
+  //   usage: TextureUsage.SAMPLED,
+  //   pixelStore: {
+  //     unpackFlipY: false,
+  //     packAlignment: 4,
+  //   },
+  //   mipLevelCount: 0,
+  // });
+  // floatRGB.setImageData([new Float32Array([10, 20, 30])]);
 
   return () => {
     // luminance.destroy();
-    floatRGB.destroy();
+    // floatRGB.destroy();
+    floatR.destroy();
     device.destroy();
 
     // For debug.

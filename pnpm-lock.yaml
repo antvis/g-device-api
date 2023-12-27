@@ -18,6 +18,9 @@ dependencies:
     version: 2.5.3
 
 devDependencies:
+  '@antv/graphlib':
+    specifier: latest
+    version: 2.0.2
   '@changesets/cli':
     specifier: ^2.26.2
     version: 2.26.2
@@ -179,6 +182,16 @@ packages:
     dependencies:
       '@jridgewell/gen-mapping': 0.3.3
       '@jridgewell/trace-mapping': 0.3.19
+    dev: true
+
+  /@antv/event-emitter@0.1.3:
+    resolution: {integrity: sha512-4ddpsiHN9Pd4UIlWuKVK1C4IiZIdbwQvy9i7DUSI3xNJ89FPUFt8lxDYj8GzzfdllV0NkJTRxnG+FvLk0llidg==}
+    dev: true
+
+  /@antv/graphlib@2.0.2:
+    resolution: {integrity: sha512-tyTzmSRgbkkC7k3H5zAw9IpQXEC90SRr66lvVo31PDA06ilCCU/jLXR6isH92oKEgB5j2/L1aJ+MRjMUm/0MGw==}
+    dependencies:
+      '@antv/event-emitter': 0.1.3
     dev: true
 
   /@antv/util@3.3.4:
