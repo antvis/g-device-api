@@ -6,6 +6,7 @@ export { render as MSAA } from './msaa';
 export { render as MultipleRenderTargets } from './multiple-render-targets';
 export { render as MultipleRenderPasses } from './multiple-render-passes';
 export { render as Blit } from './blit';
+export { render as CanvasGradient } from './canvas-gradient';
 export { render as RotatingCube } from './rotating-cube';
 export { render as NestedRenderPass } from './nested-render-pass';
 export { render as Stencil } from './stencil';
