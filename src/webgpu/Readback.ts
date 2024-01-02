@@ -87,6 +87,11 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
       dstOffset,
       size,
       texture.format,
+      true,
+      false,
+      bytesPerRow,
+      bytesPerRowAligned,
+      height,
     );
   }
 
@@ -112,8 +117,9 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
     type: Format = Format.U8_RGB,
     noDataConversion = false,
     destroy = false,
-    // bytesPerRow: number,
-    // bytesPerRowAligned: number,
+    bytesPerRow = 0,
+    bytesPerRowAligned = 0,
+    height = 0,
   ): Promise<ArrayBufferView> {
     const buffer = b as Buffer_WebGPU;
 
@@ -227,28 +233,28 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
                 }
               }
             }
-            // if (bytesPerRow !== bytesPerRowAligned) {
-            //   // TODO WEBGPU use computer shaders (or render pass) to build the final buffer data?
-            //   if (floatFormat === 1 && !noDataConversion) {
-            //     // half float have been converted to float above
-            //     bytesPerRow *= 2;
-            //     bytesPerRowAligned *= 2;
-            //   }
-            //   const data2 = new Uint8Array(data!.buffer);
-            //   let offset = bytesPerRow,
-            //     offset2 = 0;
-            //   for (let y = 1; y < height; ++y) {
-            //     offset2 = y * bytesPerRowAligned;
-            //     for (let x = 0; x < bytesPerRow; ++x) {
-            //       data2[offset++] = data2[offset2++];
-            //     }
-            //   }
-            //   if (floatFormat !== 0 && !noDataConversion) {
-            //     data = new Float32Array(data2.buffer, 0, offset / 4);
-            //   } else {
-            //     data = new Uint8Array(data2.buffer, 0, offset);
-            //   }
-            // }
+            if (bytesPerRow !== bytesPerRowAligned) {
+              // TODO WEBGPU use computer shaders (or render pass) to build the final buffer data?
+              if (floatFormat === 1 && !noDataConversion) {
+                // half float have been converted to float above
+                bytesPerRow *= 2;
+                bytesPerRowAligned *= 2;
+              }
+              const data2 = new Uint8Array(data!.buffer);
+              let offset = bytesPerRow,
+                offset2 = 0;
+              for (let y = 1; y < height; ++y) {
+                offset2 = y * bytesPerRowAligned;
+                for (let x = 0; x < bytesPerRow; ++x) {
+                  data2[offset++] = data2[offset2++];
+                }
+              }
+              if (floatFormat !== 0 && !noDataConversion) {
+                data = new Float32Array(data2.buffer, 0, offset / 4);
+              } else {
+                data = new Uint8Array(data2.buffer, 0, offset);
+              }
+            }
             gpuReadBuffer.gpuBuffer.unmap();
 
             resolve(data!);
