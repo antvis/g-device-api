@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.14
+
+### Patch Changes
+
+-   05e33ac: Read texture in webgpu.
+
 ## 1.4.13
 
 ### Patch Changes
