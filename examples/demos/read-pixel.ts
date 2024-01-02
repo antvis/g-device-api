@@ -136,7 +136,13 @@ void main() {
   const row = width * 4;
   const end = (height - 1) * row;
   for (let i = 0; i < length; i += row) {
-    ci.data.set(data.subarray(i, i + row), i);
+    const r = data.subarray(i, i + row); // bgra
+    // for (let j = 0; j < row; j += 4) {
+    //   const t = r[j];
+    //   r[j] = r[j + 2];
+    //   r[j + 2] = t;
+    // }
+    ci.data.set(r, i);
   }
   context.putImageData(ci, 0, 0);
 

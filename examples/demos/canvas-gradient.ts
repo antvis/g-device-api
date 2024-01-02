@@ -24,6 +24,7 @@ import {
   cubePositionOffset,
   cubeUVOffset,
 } from '../meshes/cube';
+import { generateColorRamp } from '../utils/gradient';
 
 export async function render(
   deviceContribution: DeviceContribution,
@@ -38,96 +39,55 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
-  const triangleProgram = device.createProgram({
-    vertex: {
-      glsl: `
-layout(location = 0) in vec2 a_Position;
-
-void main() {
-  gl_Position = vec4(a_Position, 0.0, 1.0);
-} 
-`,
-    },
-    fragment: {
-      glsl: `
-out vec4 outputColor;
-
-void main() {
-  outputColor = vec4(1.0, 0.0, 0.0, 1.0);
-}
-`,
-    },
+  const ramp = generateColorRamp({
+    colors: [
+      '#FF4818',
+      '#F7B74A',
+      '#FFF598',
+      '#91EABC',
+      '#2EA9A1',
+      '#206C7C',
+    ].reverse(),
+    positions: [0, 0.2, 0.4, 0.6, 0.8, 1.0],
   });
-
-  const triangleVertexBuffer = device.createBuffer({
-    viewOrSize: new Float32Array([0, 0.5, -0.5, -0.5, 0.5, -0.5]),
-    usage: BufferUsage.VERTEX,
-    hint: BufferFrequencyHint.DYNAMIC,
-  });
-
-  const triangleInputLayout = device.createInputLayout({
-    vertexBufferDescriptors: [
-      {
-        arrayStride: 4 * 2,
-        stepMode: VertexStepMode.VERTEX,
-        attributes: [
-          {
-            shaderLocation: 0,
-            offset: 0,
-            format: Format.F32_RG,
-          },
-        ],
-      },
-    ],
-    indexBufferFormat: null,
-    program: triangleProgram,
-  });
-
-  const trianglePipeline = device.createRenderPipeline({
-    inputLayout: triangleInputLayout,
-    program: triangleProgram,
-    colorAttachmentFormats: [Format.U8_RGBA_NORM],
-  });
-
-  const triangleTexture = device.createTexture({
+  const gradientTexture = device.createTexture({
     format: Format.U8_RGBA_NORM,
-    width: $canvas.width,
-    height: $canvas.height,
-    usage: TextureUsage.RENDER_TARGET,
+    width: ramp.width,
+    height: ramp.height,
+    usage: TextureUsage.SAMPLED,
   });
-  device.setResourceName(triangleTexture, 'Triangle Texture');
-  const triangleRenderTarget =
-    device.createRenderTargetFromTexture(triangleTexture);
+  device.setResourceName(gradientTexture, 'Gradient Texture');
+  gradientTexture.setImageData([ramp.data]);
 
   const program = device.createProgram({
     vertex: {
       glsl: `
-layout(std140) uniform Uniforms {
-  mat4 u_ModelViewProjectionMatrix;
-  float u_Test;
-};
-
-layout(location = 0) in vec4 a_Position;
-layout(location = 1) in vec2 a_Uv;
-
-out vec2 v_Uv;
-
-void main() {
-  v_Uv = a_Uv;
-  gl_Position = u_ModelViewProjectionMatrix * a_Position;
-} 
-`,
+  layout(std140) uniform Uniforms {
+    mat4 u_ModelViewProjectionMatrix;
+    float u_Test;
+  };
+  
+  layout(location = 0) in vec4 a_Position;
+  layout(location = 1) in vec2 a_Uv;
+  
+  out vec2 v_Uv;
+  
+  void main() {
+    v_Uv = a_Uv;
+    gl_Position = u_ModelViewProjectionMatrix * a_Position;
+  } 
+  `,
     },
     fragment: {
       glsl: `
-uniform sampler2D u_Texture;
-in vec2 v_Uv;
-out vec4 outputColor;
-
-void main() {
-  outputColor = texture(SAMPLER_2D(u_Texture), v_Uv);
-}
-`,
+  uniform sampler2D u_Texture;
+  in vec2 v_Uv;
+  out vec4 outputColor;
+  
+  void main() {
+    outputColor = texture(SAMPLER_2D(u_Texture), v_Uv);
+  }
+  `,
     },
   });
 
@@ -214,7 +174,7 @@ void main() {
     ],
     samplerBindings: [
       {
-        texture: triangleTexture,
+        texture: gradientTexture,
         sampler,
       },
     ],
@@ -265,7 +225,7 @@ void main() {
     // WebGL1 need this
     program.setUniformsLegacy({
       u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
-      u_Texture: triangleTexture,
+      u_Texture: gradientTexture,
     });
 
     /**
@@ -273,29 +233,6 @@ void main() {
      * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
-
-    const triangleRenderPass = device.createRenderPass({
-      colorAttachment: [triangleRenderTarget],
-      colorResolveTo: [null],
-      colorClearColor: [TransparentWhite],
-      colorStore: [true],
-      depthStencilAttachment: null,
-      depthStencilResolveTo: null,
-    });
-
-    triangleRenderPass.setPipeline(trianglePipeline);
-    triangleRenderPass.setVertexInput(
-      triangleInputLayout,
-      [
-        {
-          buffer: triangleVertexBuffer,
-        },
-      ],
-      null,
-    );
-    triangleRenderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-    triangleRenderPass.draw(3);
-    device.submitPass(triangleRenderPass);
 
     const renderPass = device.createRenderPass({
       colorAttachment: [mainColorRT],
@@ -339,12 +276,6 @@ void main() {
     pipeline.destroy();
     mainColorRT.destroy();
     mainDepthRT.destroy();
-
-    triangleProgram.destroy();
-    triangleVertexBuffer.destroy();
-    triangleInputLayout.destroy();
-    trianglePipeline.destroy();
-    triangleRenderTarget.destroy();
 
     sampler.destroy();
     device.destroy();
