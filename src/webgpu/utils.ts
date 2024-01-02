@@ -65,23 +65,33 @@ export function translateTextureUsage(
   return gpuUsage;
 }
 
+/**
+ * @see https://www.w3.org/TR/webgpu/#enumdef-gputextureformat
+ */
 export function translateTextureFormat(format: Format): GPUTextureFormat {
+  // 8-bit formats
   if (format === Format.U8_R_NORM) return 'r8unorm';
+  else if (format === Format.S8_R_NORM) return 'r8snorm';
+  // 16-bit formats
   else if (format === Format.U8_RG_NORM) return 'rg8unorm';
+  else if (format === Format.S8_RG_NORM) return 'rg8snorm';
+  // 32-bit formats
+  else if (format === Format.U32_R) return 'r32uint';
+  else if (format === Format.F32_R) return 'r32float';
   else if (format === Format.U8_RGBA_RT) return 'bgra8unorm';
   else if (format === Format.U8_RGBA_RT_SRGB) return 'bgra8unorm-srgb';
   else if (format === Format.U8_RGBA_NORM) return 'rgba8unorm';
   else if (format === Format.U8_RGBA_SRGB) return 'rgba8unorm-srgb';
-  else if (format === Format.S8_R_NORM) return 'r8snorm';
-  else if (format === Format.S8_RG_NORM) return 'rg8snorm';
   else if (format === Format.S8_RGBA_NORM) return 'rgba8snorm';
-  else if (format === Format.U32_R) return 'r32uint';
+  // 64-bit formats
   else if (format === Format.F16_RGBA) return 'rgba16float';
   else if (format === Format.F32_RGBA) return 'rgba32float';
+  // depth stencil formats
   else if (format === Format.D24) return 'depth24plus';
   else if (format === Format.D24_S8) return 'depth24plus-stencil8';
   else if (format === Format.D32F) return 'depth32float';
   else if (format === Format.D32F_S8) return 'depth32float-stencil8';
+  // bc
   else if (format === Format.BC1) return 'bc1-rgba-unorm';
   else if (format === Format.BC1_SRGB) return 'bc1-rgba-unorm-srgb';
   else if (format === Format.BC2) return 'bc2-rgba-unorm';
