@@ -152,8 +152,10 @@ export class Texture_WebGPU
 
     this.width = width;
     this.height = height;
-    this.gpuTexture = texture;
-    this.gpuTextureView = texture.createView({
+    if (texture) {
+      this.gpuTexture = texture;
+    }
+    this.gpuTextureView = this.gpuTexture.createView({
       dimension: translateTextureViewDimension(this.dimension),
     });
   }

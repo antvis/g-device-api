@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.13
+
+### Patch Changes
+
+-   ce8f26d: Support set image data in webgpu.
+
 ## 1.4.12
 
 ### Patch Changes
