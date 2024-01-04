@@ -122,7 +122,6 @@ void main() {
     new Uint8ClampedArray(length),
   );
   let data = new Uint8ClampedArray(pixel.buffer);
-  // data = data.slice(0, length);
 
   const $c = document.createElement('canvas');
   $c.width = width;
@@ -145,6 +144,18 @@ void main() {
     ci.data.set(r, i);
   }
   context.putImageData(ci, 0, 0);
+
+  $canvas.addEventListener('mousemove', async (e) => {
+    const pixel = await readback.readTexture(
+      renderTargetTexture,
+      e.offsetX * 2,
+      e.offsetY * 2,
+      1,
+      1,
+      new Uint8ClampedArray(1 * 1 * 4),
+    );
+    console.log(pixel);
+  });
 
   return () => {
     program.destroy();

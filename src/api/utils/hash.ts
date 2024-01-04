@@ -33,6 +33,13 @@ export function arrayCopy<T>(a: T[], copyFunc: CopyFunc<T>): T[] {
   return b;
 }
 
+function textureBindingEquals(
+  a: Readonly<TextureBinding>,
+  b: Readonly<TextureBinding>,
+): boolean {
+  return a.texture === b.texture && a.binding === b.binding;
+}
+
 function bufferBindingEquals(
   a: Readonly<BufferBinding>,
   b: Readonly<BufferBinding>,
@@ -66,8 +73,12 @@ export function bindingsDescriptorEquals(
 ): boolean {
   a.samplerBindings = a.samplerBindings || [];
   a.uniformBufferBindings = a.uniformBufferBindings || [];
+  a.storageBufferBindings = a.storageBufferBindings || [];
+  a.storageTextureBindings = a.storageTextureBindings || [];
   b.samplerBindings = b.samplerBindings || [];
   b.uniformBufferBindings = b.uniformBufferBindings || [];
+  b.storageBufferBindings = b.storageBufferBindings || [];
+  b.storageTextureBindings = b.storageTextureBindings || [];
 
   if (a.samplerBindings.length !== b.samplerBindings.length) return false;
   if (!arrayEqual(a.samplerBindings, b.samplerBindings, samplerBindingEquals))
@@ -77,6 +88,22 @@ export function bindingsDescriptorEquals(
       a.uniformBufferBindings,
       b.uniformBufferBindings,
       bufferBindingEquals,
+    )
+  )
+    return false;
+  if (
+    !arrayEqual(
+      a.storageBufferBindings,
+      b.storageBufferBindings,
+      bufferBindingEquals,
+    )
+  )
+    return false;
+  if (
+    !arrayEqual(
+      a.storageTextureBindings,
+      b.storageTextureBindings,
+      textureBindingEquals,
     )
   )
     return false;
