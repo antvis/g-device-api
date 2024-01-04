@@ -12,6 +12,7 @@ import {
   ChannelWriteMask,
   TransparentBlack,
   CompareFunction,
+  ViewportOrigin,
 } from '../../src';
 import { vec3, mat4 } from 'gl-matrix';
 import {
@@ -31,12 +32,17 @@ export async function render(
   // TODO: resize
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
+  const queryVendorInfo = device.queryVendorInfo();
 
   const program = device.createProgram({
     vertex: {
       glsl: `
 layout(std140) uniform Uniforms {
   mat4 u_ModelViewProjectionMatrix;
+};
+
+layout(std140) uniform PickingUniforms {
+  float u_IsPicking;
 };
 
 layout(location = 0) in vec3 a_Position;
@@ -51,11 +57,19 @@ void main() {
     },
     fragment: {
       glsl: `
+layout(std140) uniform Uniforms {
+  mat4 u_ModelViewProjectionMatrix;
+};
+
+layout(std140) uniform PickingUniforms {
+  float u_IsPicking;
+};
+
 in vec4 v_Position;
 out vec4 outputColor;
 
 void main() {
-  outputColor = v_Position;
+  outputColor = u_IsPicking == 1.0 ? vec4(1.0, 0.0, 0.0, 1.0) : v_Position;
 }
 `,
     },
@@ -68,6 +82,11 @@ void main() {
 
   const uniformBuffer = device.createBuffer({
     viewOrSize: 16 * 4, // mat4
+    usage: BufferUsage.UNIFORM,
+    hint: BufferFrequencyHint.DYNAMIC,
+  });
+  const pickingUniformBuffer = device.createBuffer({
+    viewOrSize: 4, // mat4
     usage: BufferUsage.UNIFORM,
     hint: BufferFrequencyHint.DYNAMIC,
   });
@@ -123,6 +142,7 @@ void main() {
     inputLayout,
     program,
     colorAttachmentFormats: [Format.U8_RGBA_RT],
+    depthStencilAttachmentFormat: Format.D24_S8,
     megaStateDescriptor: {
       attachmentsState: [
         {
@@ -139,9 +159,9 @@ void main() {
           },
         },
       ],
-      blendConstant: TransparentBlack,
-      depthWrite: false,
-      cullMode: CullMode.BACK,
+      depthWrite: true,
+      depthCompare: CompareFunction.LESS,
+      stencilWrite: false,
     },
   });
 
@@ -149,20 +169,32 @@ void main() {
     pipeline,
     uniformBufferBindings: [
       {
-        binding: 0,
         buffer: uniformBuffer,
+      },
+      {
+        buffer: pickingUniformBuffer,
+      },
+    ],
+  });
+  const bindings2 = device.createBindings({
+    pipeline: pipeline2,
+    uniformBufferBindings: [
+      {
+        buffer: uniformBuffer,
+      },
+      {
+        buffer: pickingUniformBuffer,
       },
     ],
   });
 
-  const mainColorRT = device.createRenderTargetFromTexture(
-    device.createTexture({
-      format: Format.U8_RGBA_RT,
-      width: $canvas.width,
-      height: $canvas.height,
-      usage: TextureUsage.RENDER_TARGET,
-    }),
-  );
+  const mainColorTexture = device.createTexture({
+    format: Format.U8_RGBA_RT,
+    width: $canvas.width,
+    height: $canvas.height,
+    usage: TextureUsage.RENDER_TARGET,
+  });
+  const mainColorRT = device.createRenderTargetFromTexture(mainColorTexture);
   const mainDepthRT = device.createRenderTargetFromTexture(
     device.createTexture({
       format: Format.D24_S8,
@@ -171,8 +203,24 @@ void main() {
       usage: TextureUsage.RENDER_TARGET,
     }),
   );
+  const pickingColorTexture = device.createTexture({
+    format: Format.U8_RGBA_RT,
+    width: $canvas.width,
+    height: $canvas.height,
+    usage: TextureUsage.RENDER_TARGET,
+    mipLevelCount: 1,
+  });
+  const pickingColorRT =
+    device.createRenderTargetFromTexture(pickingColorTexture);
+  const pickingDepthRT = device.createRenderTargetFromTexture(
+    device.createTexture({
+      format: Format.D24_S8,
+      width: $canvas.width,
+      height: $canvas.height,
+      usage: TextureUsage.RENDER_TARGET,
+    }),
+  );
 
-  let id: number;
   const frame = () => {
     const aspect = $canvas.width / $canvas.height;
     const projectionMatrix = mat4.perspective(
@@ -196,6 +244,10 @@ void main() {
     uniformBuffer.setSubData(
       0,
       new Uint8Array((modelViewProjectionMatrix as Float32Array).buffer),
+    );
+    pickingUniformBuffer.setSubData(
+      0,
+      new Uint8Array(new Float32Array([0]).buffer),
     );
     // WebGL1 need this
     program.setUniformsLegacy({
@@ -229,13 +281,22 @@ void main() {
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
     renderPass.setBindings(bindings);
     renderPass.draw(cubeVertexCount);
+    device.submitPass(renderPass);
 
-    {
+    const readback = device.createReadback();
+    $canvas.addEventListener('mousemove', async (e) => {
+      pickingUniformBuffer.setSubData(
+        0,
+        new Uint8Array(new Float32Array([1]).buffer),
+      );
+
       const renderPass2 = device.createRenderPass({
-        colorAttachment: [mainColorRT],
-        colorResolveTo: [onscreenTexture],
+        colorAttachment: [pickingColorRT],
+        colorResolveTo: [null],
         colorClearColor: [TransparentWhite],
-        depthStencilAttachment: null,
+        colorStore: [true],
+        depthStencilAttachment: pickingDepthRT,
+        depthClearValue: 1,
       });
       renderPass2.setPipeline(pipeline2);
       renderPass2.setVertexInput(
@@ -248,24 +309,58 @@ void main() {
         null,
       );
       renderPass2.setViewport(0, 0, $canvas.width, $canvas.height);
-      renderPass2.setBindings(bindings);
+      renderPass2.setBindings(bindings2);
       renderPass2.draw(cubeVertexCount);
-
       device.submitPass(renderPass2);
-    }
 
-    device.submitPass(renderPass);
-    if (useRAF) {
-      id = requestAnimationFrame(frame);
-    }
+      const dpr = window.devicePixelRatio;
+      const pixel = await readback.readTexture(
+        // mainColorTexture,
+        pickingColorTexture,
+        e.offsetX * dpr,
+        queryVendorInfo.viewportOrigin === ViewportOrigin.LOWER_LEFT
+          ? 1000 - e.offsetY * dpr
+          : e.offsetY * dpr,
+        1,
+        1,
+        new Uint8ClampedArray(1 * 1 * 4),
+      );
+      console.log(pixel);
+
+      pickingUniformBuffer.setSubData(
+        0,
+        new Uint8Array(new Float32Array([0]).buffer),
+      );
+
+      const onscreenTexture = swapChain.getOnscreenTexture();
+      const renderPass = device.createRenderPass({
+        colorAttachment: [mainColorRT],
+        colorResolveTo: [onscreenTexture],
+        colorClearColor: [TransparentWhite],
+        depthStencilAttachment: mainDepthRT,
+        depthClearValue: 1,
+      });
+
+      renderPass.setPipeline(pipeline);
+      renderPass.setVertexInput(
+        inputLayout,
+        [
+          {
+            buffer: vertexBuffer,
+          },
+        ],
+        null,
+      );
+      renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+      renderPass.setBindings(bindings);
+      renderPass.draw(cubeVertexCount);
+      device.submitPass(renderPass);
+    });
   };
 
   frame();
 
   return () => {
-    if (useRAF && id) {
-      cancelAnimationFrame(id);
-    }
     program.destroy();
     vertexBuffer.destroy();
     uniformBuffer.destroy();
@@ -283,5 +378,5 @@ void main() {
 
 render.params = {
   targets: ['webgl1', 'webgl2', 'webgpu'],
-  default: 'webgl2',
+  default: 'webgpu',
 };

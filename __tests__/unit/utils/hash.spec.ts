@@ -10,6 +10,8 @@ import {
   AddressMode,
   bindingsDescriptorEquals,
   renderPipelineDescriptorEquals,
+  Format,
+  TextureUsage,
 } from '../../../src';
 import { Buffer_GL } from '../../../src/webgl/Buffer';
 import { Device_GL } from '../../../src/webgl/Device';
@@ -135,6 +137,55 @@ describe('Hash', () => {
     expect(bindingsDescriptorEquals(a, b)).toBeFalsy();
     b.samplerBindings![0].comparison = false;
     expect(bindingsDescriptorEquals(a, b)).toBeTruthy();
+
+    a.storageBufferBindings?.push({
+      binding: 0,
+      buffer,
+      size: 0,
+      offset: 0,
+    });
+    expect(bindingsDescriptorEquals(a, b)).toBeFalsy();
+    b.storageBufferBindings?.push({
+      binding: 1,
+      buffer,
+      size: 0,
+      offset: 0,
+    });
+    expect(bindingsDescriptorEquals(a, b)).toBeFalsy();
+    // @ts-ignore
+    b.storageBufferBindings[0].binding = 0;
+    expect(bindingsDescriptorEquals(a, b)).toBeTruthy();
+    // @ts-ignore
+    b.storageBufferBindings[0].size = 100;
+    expect(bindingsDescriptorEquals(a, b)).toBeFalsy();
+    // @ts-ignore
+    b.storageBufferBindings[0].size = 0;
+
+    const texture = device.createTexture({
+      format: Format.U8_RGBA_RT,
+      width: 100,
+      height: 100,
+      usage: TextureUsage.SAMPLED,
+    });
+    const texture2 = device.createTexture({
+      format: Format.U8_RGBA_RT,
+      width: 100,
+      height: 100,
+      usage: TextureUsage.SAMPLED,
+    });
+    a.storageTextureBindings?.push({
+      binding: 0,
+      texture,
+    });
+    expect(bindingsDescriptorEquals(a, b)).toBeFalsy();
+    b.storageTextureBindings?.push({
+      binding: 0,
+      texture,
+    });
+    expect(bindingsDescriptorEquals(a, b)).toBeTruthy();
+    // @ts-ignore
+    b.storageTextureBindings[0].texture = texture2;
+    expect(bindingsDescriptorEquals(a, b)).toBeFalsy();
   });
 
   it('should renderPipelineDescriptorEquals.', () => {
