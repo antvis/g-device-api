@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.15
+
+### Patch Changes
+
+-   9c0c37d: Binding hash should account for storage buffer & texture bindings.
+
 ## 1.4.14
 
 ### Patch Changes
