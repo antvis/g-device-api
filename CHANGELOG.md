@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.4.16
+
+### Patch Changes
+
+-   9030813: Support stencil value mask.
+
 ## 1.4.15
 
 ### Patch Changes
