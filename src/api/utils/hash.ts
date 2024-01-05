@@ -140,7 +140,8 @@ export function stencilFaceStateEquals(
     a.compare == b.compare &&
     a.depthFailOp === b.depthFailOp &&
     a.failOp === b.failOp &&
-    a.passOp === b.passOp
+    a.passOp === b.passOp &&
+    a.mask === b.mask
   );
 }
 

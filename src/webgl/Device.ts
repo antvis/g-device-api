@@ -2053,6 +2053,13 @@ export class Device_GL implements SwapChain, Device {
       }
     }
 
+    if (
+      currentMegaState.stencilFront.mask !== newMegaState.stencilFront.mask ||
+      currentMegaState.stencilBack.mask !== newMegaState.stencilBack.mask
+    ) {
+      this.applyStencil();
+    }
+
     // if (
     //   currentMegaState.stencilCompare !== newMegaState.stencilCompare
     // ) {
@@ -2568,13 +2575,13 @@ export class Device_GL implements SwapChain, Device {
       GL.FRONT,
       this.currentMegaState.stencilFront.compare,
       this.currentStencilRef,
-      0xff,
+      this.currentMegaState.stencilFront.mask,
     );
     this.gl.stencilFuncSeparate(
       GL.BACK,
       this.currentMegaState.stencilBack.compare,
       this.currentStencilRef,
-      0xff,
+      this.currentMegaState.stencilBack.mask,
     );
   }
 

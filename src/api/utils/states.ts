@@ -127,6 +127,7 @@ export function copyStencilFaceState(
   dst.depthFailOp = src.depthFailOp;
   dst.passOp = src.passOp;
   dst.failOp = src.failOp;
+  dst.mask = src.mask;
   return dst;
 }
 
@@ -258,12 +259,14 @@ export const defaultMegaState: MegaStateDescriptor = {
     passOp: StencilOp.KEEP,
     depthFailOp: StencilOp.KEEP,
     failOp: StencilOp.KEEP,
+    mask: 0xff,
   },
   stencilBack: {
     compare: CompareFunction.ALWAYS,
     passOp: StencilOp.KEEP,
     depthFailOp: StencilOp.KEEP,
     failOp: StencilOp.KEEP,
+    mask: 0xff,
   },
   cullMode: CullMode.NONE,
   frontFace: FrontFace.CCW,

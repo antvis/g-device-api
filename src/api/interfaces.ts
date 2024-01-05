@@ -546,6 +546,7 @@ export interface StencilFaceState {
   passOp: StencilOp;
   depthFailOp: StencilOp;
   compare?: CompareFunction;
+  mask?: number;
 }
 
 export interface MegaStateDescriptor {
