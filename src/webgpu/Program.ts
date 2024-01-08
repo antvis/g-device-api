@@ -1,4 +1,8 @@
-import type { Program, ProgramDescriptor } from '../api';
+import type {
+  GLSLAndWGSLShaderStageDescriptor,
+  Program,
+  ProgramDescriptor,
+} from '../api';
 import { ResourceType } from '../api';
 import type { Device_WebGPU } from './Device';
 import type { IDevice_WebGPU } from './interfaces';
@@ -42,15 +46,7 @@ export class Program_WebGPU extends ResourceBase_WebGPU implements Program {
   setUniformsLegacy(uniforms: Record<string, any> = {}) {}
 
   private createShaderStage(
-    {
-      glsl,
-      wgsl,
-      entryPoint,
-    }: {
-      glsl?: string;
-      wgsl?: string;
-      entryPoint?: string;
-    },
+    { glsl, wgsl, entryPoint, postprocess }: GLSLAndWGSLShaderStageDescriptor,
     shaderStage: 'vertex' | 'fragment' | 'compute',
   ): GPUProgrammableStage {
     const validationEnabled = false;
@@ -85,6 +81,11 @@ export class Program_WebGPU extends ResourceBase_WebGPU implements Program {
         },
       );
     }
+
+    if (postprocess) {
+      code = postprocess(code);
+    }
+
     // @see https://www.w3.org/TR/webgpu/#dom-gpudevice-createshadermodule
     const shaderModule = this.device.device.createShaderModule({ code });
     return { module: shaderModule, entryPoint: entryPoint || 'main' };

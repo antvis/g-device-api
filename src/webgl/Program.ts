@@ -88,19 +88,21 @@ export class Program_GL extends ResourceBase_GL implements Program {
   private tryCompileProgram(): void {
     assert(this.compileState === ProgramCompileState_GL.NeedsCompile);
 
-    const descriptor = this.descriptor;
+    const { vertex, fragment } = this.descriptor;
 
     const gl = this.device.gl;
     // if (this.gl_shader_vert !== null) gl.deleteShader(this.gl_shader_vert);
     // if (this.gl_shader_frag !== null) gl.deleteShader(this.gl_shader_frag);
 
-    if (descriptor.vertex?.glsl && descriptor.fragment?.glsl) {
+    if (vertex?.glsl && fragment?.glsl) {
       this.gl_shader_vert = this.compileShader(
-        descriptor.vertex.glsl,
+        vertex.postprocess ? vertex.postprocess(vertex.glsl) : vertex.glsl,
         gl.VERTEX_SHADER,
       );
       this.gl_shader_frag = this.compileShader(
-        descriptor.fragment.glsl,
+        fragment.postprocess
+          ? fragment.postprocess(fragment.glsl)
+          : fragment.glsl,
         gl.FRAGMENT_SHADER,
       );
 

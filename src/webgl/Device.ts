@@ -2057,6 +2057,8 @@ export class Device_GL implements SwapChain, Device {
       currentMegaState.stencilFront.mask !== newMegaState.stencilFront.mask ||
       currentMegaState.stencilBack.mask !== newMegaState.stencilBack.mask
     ) {
+      currentMegaState.stencilFront.mask = newMegaState.stencilFront.mask;
+      currentMegaState.stencilBack.mask = newMegaState.stencilBack.mask;
       this.applyStencil();
     }
 
