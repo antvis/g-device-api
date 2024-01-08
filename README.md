@@ -15,6 +15,12 @@ It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](ht
     -   [Compute Toys](https://observablehq.com/d/0361c83b691a32b5)
 -   [Limitations](#limitations)
 
+Now we use it in the following projects:
+* [g-webgl](https://github.com/antvis/G) & [g-webgpu](https://github.com/antvis/G) Used in G2 & G6 3D plots.
+* [L7](https://github.com/antvis/L7) Large-scale WebGL-powered Geospatial Data Visualization analysis engine.
+* [A8](https://github.com/antvis/A8) An audio visualizer.
+* [renderer](https://github.com/xiaoiver/renderer) A toy renderer inspired by bevy.
+
 ## Installing
 
 ```bash
