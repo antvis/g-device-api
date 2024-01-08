@@ -492,24 +492,33 @@ export interface BindingsDescriptor {
   storageTextureBindings?: TextureBinding[];
 }
 
+export interface WGSLShaderStageDescriptor {
+  /**
+   * @see https://www.w3.org/TR/WGSL
+   */
+  wgsl?: string;
+  /**
+   * Entry point is intended to be used in the future.
+   * @see https://www.w3.org/TR/webgpu/#dom-gpushadermodulecompilationhint-entrypoint
+   */
+  entryPoint?: string;
+  /**
+   * Modify the code after compilation.
+   */
+  postprocess?: (code: string) => string;
+}
+
+export type GLSLAndWGSLShaderStageDescriptor = {
+  glsl?: string;
+} & WGSLShaderStageDescriptor;
+
 /**
  * Support the following shaderStage: vertex | fragment | compute.
  */
 export interface ProgramDescriptor {
-  vertex?: {
-    glsl?: string;
-    wgsl?: string;
-    entryPoint?: string;
-  };
-  fragment?: {
-    glsl?: string;
-    wgsl?: string;
-    entryPoint?: string;
-  };
-  compute?: {
-    wgsl: string;
-    entryPoint?: string;
-  };
+  vertex?: GLSLAndWGSLShaderStageDescriptor;
+  fragment?: GLSLAndWGSLShaderStageDescriptor;
+  compute?: WGSLShaderStageDescriptor;
 }
 
 export interface ProgramDescriptorSimple {
