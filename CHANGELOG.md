@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.5.0
+
+### Minor Changes
+
+-   868f3ba: Postprocess after shader compilation.
+
 ## 1.4.16
 
 ### Patch Changes
