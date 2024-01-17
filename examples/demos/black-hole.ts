@@ -621,6 +621,8 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
   let id;
   let t = 0;
   const frame = (time) => {
+    device.beginFrame();
+
     timeBuffer.setSubData(
       0,
       new Uint8Array(new Float32Array([t, time / 1000]).buffer),
@@ -670,6 +672,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     renderPass.draw(3);
 
     device.submitPass(renderPass);
+    device.endFrame();
     ++t;
     id = requestAnimationFrame(frame);
   };

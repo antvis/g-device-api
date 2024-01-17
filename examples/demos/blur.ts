@@ -334,6 +334,7 @@ export async function render(
   let id;
   let t = 0;
   const frame = () => {
+    device.beginFrame();
     const computePass = device.createComputePass();
     computePass.setPipeline(computePipeline);
     computePass.setBindings(bindings0);
@@ -379,6 +380,7 @@ export async function render(
     renderPass.draw(6);
 
     device.submitPass(renderPass);
+    device.endFrame();
     ++t;
     id = requestAnimationFrame(frame);
   };

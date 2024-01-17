@@ -311,6 +311,7 @@ fn main(
 
   const grids = Math.ceil(V.length / (BLOCKS * BLOCK_SIZE));
 
+  device.beginFrame();
   const computePass = device.createComputePass();
   while (maxIterations--) {
     computePass.setPipeline(storePipeline);
@@ -337,6 +338,7 @@ fn main(
   }
 
   device.submitPass(computePass);
+  device.endFrame();
 
   const out = (await readback.readBuffer(
     rBuffer,

@@ -121,6 +121,7 @@ void main() {
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
 
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [renderTarget1, renderTarget2, renderTarget3],
       colorResolveTo: [null, onscreenTexture, null],
@@ -142,6 +143,7 @@ void main() {
     renderPass.draw(3);
 
     device.submitPass(renderPass);
+    device.endFrame();
     if (useRAF) {
       id = requestAnimationFrame(frame);
     }

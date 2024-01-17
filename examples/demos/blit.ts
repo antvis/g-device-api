@@ -182,6 +182,7 @@ void main() {
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
 
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [mainColorRT],
       colorResolveTo: [null],
@@ -205,6 +206,7 @@ void main() {
     renderPass.draw(cubeVertexCount);
 
     device.submitPass(renderPass);
+    device.endFrame();
 
     device.copySubTexture2D(onscreenTexture, 0, 0, mainColorTexture, 0, 0);
     if (useRAF) {

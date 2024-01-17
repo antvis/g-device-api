@@ -5,7 +5,7 @@ import type { Bindings_WebGPU } from './Bindings';
 import type { ComputePipeline_WebGPU } from './ComputePipeline';
 
 export class ComputePass_WebGPU implements ComputePass {
-  commandEncoder: GPUCommandEncoder | null = null;
+  frameCommandEncoder: GPUCommandEncoder | null;
   private gpuComputePassDescriptor: GPUComputePassDescriptor;
   private gpuComputePassEncoder: GPUComputePassEncoder | null = null;
 
@@ -37,16 +37,16 @@ export class ComputePass_WebGPU implements ComputePass {
   finish() {
     this.gpuComputePassEncoder.end();
     this.gpuComputePassEncoder = null;
-
-    return this.commandEncoder.finish();
+    this.frameCommandEncoder = null;
   }
 
   /**
    * @see https://www.w3.org/TR/webgpu/#dom-gpucommandencoder-begincomputepass
    */
-  beginComputePass(): void {
+  beginComputePass(commandEncoder: GPUCommandEncoder): void {
     assert(this.gpuComputePassEncoder === null);
-    this.gpuComputePassEncoder = this.commandEncoder.beginComputePass(
+    this.frameCommandEncoder = commandEncoder;
+    this.gpuComputePassEncoder = this.frameCommandEncoder.beginComputePass(
       this.gpuComputePassDescriptor,
     );
   }

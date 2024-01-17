@@ -15,18 +15,11 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
-  const computeProgram = device.createProgram({
-    compute: {
-      wgsl: `
-`,
-    },
-  });
-
   const program = device.createProgram({
     compute: {
       wgsl: `
-      @binding(0) @group(0) var<storage, read_write> input : array<i32>;
-      @binding(1) @group(0) var<storage, read_write> output : array<i32>;
+      @binding(0) @group(2) var<storage, read_write> input : array<i32>;
+      @binding(1) @group(2) var<storage, read_write> output : array<i32>;
       
       @compute @workgroup_size(8, 8)
       fn main(
@@ -66,14 +59,20 @@ export async function render(
     ],
   });
 
+  device.beginFrame();
   const computePass = device.createComputePass();
   computePass.setPipeline(pipeline);
   computePass.setBindings(bindings);
   computePass.dispatchWorkgroups(1);
   device.submitPass(computePass);
+  device.endFrame();
 
   const readback = device.createReadback();
-  const output = await readback.readBuffer(outputBuffer);
+  const output = (await readback.readBuffer(
+    outputBuffer,
+    0,
+    new Int32Array(4),
+  )) as Int32Array;
   console.log(output);
 
   return () => {

@@ -83,6 +83,7 @@ void main() {
 
   let id: number;
   const frame = () => {
+    device.beginFrame();
     /**
      * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
      * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
@@ -109,6 +110,8 @@ void main() {
     renderPass.draw(3);
 
     device.submitPass(renderPass);
+
+    device.endFrame();
     if (useRAF) {
       id = requestAnimationFrame(frame);
     }

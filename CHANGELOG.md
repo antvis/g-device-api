@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.0
+
+### Minor Changes
+
+-   d7508c4: Support render bundle to reduce draw calls in both WebGL & WebGPU.
+
 ## 1.5.0
 
 ### Minor Changes

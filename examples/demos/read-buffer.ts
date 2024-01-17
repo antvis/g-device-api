@@ -89,6 +89,7 @@ void main() {
    */
   const onscreenTexture = swapChain.getOnscreenTexture();
 
+  device.beginFrame();
   const renderPass = device.createRenderPass({
     colorAttachment: [renderTarget],
     colorResolveTo: [onscreenTexture],
@@ -109,6 +110,7 @@ void main() {
   renderPass.draw(3);
 
   device.submitPass(renderPass);
+  device.endFrame();
 
   const data = await readback.readBuffer(vertexBuffer, 0, new Float32Array(6));
   console.log(data);

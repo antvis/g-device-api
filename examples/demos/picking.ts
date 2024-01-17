@@ -260,6 +260,7 @@ void main() {
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
 
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [mainColorRT],
       colorResolveTo: [onscreenTexture],
@@ -282,6 +283,7 @@ void main() {
     renderPass.setBindings(bindings);
     renderPass.draw(cubeVertexCount);
     device.submitPass(renderPass);
+    device.endFrame();
 
     const readback = device.createReadback();
     $canvas.addEventListener('mousemove', async (e) => {
@@ -290,6 +292,7 @@ void main() {
         new Uint8Array(new Float32Array([1]).buffer),
       );
 
+      device.beginFrame();
       const renderPass2 = device.createRenderPass({
         colorAttachment: [pickingColorRT],
         colorResolveTo: [null],
@@ -312,6 +315,7 @@ void main() {
       renderPass2.setBindings(bindings2);
       renderPass2.draw(cubeVertexCount);
       device.submitPass(renderPass2);
+      device.endFrame();
 
       const dpr = window.devicePixelRatio;
       const pixel = await readback.readTexture(
@@ -333,6 +337,7 @@ void main() {
       );
 
       const onscreenTexture = swapChain.getOnscreenTexture();
+      device.beginFrame();
       const renderPass = device.createRenderPass({
         colorAttachment: [mainColorRT],
         colorResolveTo: [onscreenTexture],
@@ -355,6 +360,7 @@ void main() {
       renderPass.setBindings(bindings);
       renderPass.draw(cubeVertexCount);
       device.submitPass(renderPass);
+      device.endFrame();
     });
   };
 

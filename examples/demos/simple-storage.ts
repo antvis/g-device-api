@@ -134,6 +134,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
       new Uint8Array(new Float32Array([time / 1000]).buffer),
     );
 
+    device.beginFrame();
     const computePass = device.createComputePass();
     computePass.setPipeline(pass1Pipeline);
     computePass.setBindings(bindings);
@@ -149,12 +150,14 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
       Math.floor($canvas.height / 16),
     );
     device.submitPass(computePass);
+    device.endFrame();
 
     /**
      * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
      * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [renderTarget],
       colorResolveTo: [onscreenTexture],
@@ -166,6 +169,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
     renderPass.draw(3);
 
     device.submitPass(renderPass);
+    device.endFrame();
     ++t;
     id = requestAnimationFrame(frame);
   };
