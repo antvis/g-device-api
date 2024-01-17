@@ -274,6 +274,7 @@ void main() {
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
 
+    device.beginFrame();
     const triangleRenderPass = device.createRenderPass({
       colorAttachment: [triangleRenderTarget],
       colorResolveTo: [null],
@@ -320,6 +321,8 @@ void main() {
     renderPass.draw(cubeVertexCount);
 
     device.submitPass(renderPass);
+
+    device.endFrame();
     if (useRAF) {
       id = requestAnimationFrame(frame);
     }

@@ -39,3 +39,4 @@ export { render as AR } from './ar';
 export { render as ARThree } from './ar-three';
 // export { render as Test } from './test-wgsl';
 export { render as SetImageData } from './set-image-data';
+export { render as RenderBundle } from './render-bundle';

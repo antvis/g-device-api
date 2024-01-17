@@ -16,10 +16,11 @@ It is implemented using WebGL1/2 & WebGPU underneath and inspired by [noclip](ht
 -   [Limitations](#limitations)
 
 Now we use it in the following projects:
-* [g-webgl](https://github.com/antvis/G) & [g-webgpu](https://github.com/antvis/G) Used in G2 & G6 3D plots.
-* [L7](https://github.com/antvis/L7) Large-scale WebGL-powered Geospatial Data Visualization analysis engine.
-* [A8](https://github.com/antvis/A8) An audio visualizer.
-* [renderer](https://github.com/xiaoiver/renderer) A toy renderer inspired by bevy.
+
+-   [g-webgl](https://github.com/antvis/G) & [g-webgpu](https://github.com/antvis/G) Used in G2 & G6 3D plots.
+-   [L7](https://github.com/antvis/L7) Large-scale WebGL-powered Geospatial Data Visualization analysis engine.
+-   [A8](https://github.com/antvis/A8) An audio visualizer.
+-   [renderer](https://github.com/xiaoiver/renderer) A toy renderer inspired by bevy.
 
 ## Installing
 
@@ -46,9 +47,12 @@ npm install @antv/g-device-api
     -   [createQueryPool](#createQueryPool)
     -   [createRenderPass](#createRenderPass)
     -   [createComputePass](#createComputePass)
+    -   [createRenderBundle](#createRenderBundle)
 
 -   Submit
+    -   [beignFrame](#beginFrame)
     -   [submitPass](#submitPass)
+    -   [endFrame](#endFrame)
     -   [copySubTexture2D](#copySubTexture2D)
 -   Query
     -   [queryLimits](#queryLimits)
@@ -82,6 +86,9 @@ npm install @antv/g-device-api
         -   [drawIndexedIndirect](#drawIndexedIndirect)
         -   [beginOcclusionQuery](#beginOcclusionQuery)
         -   [endOcclusionQuery](#endOcclusionQuery)
+        -   [beginBundle](#beginBundle)
+        -   [endBundle](#endBundle)
+        -   [executeBundles](#executeBundles)
     -   [ComputePass](#computePass)
         -   [setPipeline](#setPipeline)
         -   [setBindings](#setBindings)
@@ -566,6 +573,36 @@ export interface RenderPassDescriptor {
 createComputePass: () => ComputePass;
 ```
 
+### <a id="createRenderBundle" />createRenderBundle
+
+RenderBundle can record the draw calls during one frame and replay this recording for all subsequent frames.
+
+```ts
+const renderBundle = device.createRenderBundle();
+
+// On each frame.
+if (frameCount === 0) {
+    renderPass.beginBundle(renderBundle);
+    // Omit other renderpass commands
+    renderPass.endBundle();
+} else {
+    renderPass.executeBundles([renderBundle]);
+}
+```
+
+### <a id="beginFrame" />beginFrame
+
+Should call this method at the beginning of each frame.
+
+```ts
+device.beginFrame();
+const renderPass = device.createRenderPass({});
+// Omit other commands.
+renderPass.draw();
+device.submitPass(renderPass);
+device.endFrame();
+```
+
 ### <a id="submitPass" />submitPass
 
 Schedules the execution of the command buffers by the GPU on this queue.
@@ -573,6 +610,10 @@ Schedules the execution of the command buffers by the GPU on this queue.
 ```ts
 submitPass(o: RenderPass | ComputePass): void;
 ```
+
+### <a id="endFrame" />endFrame
+
+Should call this method at the end of each frame.
 
 ### <a id="copySubTexture2D" />copySubTexture2D
 
@@ -936,6 +977,30 @@ beginOcclusionQuery: (queryIndex: number) => void;
 
 ```ts
 endOcclusionQuery: () => void;
+```
+
+### <a id="beginBundle" />beginBundle
+
+Start recording draw calls in render bundle.
+
+```ts
+beginBundle: (renderBundle: RenderBundle) => void;
+```
+
+### <a id="endBundle" />endBundle
+
+Stop recording.
+
+```ts
+endBundle: () => void;
+```
+
+### <a id="executeBundles" />executeBundles
+
+Replay the commands recorded in render bundles.
+
+```ts
+executeBundles: (renderBundles: RenderBundle[]) => void;
 ```
 
 ## <a id="computePass" />ComputePass
@@ -1329,4 +1394,11 @@ device.createBindings({
 
 @group(1) @binding(0) var myTexture : texture_2d<f32>;
 @group(1) @binding(1) var mySampler : sampler;
+```
+
+Currently we don't support `dynamicOffsets` when setting bindgroup.
+
+```ts
+// Won't support for now.
+passEncoder.setBindGroup(1, dynamicBindGroup, dynamicOffsets);
 ```

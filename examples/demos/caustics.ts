@@ -342,6 +342,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
       new Uint8Array(new Float32Array([t, time / 1000]).buffer),
     );
 
+    device.beginFrame();
     const computePass = device.createComputePass();
     computePass.setPipeline(mainVelocityPipeline);
     computePass.setBindings(mainVelocityBindings);
@@ -389,6 +390,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
     renderPass.draw(3);
 
     device.submitPass(renderPass);
+    device.endFrame();
     ++t;
     id = requestAnimationFrame(frame);
   };

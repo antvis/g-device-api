@@ -227,6 +227,7 @@ export async function render(
           u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
         });
 
+        device.beginFrame();
         const renderPass = device.createRenderPass({
           colorAttachment: [mainColorRT],
           colorResolveTo: [null],
@@ -250,6 +251,7 @@ export async function render(
         renderPass.draw(cubeVertexCount);
 
         device.submitPass(renderPass);
+        device.endFrame();
 
         device.copySubTexture2D(
           onscreenTexture,

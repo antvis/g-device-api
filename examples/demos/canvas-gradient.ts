@@ -234,6 +234,7 @@ export async function render(
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
 
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [mainColorRT],
       colorResolveTo: [onscreenTexture],
@@ -257,6 +258,7 @@ export async function render(
     renderPass.draw(cubeVertexCount);
 
     device.submitPass(renderPass);
+    device.endFrame();
     if (useRAF) {
       id = requestAnimationFrame(frame);
     }

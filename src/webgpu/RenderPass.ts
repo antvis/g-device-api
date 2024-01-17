@@ -3,6 +3,7 @@ import {
   Buffer,
   IndexBufferDescriptor,
   InputLayout,
+  RenderBundle,
   RenderPass,
   RenderPassDescriptor,
   RenderPipeline,
@@ -18,10 +19,12 @@ import type { RenderPipeline_WebGPU } from './RenderPipeline';
 import type { Texture_WebGPU } from './Texture';
 import { getPlatformBuffer, getPlatformQuerySet } from './utils';
 import { Device_WebGPU } from './Device';
+import { RenderBundle_WebGPU } from './RenderBundle';
 
 export class RenderPass_WebGPU implements RenderPass {
-  commandEncoder: GPUCommandEncoder | null = null;
+  frameCommandEncoder: GPUCommandEncoder | null;
   descriptor: RenderPassDescriptor;
+  private renderBundle: RenderBundle_WebGPU;
   private gpuRenderPassEncoder: GPURenderPassEncoder | null = null;
   private gpuRenderPassDescriptor: GPURenderPassDescriptor;
   private gpuColorAttachments: GPURenderPassColorAttachment[];
@@ -48,6 +51,12 @@ export class RenderPass_WebGPU implements RenderPass {
       colorAttachments: this.gpuColorAttachments,
       depthStencilAttachment: this.gpuDepthStencilAttachment,
     };
+  }
+
+  private getEncoder() {
+    return (
+      this.renderBundle?.['renderBundleEncoder'] || this.gpuRenderPassEncoder
+    );
   }
 
   private getTextureView(
@@ -198,10 +207,14 @@ export class RenderPass_WebGPU implements RenderPass {
       : undefined;
   }
 
-  beginRenderPass(renderPassDescriptor: RenderPassDescriptor): void {
+  beginRenderPass(
+    commandEncoder: GPUCommandEncoder,
+    renderPassDescriptor: RenderPassDescriptor,
+  ): void {
     assert(this.gpuRenderPassEncoder === null);
     this.setRenderPassDescriptor(renderPassDescriptor);
-    this.gpuRenderPassEncoder = this.commandEncoder.beginRenderPass(
+    this.frameCommandEncoder = commandEncoder;
+    this.gpuRenderPassEncoder = this.frameCommandEncoder.beginRenderPass(
       this.gpuRenderPassDescriptor,
     );
   }
@@ -236,7 +249,7 @@ export class RenderPass_WebGPU implements RenderPass {
   setPipeline(pipeline_: RenderPipeline): void {
     const pipeline = pipeline_ as RenderPipeline_WebGPU;
     const gpuRenderPipeline = assertExists(pipeline.gpuRenderPipeline);
-    this.gpuRenderPassEncoder.setPipeline(gpuRenderPipeline);
+    this.getEncoder().setPipeline(gpuRenderPipeline);
   }
 
   setVertexInput(
@@ -246,9 +259,11 @@ export class RenderPass_WebGPU implements RenderPass {
   ): void {
     if (inputLayout_ === null) return;
 
+    const encoder = this.getEncoder();
+
     const inputLayout = inputLayout_ as InputLayout_WebGPU;
     if (indexBuffer !== null)
-      this.gpuRenderPassEncoder.setIndexBuffer(
+      encoder.setIndexBuffer(
         getPlatformBuffer(indexBuffer.buffer),
         assertExists(inputLayout.indexFormat),
         indexBuffer.offset,
@@ -257,20 +272,17 @@ export class RenderPass_WebGPU implements RenderPass {
     for (let i = 0; i < vertexBuffers!.length; i++) {
       const b = vertexBuffers![i];
       if (b === null) continue;
-      this.gpuRenderPassEncoder.setVertexBuffer(
-        i,
-        getPlatformBuffer(b.buffer),
-        b.offset,
-      );
+      encoder.setVertexBuffer(i, getPlatformBuffer(b.buffer), b.offset);
     }
   }
 
   setBindings(bindings_: Bindings): void {
     const bindings = bindings_ as Bindings_WebGPU;
+    const encoder = this.getEncoder();
 
     bindings.gpuBindGroup.forEach((gpuBindGroup, i) => {
       if (gpuBindGroup) {
-        this.gpuRenderPassEncoder.setBindGroup(i, bindings.gpuBindGroup[i]);
+        encoder.setBindGroup(i, bindings.gpuBindGroup[i]);
       }
     });
   }
@@ -288,7 +300,7 @@ export class RenderPass_WebGPU implements RenderPass {
     firstVertex?: number,
     firstInstance?: number,
   ) {
-    this.gpuRenderPassEncoder.draw(
+    this.getEncoder().draw(
       vertexCount,
       instanceCount,
       firstVertex,
@@ -305,7 +317,7 @@ export class RenderPass_WebGPU implements RenderPass {
     baseVertex?: number,
     firstInstance?: number,
   ) {
-    this.gpuRenderPassEncoder.drawIndexed(
+    this.getEncoder().drawIndexed(
       indexCount,
       instanceCount,
       firstIndex,
@@ -317,14 +329,14 @@ export class RenderPass_WebGPU implements RenderPass {
    * @see https://www.w3.org/TR/webgpu/#dom-gpurendercommandsmixin-drawindirect
    */
   drawIndirect(indirectBuffer: Buffer, indirectOffset: number) {
-    this.gpuRenderPassEncoder.drawIndirect(
+    this.getEncoder().drawIndirect(
       getPlatformBuffer(indirectBuffer),
       indirectOffset,
     );
   }
 
   drawIndexedIndirect(indirectBuffer: Buffer, indirectOffset: number) {
-    this.gpuRenderPassEncoder.drawIndexedIndirect(
+    this.getEncoder().drawIndexedIndirect(
       getPlatformBuffer(indirectBuffer),
       indirectOffset,
     );
@@ -350,8 +362,22 @@ export class RenderPass_WebGPU implements RenderPass {
     this.gpuRenderPassEncoder.insertDebugMarker(markerLabel);
   }
 
-  finish(): GPUCommandBuffer {
-    this.gpuRenderPassEncoder.end();
+  beginBundle(renderBundle: RenderBundle) {
+    this.renderBundle = renderBundle as RenderBundle_WebGPU;
+  }
+
+  endBundle() {
+    this.renderBundle.finish();
+  }
+
+  executeBundles(renderBundles: RenderBundle[]) {
+    this.gpuRenderPassEncoder.executeBundles(
+      renderBundles.map((bundle: RenderBundle_WebGPU) => bundle.renderBundle),
+    );
+  }
+
+  finish() {
+    this.gpuRenderPassEncoder?.end();
     this.gpuRenderPassEncoder = null;
 
     // Fake a resolve with a copy for non-MSAA.
@@ -386,7 +412,7 @@ export class RenderPass_WebGPU implements RenderPass {
       }
     }
 
-    return this.commandEncoder.finish();
+    this.frameCommandEncoder = null;
   }
 
   private copyAttachment(
@@ -408,7 +434,7 @@ export class RenderPass_WebGPU implements RenderPass {
     assert(src.height >>> srcLevel === dst.height >>> dstLevel);
     assert(!!(src.usage & GPUTextureUsage.COPY_SRC));
     assert(!!(dst.usage & GPUTextureUsage.COPY_DST));
-    this.commandEncoder.copyTextureToTexture(srcCopy, dstCopy, [
+    this.frameCommandEncoder.copyTextureToTexture(srcCopy, dstCopy, [
       dst.width,
       dst.height,
       1,

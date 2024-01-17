@@ -290,6 +290,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
   let id;
   let t = 0;
   const frame = () => {
+    device.beginFrame();
     const computePass = device.createComputePass();
     computePass.setPipeline(computePipeline);
     computePass.setBindings(bindings[t % 2]);
@@ -323,6 +324,7 @@ fn main(@builtin(global_invocation_id) GlobalInvocationID : vec3<u32>) {
     renderPass.draw(3, numParticles);
 
     device.submitPass(renderPass);
+    device.endFrame();
     ++t;
     id = requestAnimationFrame(frame);
   };

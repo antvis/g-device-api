@@ -457,6 +457,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
       new Uint8Array(new Float32Array([t, time / 1000]).buffer),
     );
 
+    device.beginFrame();
     const computePass = device.createComputePass();
     computePass.setPipeline(simulateParticlesPipeline);
     computePass.setBindings(simulateParticlesBindings);
@@ -486,6 +487,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
       Math.ceil($canvas.height / 16),
     );
     device.submitPass(computePass);
+    device.endFrame();
     device.copySubTexture2D(pass_in, 0, 0, pass_out, 0, 0, 4);
 
     /**
@@ -493,6 +495,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
      * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [renderTarget],
       colorResolveTo: [onscreenTexture],
@@ -504,6 +507,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     renderPass.draw(3);
 
     device.submitPass(renderPass);
+    device.endFrame();
     ++t;
     id = requestAnimationFrame(frame);
   };

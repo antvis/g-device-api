@@ -15,6 +15,7 @@ import type {
   QueryPool,
   QueryPoolType,
   Readback,
+  RenderBundle,
   RenderPass,
   RenderPassDescriptor,
   RenderPipeline,
@@ -82,6 +83,7 @@ import {
   translateTextureUsage,
 } from './utils';
 import { preprocessShader_GLSL } from '../shader';
+import { RenderBundle_WebGPU } from './RenderBundle';
 
 export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
   private swapChainWidth = 0;
@@ -94,7 +96,7 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
   private renderPassPool: RenderPass_WebGPU[] = [];
   private computePassPool: ComputePass_WebGPU[] = [];
 
-  // private frameCommandEncoder: GPUCommandEncoder | null = null;
+  private frameCommandEncoderPool: GPUCommandEncoder[] = [];
   // private queryPoolsSubmitted: QueryPool_WebGPU[] = [];
 
   private fallbackTexture2D: Texture_WebGPU;
@@ -269,14 +271,21 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
   }
 
   beginFrame(): void {
-    // assert(this.frameCommandEncoder === null);
-    // this.frameCommandEncoder = this.device.createCommandEncoder();
+    assert(this.frameCommandEncoderPool.length === 0);
   }
 
   endFrame(): void {
-    // assert(this.frameCommandEncoder !== null);
-    // this.device.queue.submit([this.frameCommandEncoder.finish()]);
-    // this.frameCommandEncoder = null;
+    assert(
+      this.frameCommandEncoderPool.every(
+        (frameCommandEncoder) => frameCommandEncoder !== null,
+      ),
+    );
+    this.device.queue.submit(
+      this.frameCommandEncoderPool.map((frameCommandEncoder) =>
+        frameCommandEncoder.finish(),
+      ),
+    );
+    this.frameCommandEncoderPool = [];
     // for (let i = 0; i < this.queryPoolsSubmitted.length; i++) {
     //   const queryPool = this.queryPoolsSubmitted[i];
     //   queryPool.cpuBuffer.mapAsync(GPUMapMode.READ).then(() => {
@@ -664,43 +673,54 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     });
   }
 
+  createRenderBundle(): RenderBundle {
+    return new RenderBundle_WebGPU({
+      id: this.getNextUniqueId(),
+      device: this,
+    });
+  }
+
   createRenderPass(renderPassDescriptor: RenderPassDescriptor): RenderPass {
     let pass = this.renderPassPool.pop();
     if (pass === undefined) {
       pass = new RenderPass_WebGPU(this);
     }
-    pass.commandEncoder = this.device.createCommandEncoder();
-    pass.beginRenderPass(renderPassDescriptor);
+    let frameCommandEncoder = this.frameCommandEncoderPool.pop();
+    if (frameCommandEncoder === undefined) {
+      frameCommandEncoder = this.device.createCommandEncoder();
+    }
+    pass.beginRenderPass(frameCommandEncoder, renderPassDescriptor);
     return pass;
   }
 
   createComputePass(): ComputePass {
     let pass = this.computePassPool.pop();
     if (pass === undefined) pass = new ComputePass_WebGPU();
-    pass.commandEncoder = this.device.createCommandEncoder();
-    pass.beginComputePass();
+    let frameCommandEncoder = this.frameCommandEncoderPool.pop();
+    if (frameCommandEncoder === undefined) {
+      frameCommandEncoder = this.device.createCommandEncoder();
+    }
+    pass.beginComputePass(frameCommandEncoder);
     return pass;
   }
 
   submitPass(_pass: RenderPass | ComputePass): void {
-    const queue = this.device.queue;
-
     const pass = _pass as RenderPass_WebGPU | ComputePass_WebGPU;
-    const commands = pass.finish();
-    queue.submit([commands]);
-    pass.commandEncoder = null;
 
-    // if (pass instanceof RenderPass_WebGPU) {
-    //   pass.finish();
-    //   this.renderPassPool.push(pass);
+    if (pass instanceof RenderPass_WebGPU) {
+      // release encoder
+      this.frameCommandEncoderPool.push(pass.frameCommandEncoder);
+      pass.finish();
+      this.renderPassPool.push(pass);
 
-    //   if (pass.occlusionQueryPool !== null) {
-    //     this.queryPoolsSubmitted.push(pass.occlusionQueryPool);
-    //   }
-    // } else if (pass instanceof ComputePass_WebGPU) {
-    //   pass.finish();
-    //   this.computePassPool.push(pass);
-    // }
+      // if (pass.occlusionQueryPool !== null) {
+      //   this.queryPoolsSubmitted.push(pass.occlusionQueryPool);
+      // }
+    } else if (pass instanceof ComputePass_WebGPU) {
+      this.frameCommandEncoderPool.push(pass.frameCommandEncoder);
+      pass.finish();
+      this.computePassPool.push(pass);
+    }
   }
 
   copySubTexture2D(

@@ -411,6 +411,8 @@ struct Custom {
   let id;
   let t = 0;
   const frame = (time) => {
+    device.beginFrame();
+
     uniformBuffer.setSubData(
       0,
       new Uint8Array(new Float32Array([t, time / 1000]).buffer),
@@ -448,6 +450,7 @@ struct Custom {
     renderPass.draw(3);
 
     device.submitPass(renderPass);
+    device.endFrame();
     ++t;
     id = requestAnimationFrame(frame);
   };
