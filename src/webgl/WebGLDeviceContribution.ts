@@ -7,6 +7,8 @@ export interface WebGLRendererPluginOptions {
   antialias: boolean;
   preserveDrawingBuffer: boolean;
   premultipliedAlpha: boolean;
+  shaderDebug: boolean;
+  trackResources: boolean;
   onContextCreationError: (e: Event) => void;
   onContextLost: (e: Event) => void;
   onContextRestored: (e: Event) => void;
@@ -22,6 +24,8 @@ export class WebGLDeviceContribution implements DeviceContribution {
       antialias = false,
       preserveDrawingBuffer = false,
       premultipliedAlpha = true,
+      shaderDebug,
+      trackResources,
     } = this.pluginOptions;
     const options: WebGLContextAttributes & { xrCompatible: boolean } = {
       // alpha: true,
@@ -56,8 +60,8 @@ export class WebGLDeviceContribution implements DeviceContribution {
     }
 
     return new Device_GL(gl as WebGLRenderingContext | WebGL2RenderingContext, {
-      shaderDebug: true,
-      trackResources: true,
+      shaderDebug,
+      trackResources,
     });
   }
 

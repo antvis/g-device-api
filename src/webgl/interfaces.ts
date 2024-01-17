@@ -48,11 +48,6 @@ export interface EXT_texture_norm16 {
   RGBA16_SNORM_EXT: GLenum;
 }
 
-export class GPlatformWebGL2Config {
-  public trackResources = false;
-  public shaderDebug = false;
-}
-
 export interface BindingLayoutSamplerDescriptor_GL {
   gl_target: GLenum;
   formatKind: SamplerFormatKind;
