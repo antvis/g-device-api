@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.1
+
+### Patch Changes
+
+-   5081681: Configure shaderdebug when creating webgl device contribution.
+
 ## 1.6.0
 
 ### Minor Changes
