@@ -19,6 +19,8 @@ export async function initExample(
   const deviceContributionWebGL1 = new WebGLDeviceContribution({
     targets: ['webgl1'],
     xrCompatible: params.xrCompatible,
+    shaderDebug: true,
+    trackResources: true,
     onContextCreationError: () => {},
     onContextLost: () => {},
     onContextRestored(e) {},
@@ -26,6 +28,8 @@ export async function initExample(
   const deviceContributionWebGL2 = new WebGLDeviceContribution({
     targets: ['webgl2', 'webgl1'],
     xrCompatible: params.xrCompatible,
+    shaderDebug: true,
+    trackResources: true,
     onContextCreationError: () => {},
     onContextLost: () => {},
     onContextRestored(e) {},
