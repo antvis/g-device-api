@@ -78,7 +78,6 @@ import type {
   BindingLayoutSamplerDescriptor_GL,
   EXT_texture_compression_rgtc,
   EXT_texture_norm16,
-  GPlatformWebGL2Config,
   KHR_parallel_shader_compile,
   OES_draw_buffers_indexed,
 } from './interfaces';
@@ -249,7 +248,10 @@ export class Device_GL implements SwapChain, Device {
 
   constructor(
     gl: WebGLRenderingContext | WebGL2RenderingContext,
-    configuration: GPlatformWebGL2Config,
+    configuration: Partial<{
+      shaderDebug: boolean;
+      trackResources: boolean;
+    }> = {},
   ) {
     this.gl = gl;
     this.contextAttributes = assertExists(gl.getContextAttributes());
