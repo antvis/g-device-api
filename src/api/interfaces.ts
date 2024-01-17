@@ -18,6 +18,7 @@ export enum ResourceType {
   ComputePipeline,
   Readback,
   QueryPool,
+  RenderBundle,
 }
 
 export interface Disposable {
@@ -63,6 +64,9 @@ export interface InputLayout extends ResourceBase {
 }
 export interface RenderPipeline extends ResourceBase {
   type: ResourceType.RenderPipeline;
+}
+export interface RenderBundle extends ResourceBase {
+  type: ResourceType.RenderBundle;
 }
 export interface QueryPool extends ResourceBase {
   type: ResourceType.QueryPool;
@@ -610,6 +614,10 @@ export interface RenderPassDescriptor {
   depthClearValue?: number | 'load';
   stencilClearValue?: number | 'load';
   occlusionQueryPool?: QueryPool | null;
+  /**
+   * @see https://developer.mozilla.org/en-US/docs/Web/API/GPURenderBundle
+   */
+  renderBundle?: boolean;
 }
 
 export interface DeviceLimits {
@@ -736,6 +744,11 @@ export interface RenderPass extends DebugCommandsMixin {
   // Query system.
   beginOcclusionQuery: (queryIndex: number) => void;
   endOcclusionQuery: () => void;
+
+  // Render bundle
+  beginBundle: (renderBundle: RenderBundle) => void;
+  endBundle: () => void;
+  executeBundles: (renderBundles: RenderBundle[]) => void;
 }
 
 /**
@@ -804,6 +817,7 @@ export interface Device {
 
   createRenderPass: (renderPassDescriptor: RenderPassDescriptor) => RenderPass;
   createComputePass: () => ComputePass;
+  createRenderBundle: () => RenderBundle;
 
   beginFrame(): void;
   endFrame(): void;

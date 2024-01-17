@@ -265,6 +265,7 @@ void main() {
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
 
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [mainColorRT],
       colorResolveTo: [onscreenTexture],
@@ -288,6 +289,7 @@ void main() {
     renderPass.draw(cubeVertexCount, 1, 0, 0);
 
     device.submitPass(renderPass);
+    device.endFrame();
     id = requestAnimationFrame(frame);
   };
 

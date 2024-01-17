@@ -22,6 +22,7 @@ import {
   QueryPool,
   QueryPoolType,
   Readback,
+  RenderBundle,
   RenderPass,
   RenderPassDescriptor,
   RenderPipeline,
@@ -105,6 +106,7 @@ import {
 } from './utils';
 import { ComputePass_GL } from './ComputePass';
 import { preprocessShader_GLSL } from '../shader';
+import { RenderBundle_GL } from './RenderBundle';
 
 // This is a workaround for ANGLE not supporting UBOs greater than 64kb (the limit of D3D).
 // https://bugs.chromium.org/p/angleproject/issues/detail?id=3388
@@ -228,6 +230,8 @@ export class Device_GL implements SwapChain, Device {
   private blitVertexBuffer: Buffer;
   private blitBindings: Bindings;
   private blitProgram: Program_GL;
+
+  private renderBundle: RenderBundle_GL;
 
   // GLimits
   /**
@@ -978,6 +982,24 @@ export class Device_GL implements SwapChain, Device {
     }
   }
 
+  createRenderBundle() {
+    return new RenderBundle_GL({
+      id: this.getNextUniqueId(),
+      device: this,
+    });
+  }
+  beginBundle(bundle: RenderBundle) {
+    this.renderBundle = bundle as RenderBundle_GL;
+  }
+  endBundle() {
+    this.renderBundle = undefined;
+  }
+  executeBundles(renderBundles: RenderBundle[]) {
+    renderBundles.forEach((renderBundle: RenderBundle_GL) => {
+      renderBundle.replay();
+    });
+  }
+
   createRenderPass(descriptor: RenderPassDescriptor): RenderPass {
     if (this.currentRenderPassDescriptor !== null) {
       // Save current renderpass descriptor.
@@ -1676,6 +1698,11 @@ export class Device_GL implements SwapChain, Device {
   }
 
   setBindings(bindings_: Bindings): void {
+    if (this.renderBundle) {
+      this.renderBundle.push(() => this.setBindings(bindings_));
+      return;
+    }
+
     const gl = this.gl;
 
     const { uniformBufferBindings, samplerBindings, bindingLayouts } =
@@ -2122,6 +2149,11 @@ export class Device_GL implements SwapChain, Device {
   }
 
   setPipeline(o: RenderPipeline): void {
+    if (this.renderBundle) {
+      this.renderBundle.push(() => this.setPipeline(o));
+      return;
+    }
+
     this.currentPipeline = o as RenderPipeline_GL;
     this.validatePipelineFormats(this.currentPipeline);
 
@@ -2174,6 +2206,13 @@ export class Device_GL implements SwapChain, Device {
     vertexBuffers: (VertexBufferDescriptor | null)[] | null,
     indexBuffer: IndexBufferDescriptor | null,
   ): void {
+    if (this.renderBundle) {
+      this.renderBundle.push(() =>
+        this.setVertexInput(inputLayout_, vertexBuffers, indexBuffer),
+      );
+      return;
+    }
+
     if (inputLayout_ !== null) {
       assert(this.currentPipeline.inputLayout === inputLayout_);
       const inputLayout = inputLayout_ as InputLayout_GL;
@@ -2261,6 +2300,13 @@ export class Device_GL implements SwapChain, Device {
     firstVertex?: number,
     firstInstance?: number,
   ) {
+    if (this.renderBundle) {
+      this.renderBundle.push(() =>
+        this.draw(vertexCount, instanceCount, firstVertex, firstInstance),
+      );
+      return;
+    }
+
     const gl = this.gl;
     const pipeline = this.currentPipeline;
     if (instanceCount) {
@@ -2294,6 +2340,19 @@ export class Device_GL implements SwapChain, Device {
     baseVertex?: number,
     firstInstance?: number,
   ) {
+    if (this.renderBundle) {
+      this.renderBundle.push(() =>
+        this.drawIndexed(
+          indexCount,
+          instanceCount,
+          firstIndex,
+          baseVertex,
+          firstInstance,
+        ),
+      );
+      return;
+    }
+
     const gl = this.gl;
     const pipeline = this.currentPipeline,
       inputLayout = assertExists(pipeline.inputLayout);
@@ -2573,17 +2632,18 @@ export class Device_GL implements SwapChain, Device {
     if (isNil(this.currentStencilRef)) {
       return;
     }
+
     this.gl.stencilFuncSeparate(
       GL.FRONT,
       this.currentMegaState.stencilFront.compare,
       this.currentStencilRef,
-      this.currentMegaState.stencilFront.mask,
+      this.currentMegaState.stencilFront.mask || 0xff,
     );
     this.gl.stencilFuncSeparate(
       GL.BACK,
       this.currentMegaState.stencilBack.compare,
       this.currentStencilRef,
-      this.currentMegaState.stencilBack.mask,
+      this.currentMegaState.stencilBack.mask || 0xff,
     );
   }
 

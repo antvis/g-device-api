@@ -208,6 +208,7 @@ void main() {
      */
     const onscreenTexture = swapChain.getOnscreenTexture();
 
+    device.beginFrame();
     const renderPass = device.createRenderPass({
       colorAttachment: [mainColorRT],
       colorResolveTo: [onscreenTexture],
@@ -255,6 +256,8 @@ void main() {
     }
 
     device.submitPass(renderPass);
+
+    device.endFrame();
     if (useRAF) {
       id = requestAnimationFrame(frame);
     }
@@ -283,5 +286,5 @@ void main() {
 
 render.params = {
   targets: ['webgl1', 'webgl2', 'webgpu'],
-  default: 'webgl2',
+  default: 'webgpu',
 };

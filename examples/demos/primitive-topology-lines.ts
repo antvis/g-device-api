@@ -92,6 +92,8 @@ void main() {
 
   let id: number;
   const frame = () => {
+    device.beginFrame();
+
     const renderPass = device.createRenderPass({
       colorAttachment: [renderTarget],
       colorResolveTo: [onscreenTexture],
@@ -112,6 +114,8 @@ void main() {
     renderPass.draw(6);
 
     device.submitPass(renderPass);
+
+    device.endFrame();
 
     if (useRAF) {
       requestAnimationFrame(frame);

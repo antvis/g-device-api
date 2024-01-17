@@ -85,6 +85,7 @@ void main() {
 
   const readback = device.createReadback();
 
+  device.beginFrame();
   const onscreenTexture = swapChain.getOnscreenTexture();
   const renderPass = device.createRenderPass({
     colorAttachment: [renderTarget],
@@ -106,6 +107,7 @@ void main() {
   renderPass.draw(3);
 
   device.submitPass(renderPass);
+  device.endFrame();
 
   const result = await readback.readTexture(
     floatingPointTexture,
