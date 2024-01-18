@@ -135,6 +135,7 @@ export function translateBufferUsage(usage_: BufferUsage): GPUBufferUsageFlags {
   if (usage_ & BufferUsage.UNIFORM) usage |= GPUBufferUsage.UNIFORM;
   if (usage_ & BufferUsage.STORAGE) usage |= GPUBufferUsage.STORAGE;
   if (usage_ & BufferUsage.COPY_SRC) usage |= GPUBufferUsage.COPY_SRC;
+  if (usage_ & BufferUsage.INDIRECT) usage |= GPUBufferUsage.INDIRECT;
   usage |= GPUBufferUsage.COPY_DST;
   return usage;
 }

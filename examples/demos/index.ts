@@ -1,7 +1,9 @@
 export { render as PrimitiveTopologyPoints } from './primitive-topology-points';
 export { render as PrimitiveTopologyLines } from './primitive-topology-lines';
 export { render as PrimitiveTopologyTriangles } from './primitive-topology-triangles';
-export { render as DrawIndex } from './draw-index';
+export { render as DrawIndexed } from './draw-indexed';
+export { render as DrawIndirect } from './draw-indirect';
+export { render as DrawIndexedIndirect } from './draw-indexed-indirect';
 export { render as MSAA } from './msaa';
 export { render as MultipleRenderTargets } from './multiple-render-targets';
 export { render as MultipleRenderPasses } from './multiple-render-passes';
