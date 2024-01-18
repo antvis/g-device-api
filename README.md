@@ -949,6 +949,24 @@ Draws primitives using parameters read from a GPUBuffer.
 drawIndirect: (indirectBuffer: Buffer, indirectOffset: number) => void;
 ```
 
+```ts
+// Create drawIndirect values
+const uint32 = new Uint32Array(4);
+uint32[0] = 3;
+uint32[1] = 1;
+uint32[2] = 0;
+uint32[3] = 0;
+
+// Create a GPUBuffer and write the draw values into it
+const drawValues = device.createBuffer({
+    viewOrSize: uint32,
+    usage: BufferUsage.INDIRECT,
+});
+
+// Draw the vertices
+renderPass.drawIndirect(drawValues, 0);
+```
+
 ### <a id="drawIndexedIndirect" />drawIndexedIndirect
 
 ⚠️ WebGPU only.
@@ -957,6 +975,24 @@ Draws indexed primitives using parameters read from a GPUBuffer.
 
 ```ts
 drawIndexedIndirect: (indirectBuffer: Buffer, indirectOffset: number) => void;
+```
+
+```ts
+// Create drawIndirect values
+const uint32 = new Uint32Array(5);
+uint32[0] = 6; // The indexCount value
+uint32[1] = 1; // The instanceCount value
+uint32[2] = 0; // The firstIndex value
+uint32[3] = 0; // The baseVertex value
+uint32[4] = 0; // The firstInstance value
+// Create a GPUBuffer and write the draw values into it
+const drawValues = device.createBuffer({
+    viewOrSize: uint32,
+    usage: BufferUsage.INDIRECT,
+});
+
+// Draw the vertices
+renderPass.drawIndirect(drawValues, 0);
 ```
 
 ### <a id="beginOcclusionQuery" />beginOcclusionQuery
