@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.2
+
+### Patch Changes
+
+-   94fa643: Support drawIndirect in WebGPU.
+
 ## 1.6.1
 
 ### Patch Changes
