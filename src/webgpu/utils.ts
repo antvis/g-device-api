@@ -77,15 +77,28 @@ export function translateTextureFormat(format: Format): GPUTextureFormat {
   else if (format === Format.S8_RG_NORM) return 'rg8snorm';
   // 32-bit formats
   else if (format === Format.U32_R) return 'r32uint';
+  else if (format === Format.S32_R) return 'r32sint';
   else if (format === Format.F32_R) return 'r32float';
+  else if (format === Format.U16_RG) return 'rg16uint';
+  else if (format === Format.S16_RG) return 'rg16sint';
+  else if (format === Format.F16_RG) return 'rg16float';
   else if (format === Format.U8_RGBA_RT) return 'bgra8unorm';
   else if (format === Format.U8_RGBA_RT_SRGB) return 'bgra8unorm-srgb';
   else if (format === Format.U8_RGBA_NORM) return 'rgba8unorm';
   else if (format === Format.U8_RGBA_SRGB) return 'rgba8unorm-srgb';
   else if (format === Format.S8_RGBA_NORM) return 'rgba8snorm';
+  else if (format === Format.F32_RGB) return 'rgb9e5ufloat';
   // 64-bit formats
+  else if (format === Format.U32_RG) return 'rg32uint';
+  else if (format === Format.S32_RG) return 'rg32sint';
+  else if (format === Format.F32_RG) return 'rg32float';
+  else if (format === Format.U16_RGBA) return 'rgba16uint';
+  else if (format === Format.S16_RGBA) return 'rgba16sint';
   else if (format === Format.F16_RGBA) return 'rgba16float';
+  // 128-bit formats
   else if (format === Format.F32_RGBA) return 'rgba32float';
+  else if (format === Format.U32_RGBA) return 'rgba32uint';
+  else if (format === Format.S32_RGBA) return 'rgba32sint';
   // depth stencil formats
   else if (format === Format.D24) return 'depth24plus';
   else if (format === Format.D24_S8) return 'depth24plus-stencil8';
@@ -682,4 +695,98 @@ export function halfFloat2Number(value: number): number {
   }
 
   return (s ? -1 : 1) * Math.pow(2, e - 15) * (1 + f / Math.pow(2, 10));
+}
+
+export function getBlockInformationFromFormat(format: GPUTextureFormat): {
+  width: number;
+  height: number;
+  length: number;
+} {
+  switch (format) {
+    // 8 bits formats
+    case 'r8unorm':
+    case 'r8snorm':
+    case 'r8uint':
+    case 'r8sint':
+      return { width: 1, height: 1, length: 1 };
+
+    // 16 bits formats
+    case 'r16uint':
+    case 'r16sint':
+    case 'r16float':
+    case 'rg8unorm':
+    case 'rg8snorm':
+    case 'rg8uint':
+    case 'rg8sint':
+      return { width: 1, height: 1, length: 2 };
+
+    // 32 bits formats
+    case 'r32uint':
+    case 'r32sint':
+    case 'r32float':
+    case 'rg16uint':
+    case 'rg16sint':
+    case 'rg16float':
+    case 'rgba8unorm':
+    case 'rgba8unorm-srgb':
+    case 'rgba8snorm':
+    case 'rgba8uint':
+    case 'rgba8sint':
+    case 'bgra8unorm':
+    case 'bgra8unorm-srgb':
+    case 'rgb9e5ufloat':
+    case 'rgb10a2unorm':
+    case 'rg11b10ufloat':
+      return { width: 1, height: 1, length: 4 };
+    // 64 bits formats
+    case 'rg32uint':
+    case 'rg32sint':
+    case 'rg32float':
+    case 'rgba16uint':
+    case 'rgba16sint':
+    case 'rgba16float':
+      return { width: 1, height: 1, length: 8 };
+
+    // 128 bits formats
+    case 'rgba32uint':
+    case 'rgba32sint':
+    case 'rgba32float':
+      return { width: 1, height: 1, length: 16 };
+    // Depth and stencil formats
+    case 'stencil8':
+      throw new Error('No fixed size for Stencil8 format!');
+    case 'depth16unorm':
+      return { width: 1, height: 1, length: 2 };
+    case 'depth24plus':
+      throw new Error('No fixed size for Depth24Plus format!');
+    case 'depth24plus-stencil8':
+      throw new Error('No fixed size for Depth24PlusStencil8 format!');
+    case 'depth32float':
+      return { width: 1, height: 1, length: 4 };
+    // case 'depth24unorm-stencil8':
+    //   return { width: 1, height: 1, length: 4 };
+    case 'depth32float-stencil8':
+      return { width: 1, height: 1, length: 5 };
+    // BC compressed formats usable if "texture-compression-bc" is both
+    // supported by the device/user agent and enabled in requestDevice.
+    case 'bc7-rgba-unorm':
+    case 'bc7-rgba-unorm-srgb':
+    case 'bc6h-rgb-ufloat':
+    case 'bc6h-rgb-float':
+    case 'bc2-rgba-unorm':
+    case 'bc2-rgba-unorm-srgb':
+    case 'bc3-rgba-unorm':
+    case 'bc3-rgba-unorm-srgb':
+    case 'bc5-rg-unorm':
+    case 'bc5-rg-snorm':
+      return { width: 4, height: 4, length: 16 };
+
+    case 'bc4-r-unorm':
+    case 'bc4-r-snorm':
+    case 'bc1-rgba-unorm':
+    case 'bc1-rgba-unorm-srgb':
+      return { width: 4, height: 4, length: 8 };
+    default:
+      return { width: 1, height: 1, length: 4 };
+  }
 }

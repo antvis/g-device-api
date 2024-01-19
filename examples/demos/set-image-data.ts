@@ -13,58 +13,74 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
-  // const luminance = device.createTexture({
-  //   format: Format.U8_LUMINANCE,
-  //   width: 1,
-  //   height: 1,
-  //   usage: TextureUsage.SAMPLED,
-  //   pixelStore: {
-  //     unpackFlipY: false,
-  //     packAlignment: 1,
-  //   },
-  //   mipLevelCount: 0,
-  // });
-  // luminance.setImageData([new Uint8Array([10])]);
-
   const floatR = device.createTexture({
     format: Format.F32_R,
     width: 1,
     height: 1,
     usage: TextureUsage.SAMPLED,
-    pixelStore: {
-      unpackFlipY: false,
-      packAlignment: 1,
-    },
-    mipLevelCount: 1,
   });
   floatR.setImageData([new Float32Array([10.25])]);
+
+  const floatRG = device.createTexture({
+    format: Format.F32_RG,
+    width: 1,
+    height: 1,
+    usage: TextureUsage.SAMPLED,
+  });
+  floatRG.setImageData([new Float32Array([10, 20])]);
+
+  const floatRGB = device.createTexture({
+    format: Format.F32_RGB,
+    width: 1,
+    height: 1,
+    usage: TextureUsage.SAMPLED,
+  });
+  floatRGB.setImageData([new Float32Array([10, 20, 30])]);
+
+  const floatRGBA = device.createTexture({
+    format: Format.F32_RGBA,
+    width: 1,
+    height: 1,
+    usage: TextureUsage.SAMPLED,
+  });
+  floatRGBA.setImageData([new Float32Array([10, 20, 30, 40])]);
+
+  const floatR2x2 = device.createTexture({
+    format: Format.F32_R,
+    width: 2,
+    height: 2,
+    usage: TextureUsage.SAMPLED,
+  });
+  floatR2x2.setImageData([new Float32Array([10, 20, 30, 40])]);
+
+  const floatRGBA2x2 = device.createTexture({
+    format: Format.F32_RGBA,
+    width: 2,
+    height: 2,
+    usage: TextureUsage.SAMPLED,
+  });
+  floatRGBA2x2.setImageData([
+    new Float32Array([
+      10, 20, 30, 40, 10, 20, 30, 40, 10, 20, 30, 40, 10, 20, 30, 40,
+    ]),
+  ]);
 
   const u8RGBA = device.createTexture({
     format: Format.U8_RGBA_RT,
     width: 1,
     height: 1,
     usage: TextureUsage.SAMPLED,
-    mipLevelCount: 1,
   });
   u8RGBA.setImageData([new Uint8Array([1, 1, 1, 1])]);
 
-  // const floatRGB = device.createTexture({
-  //   format: Format.F32_RGB,
-  //   width: 1,
-  //   height: 1,
-  //   usage: TextureUsage.SAMPLED,
-  //   pixelStore: {
-  //     unpackFlipY: false,
-  //     packAlignment: 4,
-  //   },
-  //   mipLevelCount: 0,
-  // });
-  // floatRGB.setImageData([new Float32Array([10, 20, 30])]);
-
   return () => {
-    // luminance.destroy();
-    // floatRGB.destroy();
     floatR.destroy();
+    floatRG.destroy();
+    floatRGB.destroy();
+    floatRGBA.destroy();
+    floatR2x2.destroy();
+    floatRGBA2x2.destroy();
+    u8RGBA.destroy();
     device.destroy();
 
     // For debug.
@@ -74,7 +90,7 @@ export async function render(
 
 render.params = {
   targets: ['webgl1', 'webgl2', 'webgpu'],
-  default: 'webgpu',
+  default: 'webgl2',
   width,
   height,
 };
