@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.3
+
+### Patch Changes
+
+-   8fde282: WriteTexture should account for bytesPerRow in WebGPU.
+
 ## 1.6.2
 
 ### Patch Changes
