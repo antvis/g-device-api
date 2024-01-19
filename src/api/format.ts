@@ -168,15 +168,35 @@ export enum Format {
     FormatCompFlags.RGBA,
     FormatFlags.Normalized,
   ),
+  U16_RGBA = makeFormat(
+    FormatTypeFlags.U16,
+    FormatCompFlags.RGBA,
+    FormatFlags.None,
+  ),
   U16_RGB = makeFormat(
     FormatTypeFlags.U16,
     FormatCompFlags.RGB,
+    FormatFlags.None,
+  ),
+  U16_RG = makeFormat(
+    FormatTypeFlags.U16,
+    FormatCompFlags.RG,
     FormatFlags.None,
   ),
   U32_R = makeFormat(FormatTypeFlags.U32, FormatCompFlags.R, FormatFlags.None),
   U32_RG = makeFormat(
     FormatTypeFlags.U32,
     FormatCompFlags.RG,
+    FormatFlags.None,
+  ),
+  U32_RGB = makeFormat(
+    FormatTypeFlags.U32,
+    FormatCompFlags.RGB,
+    FormatFlags.None,
+  ),
+  U32_RGBA = makeFormat(
+    FormatTypeFlags.U32,
+    FormatCompFlags.RGBA,
     FormatFlags.None,
   ),
   S8_R = makeFormat(FormatTypeFlags.S8, FormatCompFlags.R, FormatFlags.None),
@@ -227,6 +247,21 @@ export enum Format {
     FormatFlags.Normalized,
   ),
   S32_R = makeFormat(FormatTypeFlags.S32, FormatCompFlags.R, FormatFlags.None),
+  S32_RG = makeFormat(
+    FormatTypeFlags.S32,
+    FormatCompFlags.RG,
+    FormatFlags.None,
+  ),
+  S32_RGB = makeFormat(
+    FormatTypeFlags.S32,
+    FormatCompFlags.RGB,
+    FormatFlags.None,
+  ),
+  S32_RGBA = makeFormat(
+    FormatTypeFlags.S32,
+    FormatCompFlags.RGBA,
+    FormatFlags.None,
+  ),
 
   // Packed texture formats.
   U16_RGBA_5551 = makeFormat(

@@ -2,7 +2,10 @@ import { Format, Texture, TextureDescriptor, TextureDimension } from '../api';
 import { ResourceType } from '../api';
 import type { IDevice_WebGPU, TextureShared_WebGPU } from './interfaces';
 import { ResourceBase_WebGPU } from './ResourceBase';
-import { translateTextureViewDimension } from './utils';
+import {
+  getBlockInformationFromFormat,
+  translateTextureViewDimension,
+} from './utils';
 
 export class Texture_WebGPU
   extends ResourceBase_WebGPU
@@ -136,12 +139,20 @@ export class Texture_WebGPU
         source: datas[0],
       }) as unknown as GPUTexture;
     } else {
+      const blockInformation = getBlockInformationFromFormat(
+        this.gpuTextureformat,
+      );
+      const bytesPerRow =
+        Math.ceil(this.width / blockInformation.width) *
+        blockInformation.length;
       // TODO: support ArrayBufferView[]
       datas.forEach((data) => {
         device.queue.writeTexture(
           { texture: this.gpuTexture },
           data as BufferSource,
-          {},
+          {
+            bytesPerRow,
+          },
           {
             width: this.width,
             height: this.height,
