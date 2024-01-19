@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.4
+
+### Patch Changes
+
+-   5c86bba: Enable filterable float32 feature in WebGPU.
+
 ## 1.6.3
 
 ### Patch Changes
