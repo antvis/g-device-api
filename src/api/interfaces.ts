@@ -482,6 +482,7 @@ export interface SamplerBinding {
 
 export enum SamplerFormatKind {
   Float,
+  UnfilterableFloat,
   Uint,
   Sint,
   Depth,
