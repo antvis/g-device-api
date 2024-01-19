@@ -11,7 +11,11 @@ import { GPUMapMode } from './constants';
 import type { IDevice_WebGPU } from './interfaces';
 import { ResourceBase_WebGPU } from './ResourceBase';
 import type { Texture_WebGPU } from './Texture';
-import { allocateAndCopyTypedBuffer, halfFloat2Number } from './utils';
+import {
+  allocateAndCopyTypedBuffer,
+  getBlockInformationFromFormat,
+  halfFloat2Number,
+} from './utils';
 
 export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
   type: ResourceType.Readback = ResourceType.Readback;
@@ -35,7 +39,7 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
     // FIXME: default to 0 for now
     const faceIndex = 0;
 
-    const blockInformation = this.getBlockInformationFromFormat(
+    const blockInformation = getBlockInformationFromFormat(
       texture.gpuTextureformat,
     );
 
@@ -278,99 +282,5 @@ export class Readback_WebGPU extends ResourceBase_WebGPU implements Readback {
     }
 
     return destArray;
-  }
-
-  private getBlockInformationFromFormat(format: GPUTextureFormat): {
-    width: number;
-    height: number;
-    length: number;
-  } {
-    switch (format) {
-      // 8 bits formats
-      case 'r8unorm':
-      case 'r8snorm':
-      case 'r8uint':
-      case 'r8sint':
-        return { width: 1, height: 1, length: 1 };
-
-      // 16 bits formats
-      case 'r16uint':
-      case 'r16sint':
-      case 'r16float':
-      case 'rg8unorm':
-      case 'rg8snorm':
-      case 'rg8uint':
-      case 'rg8sint':
-        return { width: 1, height: 1, length: 2 };
-
-      // 32 bits formats
-      case 'r32uint':
-      case 'r32sint':
-      case 'r32float':
-      case 'rg16uint':
-      case 'rg16sint':
-      case 'rg16float':
-      case 'rgba8unorm':
-      case 'rgba8unorm-srgb':
-      case 'rgba8snorm':
-      case 'rgba8uint':
-      case 'rgba8sint':
-      case 'bgra8unorm':
-      case 'bgra8unorm-srgb':
-      case 'rgb9e5ufloat':
-      case 'rgb10a2unorm':
-      case 'rg11b10ufloat':
-        return { width: 1, height: 1, length: 4 };
-      // 64 bits formats
-      case 'rg32uint':
-      case 'rg32sint':
-      case 'rg32float':
-      case 'rgba16uint':
-      case 'rgba16sint':
-      case 'rgba16float':
-        return { width: 1, height: 1, length: 8 };
-
-      // 128 bits formats
-      case 'rgba32uint':
-      case 'rgba32sint':
-      case 'rgba32float':
-        return { width: 1, height: 1, length: 16 };
-      // Depth and stencil formats
-      case 'stencil8':
-        throw new Error('No fixed size for Stencil8 format!');
-      case 'depth16unorm':
-        return { width: 1, height: 1, length: 2 };
-      case 'depth24plus':
-        throw new Error('No fixed size for Depth24Plus format!');
-      case 'depth24plus-stencil8':
-        throw new Error('No fixed size for Depth24PlusStencil8 format!');
-      case 'depth32float':
-        return { width: 1, height: 1, length: 4 };
-      // case 'depth24unorm-stencil8':
-      //   return { width: 1, height: 1, length: 4 };
-      case 'depth32float-stencil8':
-        return { width: 1, height: 1, length: 5 };
-      // BC compressed formats usable if "texture-compression-bc" is both
-      // supported by the device/user agent and enabled in requestDevice.
-      case 'bc7-rgba-unorm':
-      case 'bc7-rgba-unorm-srgb':
-      case 'bc6h-rgb-ufloat':
-      case 'bc6h-rgb-float':
-      case 'bc2-rgba-unorm':
-      case 'bc2-rgba-unorm-srgb':
-      case 'bc3-rgba-unorm':
-      case 'bc3-rgba-unorm-srgb':
-      case 'bc5-rg-unorm':
-      case 'bc5-rg-snorm':
-        return { width: 4, height: 4, length: 16 };
-
-      case 'bc4-r-unorm':
-      case 'bc4-r-snorm':
-      case 'bc1-rgba-unorm':
-      case 'bc1-rgba-unorm-srgb':
-        return { width: 4, height: 4, length: 8 };
-      default:
-        return { width: 1, height: 1, length: 4 };
-    }
   }
 }
