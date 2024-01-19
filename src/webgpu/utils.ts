@@ -176,9 +176,16 @@ export function translateMipFilter(
   else throw new Error('whoops');
 }
 
+/**
+ * @see https://www.w3.org/TR/webgpu/#enumdef-gputexturesampletype
+ */
 function translateSampleType(type: SamplerFormatKind): GPUTextureSampleType {
   if (type === SamplerFormatKind.Float) return 'float';
+  else if (type === SamplerFormatKind.UnfilterableFloat)
+    return 'unfilterable-float';
   else if (type === SamplerFormatKind.Depth) return 'depth';
+  else if (type === SamplerFormatKind.Sint) return 'sint';
+  else if (type === SamplerFormatKind.Uint) return 'uint';
   else throw new Error('whoops');
 }
 

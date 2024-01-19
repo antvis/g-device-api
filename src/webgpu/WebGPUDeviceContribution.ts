@@ -36,6 +36,7 @@ export class WebGPUDeviceContribution implements DeviceContribution {
       // 'depth24unorm-stencil8',
       'depth32float-stencil8',
       'texture-compression-bc',
+      'float32-filterable',
     ];
     const requiredFeatures = optionalFeatures.filter((feature) =>
       adapter.features.has(feature),
