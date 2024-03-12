@@ -49,11 +49,15 @@ export async function render(
     },
     fragment: {
       glsl: `
+  layout(std140) uniform Uniforms {
+    mat4 u_ModelViewProjectionMatrix;
+  };
+
   in vec4 v_Position;
   out vec4 outputColor;
 
   void main() {
-    outputColor = vec4(1.0, 0.0, 0.0, 1.0);
+    outputColor = vec4(v_Position);
   }
   `,
     },
@@ -148,13 +152,20 @@ export async function render(
     // Initialize a WebXR session using "immersive-ar".
     const session = await navigator.xr!.requestSession('immersive-ar', {
       requiredFeatures: ['local'],
+      optionalFeatures: ['dom-overlay'],
+      domOverlay: {
+        root: document.getElementById('overlay')!,
+      },
+    });
+    session.addEventListener('end', () => {
+      $button.innerHTML = 'Enter AR';
     });
     session.updateRenderState({
       baseLayer: new XRWebGLLayer(session, gl, {
-        alpha: true,
+        // alpha: true,
         antialias: false,
-        depth: true,
-        stencil: false,
+        depth: false,
+        // stencil: false,
       }),
     });
 
@@ -167,11 +178,13 @@ export async function render(
     const modelMatrix = mat4.fromRotationTranslationScale(
       mat4.create(),
       quat.create(),
-      vec3.fromValues(0, 0, 0),
-      vec3.fromValues(1, 1, 1),
+      vec3.fromValues(0, 0, -3),
+      vec3.fromValues(1.0, 1.0, 1.0),
     );
 
     const onXRFrame: XRFrameRequestCallback = (time, frame) => {
+      mat4.rotate(modelMatrix, modelMatrix, 0.01, vec3.fromValues(1, 0, 0));
+
       // Assumed to be a XRWebGLLayer for now.
       let layer = session.renderState.baseLayer;
       if (!layer) {
@@ -197,19 +210,30 @@ export async function render(
       // XRFrame.getViewerPose can return null while the session attempts to establish tracking.
       const pose = frame.getViewerPose(referenceSpace);
       if (pose) {
+        const p = pose.transform.position;
+        // console.log('position', p.x.toFixed(2), p.y.toFixed(2), p.z.toFixed(2));
+        $overlay.innerHTML = `position: ${p.x.toFixed(2)}, ${p.y.toFixed(
+          2,
+        )}, ${p.z.toFixed(2)}`;
+
+        // pose.views.forEach((view) => {
+        //   const viewport = session.renderState.baseLayer!.getViewport(view)!;
+        //   console.log(view.eye, viewport);
+        // });
+
         // In mobile AR, we only have one view.
         const view = pose.views[0];
-
         const viewport = session.renderState.baseLayer!.getViewport(view)!;
 
         // Use the view's transform matrix and projection matrix
-        const viewMatrix = mat4.invert(mat4.create(), view.transform.matrix);
+        // const viewMatrix = mat4.invert(mat4.create(), view.transform.matrix);
+        const viewMatrix = view.transform.inverse.matrix;
         const projectionMatrix = view.projectionMatrix;
 
-        const fov = 2.0 * Math.atan(1.0 / projectionMatrix[5]);
-        const aspect = projectionMatrix[5] / projectionMatrix[0];
+        // const fov = 2.0 * Math.atan(1.0 / projectionMatrix[5]);
+        // const aspect = projectionMatrix[5] / projectionMatrix[0];
 
-        console.log(fov, aspect, $canvas.width, $canvas.height);
+        // console.log(fov, aspect, $canvas.width, $canvas.height);
 
         mat4.multiply(modelViewMatrix, viewMatrix, modelMatrix);
         mat4.multiply(
@@ -246,7 +270,12 @@ export async function render(
           ],
           null,
         );
-        renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+        renderPass.setViewport(
+          viewport.x,
+          viewport.y,
+          viewport.width,
+          viewport.height,
+        );
         renderPass.setBindings(bindings);
         renderPass.draw(cubeVertexCount);
 
@@ -272,9 +301,24 @@ export async function render(
   // Starting an immersive WebXR session requires user interaction.
   // We start this one with a simple button.
   const $button = document.createElement('button');
-  $button.innerHTML = 'Start Hello WebXR';
   $button.onclick = activateXR;
   $canvas.parentElement?.appendChild($button);
+
+  function checkSupportedState() {
+    navigator.xr!.isSessionSupported('immersive-ar').then((supported) => {
+      if (supported) {
+        $button.innerHTML = 'Enter AR';
+      } else {
+        $button.innerHTML = 'AR not found';
+      }
+      $button.disabled = !supported;
+    });
+  }
+  checkSupportedState();
+
+  const $overlay = document.createElement('div');
+  $overlay.id = 'overlay';
+  document.body.appendChild($overlay);
 
   return () => {
     device.destroy();

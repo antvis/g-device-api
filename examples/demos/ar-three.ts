@@ -10,6 +10,10 @@ import {
   BoxGeometry,
 } from 'three';
 
+/**
+ * @see https://immersiveweb.dev/#three.js
+ */
+
 export async function render(
   deviceContribution: DeviceContribution,
   $canvas: HTMLCanvasElement,
@@ -28,28 +32,25 @@ export async function render(
 
   const scene = new Scene();
 
-  const camera = new PerspectiveCamera(
-    70,
+  // Make a camera. note that far is set to 100, which is better for realworld sized environments
+  let camera = new PerspectiveCamera(
+    50,
     window.innerWidth / window.innerHeight,
-    0.02,
-    20,
+    0.1,
+    100,
   );
+  camera.position.set(0, 1.6, 3);
+  scene.add(camera);
 
   const geometry = new BoxGeometry(1, 1, 1);
   const material = new MeshBasicMaterial({ color: 0x00ff00 });
   const cube = new Mesh(geometry, material);
-  cube.position.z = -4;
+  // cube.position.set(0, 0, 0);
+  cube.position.set(0, 0, -3);
   scene.add(cube);
 
   const ambientLight = new AmbientLight(0xffffff, 1.0);
   scene.add(ambientLight);
-
-  const controller = renderer.xr.getController(0);
-  scene.add(controller);
-
-  function onSelect() {}
-
-  controller.addEventListener('select', onSelect);
 
   const renderLoop = (timestamp: any, frame?: XRFrame) => {
     cube.rotation.y += 0.01;

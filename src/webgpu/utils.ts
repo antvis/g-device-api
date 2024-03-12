@@ -87,7 +87,6 @@ export function translateTextureFormat(format: Format): GPUTextureFormat {
   else if (format === Format.U8_RGBA_NORM) return 'rgba8unorm';
   else if (format === Format.U8_RGBA_SRGB) return 'rgba8unorm-srgb';
   else if (format === Format.S8_RGBA_NORM) return 'rgba8snorm';
-  else if (format === Format.F32_RGB) return 'rgb9e5ufloat';
   // 64-bit formats
   else if (format === Format.U32_RG) return 'rg32uint';
   else if (format === Format.S32_RG) return 'rg32sint';
@@ -451,8 +450,10 @@ export function translateDepthStencilState(
         megaStateDescriptor.stencilBack.depthFailOp,
       ),
     },
-    stencilReadMask: 1,
-    stencilWriteMask: 1,
+    stencilReadMask: 0xffffffff,
+    stencilWriteMask: 0xffffffff,
+    // stencilReadMask: 0xffffffff,
+    // stencilWriteMask: megaStateDescriptor.stencilWrite ? 0xff : 0x00,
   };
 }
 
