@@ -509,4 +509,74 @@ vec3 u_blur_height_fixed;
 };
 `);
   });
+
+  it('should separate sampler textures correctly.', () => {
+    const raw = `uniform sampler2D u_Texture;
+in vec2 v_TexCoord;
+
+out vec4 outputColor;
+
+vec4 FXAA(PD_SAMPLER_2D(t_Texture), in vec2 t_PixelCenter, in vec2 t_InvResolution) {
+  float lumaNW = MonochromeNTSC(texture(PU_SAMPLER_2D(t_Texture), t_PixelTopLeft.xy)             .rgb);
+  return rgbOutput;
+}
+
+void main() {
+  outputColor = FXAA(PP_SAMPLER_2D(u_Texture), v_TexCoord.xy, u_InvResolution.xy);
+}`;
+    const glsl100 = preprocessShader_GLSL(WebGL1VendorInfo, 'frag', raw);
+    expect(glsl100).toEqual(`#extension GL_OES_standard_derivatives : enable
+precision mediump float;
+
+uniform sampler2D u_Texture; // BINDING=0
+varying vec2 v_TexCoord;
+vec4 outputColor;
+
+vec4 FXAA(sampler2D P_t_Texture, in vec2 t_PixelCenter, in vec2 t_InvResolution) {
+  float lumaNW = MonochromeNTSC(texture2D(P_t_Texture, t_PixelTopLeft.xy)             .rgb);
+  return rgbOutput;
+}
+void main() {
+  outputColor = FXAA(u_Texture, v_TexCoord.xy, u_InvResolution.xy);
+
+  gl_FragColor = vec4(outputColor);
+}`);
+
+    const glsl300 = preprocessShader_GLSL(WebGL2VendorInfo, 'frag', raw);
+    expect(glsl300).toEqual(`#version 300
+
+precision mediump float;
+
+uniform sampler2D u_Texture; // BINDING=0
+in vec2 v_TexCoord;
+out vec4 outputColor;
+vec4 FXAA(sampler2D P_t_Texture, in vec2 t_PixelCenter, in vec2 t_InvResolution) {
+  float lumaNW = MonochromeNTSC(texture(P_t_Texture, t_PixelTopLeft.xy)             .rgb);
+  return rgbOutput;
+}
+void main() {
+  outputColor = FXAA(u_Texture, v_TexCoord.xy, u_InvResolution.xy);
+}`);
+
+    const glsl440 = preprocessShader_GLSL(WebGPUVendorInfo, 'frag', raw);
+    expect(glsl440).toEqual(`#version 440
+
+precision mediump float;
+#define VIEWPORT_ORIGIN_TL 1
+#define CLIPSPACE_NEAR_ZERO 1
+#define gl_VertexID gl_VertexIndex
+#define gl_InstanceID gl_InstanceIndex
+
+layout(set = 1, binding = 0) uniform texture2D T_u_Texture;
+layout(set = 1, binding = 1) uniform sampler S_u_Texture;
+layout(location = 0) in vec2 v_TexCoord;
+out vec4 outputColor;
+vec4 FXAA(texture2D T_P_t_Texture, sampler S_P_t_Texture, in vec2 t_PixelCenter, in vec2 t_InvResolution) {
+  float lumaNW = MonochromeNTSC(texture(sampler2D(T_P_t_Texture, S_P_t_Texture), t_PixelTopLeft.xy)             .rgb);
+  return rgbOutput;
+}
+void main() {
+  outputColor = FXAA(T_u_Texture, S_u_Texture, v_TexCoord.xy, u_InvResolution.xy);
+}`);
+  });
 });

@@ -266,7 +266,41 @@ layout(set = ${set}, binding = ${
     );
   }
 
+  rest = rest.replace(
+    /\bPU_SAMPLER_(\w+)\((.*?)\)/g,
+    (substr, combinedSamplerType, samplerName) => {
+      return `SAMPLER_${combinedSamplerType}(P_${samplerName})`;
+    },
+  );
+
+  rest = rest.replace(
+    /\bPF_SAMPLER_(\w+)\((.*?)\)/g,
+    (substr, combinedSamplerType, samplerName) => {
+      return `PP_SAMPLER_${combinedSamplerType}(P_${samplerName})`;
+    },
+  );
+
+  rest = rest.replace(/\bPU_TEXTURE\((.*?)\)/g, (substr, samplerName) => {
+    return `TEXTURE(P_${samplerName})`;
+  });
+
   if (vendorInfo.separateSamplerTextures) {
+    rest = rest.replace(
+      /\bPD_SAMPLER_(\w+)\((.*?)\)/g,
+      (substr, combinedSamplerType, samplerName) => {
+        const [textureType, samplerType] =
+          getSeparateSamplerTypes(combinedSamplerType);
+        return `texture${textureType} T_P_${samplerName}, sampler${samplerType} S_P_${samplerName}`;
+      },
+    );
+
+    rest = rest.replace(
+      /\bPP_SAMPLER_(\w+)\((.*?)\)/g,
+      (substr, combinedSamplerType, samplerName) => {
+        return `T_${samplerName}, S_${samplerName}`;
+      },
+    );
+
     rest = rest.replace(
       /\bSAMPLER_(\w+)\((.*?)\)/g,
       (substr, combinedSamplerType, samplerName) => {
@@ -279,6 +313,20 @@ layout(set = ${set}, binding = ${
     });
   } else {
     const samplerNames: [string, string][] = [];
+    rest = rest.replace(
+      /\bPD_SAMPLER_(\w+)\((.*?)\)/g,
+      (substr, combinedSamplerType, samplerName) => {
+        return `sampler${combinedSamplerType} P_${samplerName}`;
+      },
+    );
+
+    rest = rest.replace(
+      /\bPP_SAMPLER_(\w+)\((.*?)\)/g,
+      (substr, combinedSamplerType, samplerName) => {
+        return samplerName;
+      },
+    );
+
     rest = rest.replace(
       /\bSAMPLER_(\w+)\((.*?)\)/g,
       (substr, combinedSamplerType, samplerName) => {
