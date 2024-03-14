@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.5
+
+### Patch Changes
+
+-   d9b7078: Separate sampler and textures correctly.
+
 ## 1.6.4
 
 ### Patch Changes
