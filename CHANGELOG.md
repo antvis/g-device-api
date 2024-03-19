@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.6
+
+### Patch Changes
+
+-   5cfa31c: Display more granular error message when compiling wgsl with naga.
+
 ## 1.6.5
 
 ### Patch Changes
