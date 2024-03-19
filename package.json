@@ -1,6 +1,6 @@
 {
   "name": "@antv/g-device-api",
-  "version": "1.6.6",
+  "version": "1.6.7",
   "description": "A Device API references WebGPU implementations",
   "keywords": [
     "antv",
@@ -41,7 +41,6 @@
     "lint": "npm run eslint",
     "lint-staged": "lint-staged",
     "prepare": "husky install",
-    "prepublishOnly": "npm run build && cp -r rust/pkg dist",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "changeset publish",
