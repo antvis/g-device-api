@@ -84,7 +84,7 @@ fn main_image(@builtin(global_invocation_id) id: vec3u) {
         u -= R*clamp(u*R,-vec2f(i),vec2f(i));
         l = max(length(u),0.1);
         //Compute anti-aliased alpha using SDF
-        A = min((l - 0.1) * r.y / 5, 1);
+        A = min((l - 0.1) * r.y / 5., 1.);
         //Pick layer color
         h = sin(i*10+a/3+vec4f(1,3,5,0))/5+0.8;
         //Color blending and lighting

@@ -14,7 +14,7 @@ import {
  */
 export function registerShaderModule(device: Device, shader: string): string {
   const compiler = device['WGSLComposer'];
-  return compiler.wgsl_compile(alias + shader);
+  return compiler.load_composable(alias + shader);
 }
 
 export function defineStr(k: string, v: string): string {
@@ -49,31 +49,32 @@ export function createProgram(
   return device.createProgram(desc);
 }
 
+// We cannot use alias for now. @see https://github.com/bevyengine/naga_oil/issues/79
 export const alias = /* wgsl */ `
-alias int = i32;
-alias uint = u32;
-alias float = f32;
-alias int2 = vec2<i32>;
-alias int3 = vec3<i32>;
-alias int4 = vec4<i32>;
-alias uint2 = vec2<u32>;
-alias uint3 = vec3<u32>;
-alias uint4 = vec4<u32>;
-alias float2 = vec2<f32>;
-alias float3 = vec3<f32>;
-alias float4 = vec4<f32>;
-alias bool2 = vec2<bool>;
-alias bool3 = vec3<bool>;
-alias bool4 = vec4<bool>;
-alias float2x2 = mat2x2<f32>;
-alias float2x3 = mat2x3<f32>;
-alias float2x4 = mat2x4<f32>;
-alias float3x2 = mat3x2<f32>;
-alias float3x3 = mat3x3<f32>;
-alias float3x4 = mat3x4<f32>;
-alias float4x2 = mat4x2<f32>;
-alias float4x3 = mat4x3<f32>;
-alias float4x4 = mat4x4<f32>;
+// alias int = i32;
+// alias uint = u32;
+// alias float = f32;
+// alias int2 = vec2<i32>;
+// alias int3 = vec3<i32>;
+// alias int4 = vec4<i32>;
+// alias uint2 = vec2<u32>;
+// alias uint3 = vec3<u32>;
+// alias uint4 = vec4<u32>;
+// alias float2 = vec2<f32>;
+// alias float3 = vec3<f32>;
+// alias float4 = vec4<f32>;
+// alias bool2 = vec2<bool>;
+// alias bool3 = vec3<bool>;
+// alias bool4 = vec4<bool>;
+// alias float2x2 = mat2x2<f32>;
+// alias float2x3 = mat2x3<f32>;
+// alias float2x4 = mat2x4<f32>;
+// alias float3x2 = mat3x2<f32>;
+// alias float3x3 = mat3x3<f32>;
+// alias float3x4 = mat3x4<f32>;
+// alias float4x2 = mat4x2<f32>;
+// alias float4x3 = mat4x3<f32>;
+// alias float4x4 = mat4x4<f32>;
 `;
 
 /**
@@ -89,8 +90,8 @@ struct Time {
 }
 
 struct Mouse { 
-  pos: uint2, 
-  click: int
+  pos: vec2<u32>, 
+  click: i32
 }
 
 @group(0) @binding(0) var<uniform> time : Time;
@@ -100,15 +101,15 @@ struct Mouse {
 @group(3) @binding(0) var screen : texture_storage_2d<rgba16float, write>;
 @group(3) @binding(1) var pass_out: texture_storage_2d_array<rgba16float,write>;
 
-fn passStore(pass_index: int, coord: int2, value: float4) {
+fn passStore(pass_index: i32, coord: vec2<i32>, value: vec4<f32>) {
   textureStore(pass_out, coord, pass_index, value);
 }
 
-fn passLoad(pass_index: int, coord: int2, lod: int) -> float4 {
+fn passLoad(pass_index: i32, coord: vec2<i32>, lod: i32) -> vec4<f32> {
   return textureLoad(pass_in, coord, pass_index, lod);
 }
 
-fn passSampleLevelBilinearRepeat(pass_index: int, uv: float2, lod: float) -> float4 {
+fn passSampleLevelBilinearRepeat(pass_index: i32, uv: vec2<f32>, lod: f32) -> vec4<f32> {
   return textureSampleLevel(pass_in, bilinear, fract(uv), pass_index, lod);
 }
 `;
@@ -237,43 +238,43 @@ export const math = /* wgsl */ `
 const PI = 3.14159265;
 const TWO_PI = 6.28318530718;
 
-var<private> state : uint4;
+var<private> state : vec4<u32>;
 
-fn pcg4d(a: uint4) -> uint4
+fn pcg4d(a: vec4<u32>) -> vec4<u32>
 {
   var v = a * 1664525u + 1013904223u;
     v.x += v.y*v.w; v.y += v.z*v.x; v.z += v.x*v.y; v.w += v.y*v.z;
-    v = v ^  ( v >> uint4(16u) );
+    v = v ^  ( v >> vec4<u32>(16u) );
     v.x += v.y*v.w; v.y += v.z*v.x; v.z += v.x*v.y; v.w += v.y*v.z;
     return v;
 }
 
-fn rand4() -> float4
+fn rand4() -> vec4<f32>
 { 
     state = pcg4d(state);
-    return float4(state)/float(0xffffffffu); 
+    return vec4<f32>(state)/f32(0xffffffffu); 
 }
 
-fn nrand4(sigma: float, mean: float4) -> float4
+fn nrand4(sigma: f32, mean: vec4<f32>) -> vec4<f32>
 {
     let Z = rand4();
     return mean + sigma * sqrt(-2.0 * log(Z.xxyy)) * 
-            float4(cos(TWO_PI * Z.z),sin(TWO_PI * Z.z),cos(TWO_PI * Z.w),sin(TWO_PI * Z.w));
+    vec4<f32>(cos(TWO_PI * Z.z),sin(TWO_PI * Z.z),cos(TWO_PI * Z.w),sin(TWO_PI * Z.w));
 }
 
-fn disk(r: float2) -> float2
+fn disk(r: vec2<f32>) -> vec2<f32>
 {
     return vec2(sin(TWO_PI*r.x), cos(TWO_PI*r.x))*(r.y);
 }
 
-fn sqr(x: float) -> float
+fn sqr(x: f32) -> f32
 {
     return x*x;
 }
 
-fn diag(a: float4) -> float4x4
+fn diag(a: vec4<f32>) -> mat4x4<f32>
 {
-    return float4x4(
+    return mat4x4<f32>(
         a.x,0.0,0.0,0.0,
         0.0,a.y,0.0,0.0,
         0.0,0.0,a.z,0.0,
@@ -281,9 +282,9 @@ fn diag(a: float4) -> float4x4
     );
 }
 
-fn rand4s(seed: uint4) -> float4
+fn rand4s(seed: vec4<u32>) -> vec4<f32>
 { 
-    return float4(pcg4d(seed))/float(0xffffffffu); 
+    return vec4<f32>(pcg4d(seed))/f32(0xffffffffu); 
 }
 `;
 
@@ -292,29 +293,29 @@ export const camera = /* wgsl */ `
 
 struct Camera 
 {
-  pos: float3,
-  cam: float3x3,
-  fov: float,
-  size: float2
+  pos: vec3<f32>,
+  cam: mat3x3<f32>,
+  fov: f32,
+  size: vec2<f32>
 }
 
 var<private> camera : Camera;
 
-fn GetCameraMatrix(ang: float2) -> float3x3
+fn GetCameraMatrix(ang: vec2<f32>) -> mat3x3<f32>
 {
-    let x_dir = float3(cos(ang.x)*sin(ang.y), cos(ang.y), sin(ang.x)*sin(ang.y));
-    let y_dir = normalize(cross(x_dir, float3(0.0,1.0,0.0)));
+    let x_dir = vec3<f32>(cos(ang.x)*sin(ang.y), cos(ang.y), sin(ang.x)*sin(ang.y));
+    let y_dir = normalize(cross(x_dir, vec3<f32>(0.0,1.0,0.0)));
     let z_dir = normalize(cross(y_dir, x_dir));
-    return float3x3(-x_dir, y_dir, z_dir);
+    return mat3x3<f32>(-x_dir, y_dir, z_dir);
 }
 
 //project to clip space
-fn Project(cam: Camera, p: float3) -> float3
+fn Project(cam: Camera, p: vec3<f32>) -> vec3<f32>
 {
     let td = distance(cam.pos, p);
     let dir = (p - cam.pos)/td;
     let screen = dir*cam.cam;
-    return float3(screen.yz*cam.size.y/(cam.fov*screen.x) + 0.5*cam.size,screen.x*td);
+    return vec3<f32>(screen.yz*cam.size.y/(cam.fov*screen.x) + 0.5*cam.size,screen.x*td);
 }
   `;
 
@@ -326,27 +327,27 @@ export const particle = /* wgsl */ `
 
 struct Particle
 {
-    position: float4,
-    velocity: float4,
+    position: vec4<f32>,
+    velocity: vec4<f32>,
 }
 
 @group(2) @binding(0) var<storage, read_write> atomic_storage : array<atomic<i32>>;
 
-fn AdditiveBlend(color: float3, depth: float, index: int)
+fn AdditiveBlend(color: vec3<f32>, depth: f32, index: i32)
 {
     let scaledColor = 256.0 * color/depth;
 
-    atomicAdd(&atomic_storage[index*4+0], int(scaledColor.x));
-    atomicAdd(&atomic_storage[index*4+1], int(scaledColor.y));
-    atomicAdd(&atomic_storage[index*4+2], int(scaledColor.z));
+    atomicAdd(&atomic_storage[index*4+0], i32(scaledColor.x));
+    atomicAdd(&atomic_storage[index*4+1], i32(scaledColor.y));
+    atomicAdd(&atomic_storage[index*4+2], i32(scaledColor.z));
 }
 
-fn RasterizePoint(pos: float3, color: float3)
+fn RasterizePoint(pos: vec3<f32>, color: vec3<f32>)
 {
-    let screen_size = int2(camera.size);
+    let screen_size = vec2<i32>(camera.size);
     let projectedPos = Project(camera, pos);
     
-    let screenCoord = int2(projectedPos.xy);
+    let screenCoord = vec2<i32>(projectedPos.xy);
     
     //outside of our view
     if(screenCoord.x < 0 || screenCoord.x >= screen_size.x || 
@@ -360,7 +361,7 @@ fn RasterizePoint(pos: float3, color: float3)
     AdditiveBlend(color, projectedPos.z, idx);
 }
 
-fn LoadParticle(pix: int2) -> Particle
+fn LoadParticle(pix: vec2<i32>) -> Particle
 {
     var p: Particle;
     p.position = textureLoad(pass_in, pix, 0, 0); 
@@ -368,7 +369,7 @@ fn LoadParticle(pix: int2) -> Particle
     return p;
 }
 
-fn SaveParticle(pix: int2, p: Particle) 
+fn SaveParticle(pix: vec2<i32>, p: Particle) 
 {
     textureStore(pass_out, pix, 0, p.position); 
     textureStore(pass_out, pix, 1, p.velocity); 

@@ -82,66 +82,66 @@ struct Custom {
 
   struct Camera
   {
-    pos: float3,
-    cam: float3x3,
-    fov: float,
-    size: float2
+    pos: vec3f,
+    cam: mat3x3<f32>,
+    fov: f32,
+    size: vec2f
   }
 
   var<private> camera : Camera;
-  var<private> state : uint4;
+  var<private> state : vec4u;
 
-  fn pcg4d(a: uint4) -> uint4
+  fn pcg4d(a: vec4u) -> vec4u
   {
   	var v = a * 1664525u + 1013904223u;
       v.x += v.y*v.w; v.y += v.z*v.x; v.z += v.x*v.y; v.w += v.y*v.z;
-      v = v ^  ( v >> uint4(16u) );
+      v = v ^  ( v >> vec4u(16u) );
       v.x += v.y*v.w; v.y += v.z*v.x; v.z += v.x*v.y; v.w += v.y*v.z;
       return v;
   }
 
-  fn rand4() -> float4
+  fn rand4() -> vec4f
   {
       state = pcg4d(state);
-      return float4(state)/float(0xffffffffu);
+      return vec4f(state)/f32(0xffffffffu);
   }
 
-  fn nrand4(sigma: float, mean: float4) -> float4
+  fn nrand4(sigma: f32, mean: vec4f) -> vec4f
   {
       let Z = rand4();
       return mean + sigma * sqrt(-2.0 * log(Z.xxyy)) *
-             float4(cos(TWO_PI * Z.z),sin(TWO_PI * Z.z),cos(TWO_PI * Z.w),sin(TWO_PI * Z.w));
+             vec4f(cos(TWO_PI * Z.z),sin(TWO_PI * Z.z),cos(TWO_PI * Z.w),sin(TWO_PI * Z.w));
   }
 
-  fn GetCameraMatrix(ang: float2) -> float3x3
+  fn GetCameraMatrix(ang: vec2f) -> mat3x3<f32>
   {
-      let x_dir = float3(cos(ang.x)*sin(ang.y), cos(ang.y), sin(ang.x)*sin(ang.y));
-      let y_dir = normalize(cross(x_dir, float3(0.0,1.0,0.0)));
+      let x_dir = vec3f(cos(ang.x)*sin(ang.y), cos(ang.y), sin(ang.x)*sin(ang.y));
+      let y_dir = normalize(cross(x_dir, vec3f(0.0,1.0,0.0)));
       let z_dir = normalize(cross(y_dir, x_dir));
-      return float3x3(-x_dir, y_dir, z_dir);
+      return mat3x3<f32>(-x_dir, y_dir, z_dir);
   }
 
-  fn SetCamera(ang: float2, fov: float)
+  fn SetCamera(ang: vec2f, fov: f32)
   {
       camera.fov = fov;
       camera.cam = GetCameraMatrix(ang);
-      camera.pos = - (camera.cam*float3(3.0*custom.Radius+0.5,0.0,0.0));
-      camera.size = float2(textureDimensions(screen));
+      camera.pos = - (camera.cam*vec3f(3.0*custom.Radius+0.5,0.0,0.0));
+      camera.size = vec2f(textureDimensions(screen));
   }
 
   //project to clip space
-  fn Project(cam: Camera, p: float3) -> float3
+  fn Project(cam: Camera, p: vec3f) -> vec3f
   {
       let td = distance(cam.pos, p);
       let dir = (p - cam.pos)/td;
       let screen = dir*cam.cam;
-      return float3(screen.yz*cam.size.y/(cam.fov*screen.x) + 0.5*cam.size,screen.x*td);
+      return vec3f(screen.yz*cam.size.y/(cam.fov*screen.x) + 0.5*cam.size,screen.x*td);
   }
 
   @compute @workgroup_size(16, 16)
-  fn Clear(@builtin(global_invocation_id) id: uint3) {
-      let screen_size = int2(textureDimensions(screen));
-      let idx0 = int(id.x) + int(screen_size.x * int(id.y));
+  fn Clear(@builtin(global_invocation_id) id: vec3u) {
+      let screen_size = vec2i(textureDimensions(screen));
+      let idx0 = i32(id.x) + i32(screen_size.x * i32(id.y));
 
       atomicStore(&atomic_storage[idx0*4+0], 0);
       atomicStore(&atomic_storage[idx0*4+1], 0);
@@ -149,18 +149,18 @@ struct Custom {
       atomicStore(&atomic_storage[idx0*4+3], 0);
   }
 
-  fn Pack(a: uint, b: uint) -> int
+  fn Pack(a: u32, b: u32) -> i32
   {
-      return int(a + (b << (31u - DEPTH_BITS)));
+      return i32(a + (b << (31u - DEPTH_BITS)));
   }
 
-  fn Unpack(a: int) -> float
+  fn Unpack(a: i32) -> f32
   {
-      let mask = (1 << (DEPTH_BITS - 1u)) - 1;
-      return float(a & mask)/256.0;
+      let mask = i32(1u << (DEPTH_BITS - 1u)) - 1i;
+      return f32(a & mask)/256.0;
   }
 
-  fn ClosestPoint(color: float3, depth: float, index: int)
+  fn ClosestPoint(color: vec3f, depth: f32, index: i32)
   {
       let inverseDepth = 1.0/depth;
       let scaledDepth = (inverseDepth - 1.0/DEPTH_MAX)/(1.0/DEPTH_MIN - 1.0/DEPTH_MAX);
@@ -170,28 +170,28 @@ struct Custom {
           return;
       }
 
-      let uintDepth = uint(scaledDepth*float((1u << DEPTH_BITS) - 1u));
-      let uintColor = uint3(color * 256.0);
+      let uintDepth = u32(scaledDepth*f32((1u << DEPTH_BITS) - 1u));
+      let uintColor = vec3u(color * 256.0);
 
       atomicMax(&atomic_storage[index*4+0], Pack(uintColor.x, uintDepth));
       atomicMax(&atomic_storage[index*4+1], Pack(uintColor.y, uintDepth));
       atomicMax(&atomic_storage[index*4+2], Pack(uintColor.z, uintDepth));
   }
 
-  fn AdditiveBlend(color: float3, depth: float, index: int)
+  fn AdditiveBlend(color: vec3f, depth: f32, index: i32)
   {
       let scaledColor = 256.0 * color/depth;
 
-      atomicAdd(&atomic_storage[index*4+0], int(scaledColor.x));
-      atomicAdd(&atomic_storage[index*4+1], int(scaledColor.y));
-      atomicAdd(&atomic_storage[index*4+2], int(scaledColor.z));
+      atomicAdd(&atomic_storage[index*4+0], i32(scaledColor.x));
+      atomicAdd(&atomic_storage[index*4+1], i32(scaledColor.y));
+      atomicAdd(&atomic_storage[index*4+2], i32(scaledColor.z));
   }
 
-  fn RasterizePoint(pos: float3, color: float3)
+  fn RasterizePoint(pos: vec3f, color: vec3f)
   {
-      let screen_size = int2(camera.size);
+      let screen_size = vec2i(camera.size);
       let projectedPos = Project(camera, pos);
-      let screenCoord = int2(projectedPos.xy);
+      let screenCoord = vec2i(projectedPos.xy);
 
       //outside of our view
       if(screenCoord.x < 0 || screenCoord.x >= screen_size.x ||
@@ -213,47 +213,47 @@ struct Custom {
   }
 
   @compute @workgroup_size(16, 16)
-  fn Rasterize(@builtin(global_invocation_id) id: uint3) {
+  fn Rasterize(@builtin(global_invocation_id) id: vec3u) {
       // Viewport resolution (in pixels)
-      let screen_size = int2(textureDimensions(screen));
-      let screen_size_f = float2(screen_size);
+      let screen_size = vec2i(textureDimensions(screen));
+      let screen_size_f = vec2f(screen_size);
 
-      // let ang = float2(mouse.pos.xy)*float2(-TWO_PI, PI)/screen_size_f + float2(0.4, 0.4);
-      let ang = float2(0.0, 0.0)*float2(-TWO_PI, PI)/screen_size_f + float2(0.4, 0.4);
+      // let ang = vec2f(mouse.pos.xy)*vec2f(-TWO_PI, PI)/screen_size_f + vec2f(0.4, 0.4);
+      let ang = vec2f(0.0, 0.0)*vec2f(-TWO_PI, PI)/screen_size_f + vec2f(0.4, 0.4);
 
       SetCamera(ang, FOV);
 
       //RNG state
-      state = uint4(id.x, id.y, id.z, 0u*time.frame);
+      state = vec4u(id.x, id.y, id.z, 0u*time.frame);
 
-      for(var i: i32 = 0; i < int(custom.Samples*MaxSamples + 1.0); i++)
+      for(var i: i32 = 0; i < i32(custom.Samples*MaxSamples + 1.0); i++)
       {
-          let rand = nrand4(1.0, float4(0.0));
+          let rand = nrand4(1.0, vec4f(0.0));
           var pos = 0.2*rand.xyz;
-          let col = float3(0.5 + 0.5*sin(10.0*pos));
+          let col = vec3f(0.5 + 0.5*sin(10.0*pos));
 
           let sec = 5.0+custom.Speed*time.elapsed;
           //move points along sines
-          pos += sin(float3(2.0,1.0,1.5)*sec)*0.1*sin(30.0*custom.Sinea*pos);
-          pos += sin(float3(2.0,1.0,1.5)*sec)*0.02*sin(30.0*custom.Sineb*pos.zxy);
+          pos += sin(vec3f(2.0,1.0,1.5)*sec)*0.1*sin(30.0*custom.Sinea*pos);
+          pos += sin(vec3f(2.0,1.0,1.5)*sec)*0.02*sin(30.0*custom.Sineb*pos.zxy);
 
           RasterizePoint(pos, col);
       }
   }
 
-  fn Sample(pos: int2) -> float3
+  fn Sample(pos: vec2i) -> vec3f
   {
-      let screen_size = int2(textureDimensions(screen));
+      let screen_size = vec2i(textureDimensions(screen));
       let idx = pos.x + screen_size.x * pos.y;
 
-      var color: float3;
+      var color: vec3f;
       if(custom.Mode < 0.5)
       {
-          let x = float(atomicLoad(&atomic_storage[idx*4+0]))/(256.0);
-          let y = float(atomicLoad(&atomic_storage[idx*4+1]))/(256.0);
-          let z = float(atomicLoad(&atomic_storage[idx*4+2]))/(256.0);
+          let x = f32(atomicLoad(&atomic_storage[idx*4+0]))/(256.0);
+          let y = f32(atomicLoad(&atomic_storage[idx*4+1]))/(256.0);
+          let z = f32(atomicLoad(&atomic_storage[idx*4+2]))/(256.0);
 
-          color = tanh(0.1*float3(x,y,z)/(custom.Samples*MaxSamples + 1.0));
+          color = tanh(0.1*vec3f(x,y,z)/(custom.Samples*MaxSamples + 1.0));
       }
       else
       {
@@ -261,27 +261,27 @@ struct Custom {
           let y = Unpack(atomicLoad(&atomic_storage[idx*4+1]));
           let z = Unpack(atomicLoad(&atomic_storage[idx*4+2]));
 
-          color = float3(x,y,z);
+          color = vec3f(x,y,z);
       }
 
       return abs(color);
   }
 
   @compute @workgroup_size(16, 16)
-  fn main_image(@builtin(global_invocation_id) id: uint3)
+  fn main_image(@builtin(global_invocation_id) id: vec3u)
   {
-      let screen_size = uint2(textureDimensions(screen));
+      let screen_size = vec2u(textureDimensions(screen));
 
       // Prevent overdraw for workgroups on the edge of the viewport
       if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
 
       // Pixel coordinates (centre of pixel, origin at bottom left)
-      // let fragCoord = float2(float(id.x) + .5, float(id.y) + .5);
+      // let fragCoord = vec2f(f32(id.x) + .5, f32(id.y) + .5);
 
-      let color = float4(Sample(int2(id.xy)),1.0);
+      let color = vec4f(Sample(vec2i(id.xy)),1.0);
 
       // Output to screen (linear colour space)
-      textureStore(screen, int2(id.xy), color);
+      textureStore(screen, vec2i(id.xy), color);
   }
           `;
 
