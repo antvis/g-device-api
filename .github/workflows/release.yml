@@ -34,9 +34,6 @@ jobs:
       - name: Build
         run: pnpm build
 
-      - name: Copy rust bundle
-        run: cp -r rust/pkg dist
-
       - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
