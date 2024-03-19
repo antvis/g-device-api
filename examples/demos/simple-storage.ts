@@ -43,20 +43,20 @@ export async function render(
   const computeWgsl = /* wgsl */ `
 #import prelude::{screen}
 
-@group(2) @binding(0) var<storage, read_write> stor1 : array<float>;
+@group(2) @binding(0) var<storage, read_write> stor1 : array<f32>;
 
 @compute @workgroup_size(16, 16)
-fn pas(@builtin(global_invocation_id) id: uint3) {
+fn pas(@builtin(global_invocation_id) id: vec3u) {
     let idx = id.y * textureDimensions(screen).x + id.x;
-    stor1[idx] = float(id.x) / float(textureDimensions(screen).x);
+    stor1[idx] = f32(id.x) / f32(textureDimensions(screen).x);
 }
 
 @compute @workgroup_size(16, 16)
-fn main_image(@builtin(global_invocation_id) id: uint3) {
+fn main_image(@builtin(global_invocation_id) id: vec3u) {
     let idx = id.y * textureDimensions(screen).x + id.x;
     let val = stor1[idx];
-    let col = float3(val);
-    textureStore(screen, int2(id.xy), float4(col, 1.));
+    let col = vec3f(val);
+    textureStore(screen, vec2i(id.xy), vec4f(col, 1.));
 }
           `;
 

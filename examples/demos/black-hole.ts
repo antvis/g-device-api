@@ -51,7 +51,7 @@ export async function render(
 
   const screen = device.createTexture({
     // Use F32_RGBA
-    // @see https://www.w3.org/TR/webgpu/#float32-filterable
+    // @see https://www.w3.org/TR/webgpu/#vec3f2-filterable
     // @see https://github.com/compute-toys/wgpu-compute-toy/blob/master/src/bind.rs#L433
     format: Format.F16_RGBA,
     width: $canvas.width,
@@ -134,63 +134,63 @@ const PARTICLE_COUNT = 1000;
 const DEPTH_MIN = 0.2;
 const DEPTH_MAX = 5.0;
 const DEPTH_BITS = 16u;
-const dq = float2(0.0, 1.0);
+const dq = vec2f(0.0, 1.0);
 const eps = 0.01;
 
 const KerrM = 1.0;
 
 struct GeodesicRay
 {    
-    q:  float4,
-    qt: float4,
-    p:  float4,
+    q:  vec4f,
+    qt: vec4f,
+    p:  vec4f,
 }; 
 
-var<private> bokehRad : float;
+var<private> bokehRad : f32;
 
-fn SetCamera(ang: float2, fov: float)
+fn SetCamera(ang: vec2f, fov: f32)
 {
     camera.fov = fov;
     camera.cam = GetCameraMatrix(ang); 
-    camera.pos = - (camera.cam*float3(50.0*custom.Radius+0.5,0.0,0.0));
-    camera.size = float2(textureDimensions(screen));
+    camera.pos = - (camera.cam*vec3f(50.0*custom.Radius+0.5,0.0,0.0));
+    camera.size = vec2f(textureDimensions(screen));
 }
 
-fn KerrGetR2(p: float3) -> float
+fn KerrGetR2(p: vec3f) -> f32
 {
     let rho = dot(p,p) - sqr(custom.KerrA);
     let r2 = 0.5*(rho + sqrt(sqr(rho) + sqr(2.0*custom.KerrA*p.z)));
     return r2;
 }
 
-fn KerrGetK(p: float3) -> float4
+fn KerrGetK(p: vec3f) -> vec4f
 {
     let r2 = KerrGetR2(p);
     let r = sqrt(r2);
     let invr2 = 1.0 / (r2 + sqr(custom.KerrA) + 1e-3); 
-    let  k = float3((r*p.x - custom.KerrA*p.y) * invr2, (r*p.y + custom.KerrA*p.x) * invr2, p.z/(r + 1e-4));
+    let  k = vec3f((r*p.x - custom.KerrA*p.y) * invr2, (r*p.y + custom.KerrA*p.x) * invr2, p.z/(r + 1e-4));
     let f = r2 * (2.0 * KerrM * r - sqr(custom.KerrQ)) / (r2 * r2 + sqr(custom.KerrA * p.z) + 1e-3);
-    return float4(k, f);
+    return vec4f(k, f);
 }
 
-fn G(q: float4) -> float4x4 
+fn G(q: vec4f) -> mat4x4<f32> 
 {
     //Kerr metric in Kerr-Schild coordinates 
     let k = KerrGetK(q.yzw);
-    let kf = k.w*float4(1.0, k.xyz);
-    return diag(float4(-1.0,1.0,1.0,1.0)) + float4x4(kf, k.x*kf, k.y*kf, k.z*kf);    
+    let kf = k.w*vec4f(1.0, k.xyz);
+    return diag(vec4f(-1.0,1.0,1.0,1.0)) + mat4x4<f32>(kf, k.x*kf, k.y*kf, k.z*kf);    
 }
 
-fn Ginv(q: float4) -> float4x4 
+fn Ginv(q: vec4f) -> mat4x4<f32> 
 {
     //inverse of Kerr metric in Kerr-Schild coordinates 
     let k = KerrGetK(q.yzw);
     let kf = k.w*vec4(1.0, -k.xyz)/dot(k.xyz, k.xyz);
-    return diag(float4(-1.0,1.0,1.0,1.0)) + float4x4(-kf, k.x*kf, k.y*kf, k.z*kf); 
+    return diag(vec4f(-1.0,1.0,1.0,1.0)) + mat4x4<f32>(-kf, k.x*kf, k.y*kf, k.z*kf); 
 }
 
 //lagrangian
-fn Lmat(qt: float4, g: float4x4) -> float 
+fn Lmat(qt: vec4f, g: mat4x4<f32>) -> f32 
 {
     return   g[0][0]*qt.x*qt.x + g[1][1]*qt.y*qt.y + g[2][2]*qt.z*qt.z + g[3][3]*qt.w*qt.w +
         2.0*(g[0][1]*qt.x*qt.y + g[0][2]*qt.x*qt.z + g[0][3]*qt.x*qt.w +
@@ -198,22 +198,22 @@ fn Lmat(qt: float4, g: float4x4) -> float
                 g[2][3]*qt.z*qt.w);
 }
 
-fn L(qt: float4, q: float4) -> float 
+fn L(qt: vec4f, q: vec4f) -> f32 
 {
     return Lmat(qt, G(q));
 }
 
-fn H(p: float4, ginv: float4x4) -> float 
+fn H(p: vec4f, ginv: mat4x4<f32>) -> f32 
 {
     return Lmat(p, ginv);
 }
 
-fn  ToMomentum(ray: GeodesicRay) -> float4 
+fn  ToMomentum(ray: GeodesicRay) -> vec4f 
 {
     return G(ray.q)*ray.qt; 
 }
 
-fn  FromMomentum(ray: GeodesicRay) -> float4 
+fn  FromMomentum(ray: GeodesicRay) -> vec4f 
 {
     return Ginv(ray.q)*ray.p; 
 }
@@ -234,27 +234,27 @@ fn GeodesicToParticle(ray: GeodesicRay) -> Particle
     return particle;
 }
 
-fn HamiltonianGradient(ray: GeodesicRay) -> float4 
+fn HamiltonianGradient(ray: GeodesicRay) -> vec4f 
 {
     let ginv = Ginv(ray.q);
     let H0 = H(ray.p, ginv);
     let delta = 0.1; 
-    return (float4(
+    return (vec4f(
         L(ray.qt,ray.q+delta*dq.yxxx),
         L(ray.qt,ray.q+delta*dq.xyxx),
         L(ray.qt,ray.q+delta*dq.xxyx),
         L(ray.qt,ray.q+delta*dq.xxxy)) - H0)/delta;
 }
 
-fn VelClamp(vel: float4) -> float4
+fn VelClamp(vel: vec4f) -> vec4f
 {
-    return vel;//float4(vel.x, vel.yzw / max(1.0, length(vel.yzw)));
+    return vel;//vec4f(vel.x, vel.yzw / max(1.0, length(vel.yzw)));
 }
 
 @compute @workgroup_size(16, 16)
-fn SimulateParticles(@builtin(global_invocation_id) id: uint3) 
+fn SimulateParticles(@builtin(global_invocation_id) id: vec3u) 
 {
-    var pix = int2(id.xy);
+    var pix = vec2i(id.xy);
     var p = LoadParticle(pix);
 
     if(pix.x > PARTICLE_COUNT || pix.y > PARTICLE_COUNT) 
@@ -262,7 +262,7 @@ fn SimulateParticles(@builtin(global_invocation_id) id: uint3)
         return;
     }
     
-    state = uint4(id.x, id.y, id.z, time.frame);
+    state = vec4u(id.x, id.y, id.z, time.frame);
     
     let r = sqrt(KerrGetR2(p.position.yzw));
 
@@ -270,7 +270,7 @@ fn SimulateParticles(@builtin(global_invocation_id) id: uint3)
     {
         let rng = rand4();
         let rng1 = rand4();
-        p.position = 30.0*float4(1.0, 1.0, 1.0, custom.InitThick) * float4(0.0,2.0*rng.xyz - 1.0);
+        p.position = 30.0*vec4f(1.0, 1.0, 1.0, custom.InitThick) * vec4f(0.0,2.0*rng.xyz - 1.0);
 
         let r01 = sqrt(KerrGetR2(p.position.yzw)); 
         if(r01 < 0.9)
@@ -278,11 +278,11 @@ fn SimulateParticles(@builtin(global_invocation_id) id: uint3)
             return;
         }
 
-        var vel = normalize(cross(p.position.yzw, float3(0.0,0.0,1.0)));
+        var vel = normalize(cross(p.position.yzw, vec3f(0.0,0.0,1.0)));
 
         vel += 0.3*(rng1.xyz * 0.5 - 0.25);
         let vscale = clamp(1.0 / (0.2 + 0.08*r01), 0., 1.0);
-        p.velocity = float4(-1.0,2.0*(custom.InitSpeed - 0.5)*vel*vscale);
+        p.velocity = vec4f(-1.0,2.0*(custom.InitSpeed - 0.5)*vel*vscale);
     }
 
    
@@ -294,7 +294,7 @@ fn SimulateParticles(@builtin(global_invocation_id) id: uint3)
     //    // return;
     // }
    
-    for(var i = 0; i < int(custom.Steps*16.0 + 1.0); i++)
+    for(var i = 0; i < i32(custom.Steps*16.0 + 1.0); i++)
     {
         ray.qt = FromMomentum(ray);
         let qt0 = ray.qt;
@@ -308,9 +308,9 @@ fn SimulateParticles(@builtin(global_invocation_id) id: uint3)
 }
 
 @compute @workgroup_size(16, 16)
-fn Clear(@builtin(global_invocation_id) id: uint3) {
-    let screen_size = int2(textureDimensions(screen));
-    let idx0 = int(id.x) + int(screen_size.x * int(id.y));
+fn Clear(@builtin(global_invocation_id) id: vec3u) {
+    let screen_size = vec2i(textureDimensions(screen));
+    let idx0 = i32(id.x) + i32(screen_size.x * i32(id.y));
 
     atomicStore(&atomic_storage[idx0*4+0], 0);
     atomicStore(&atomic_storage[idx0*4+1], 0);
@@ -319,17 +319,17 @@ fn Clear(@builtin(global_invocation_id) id: uint3) {
 }
 
 @compute @workgroup_size(16, 16)
-fn Rasterize(@builtin(global_invocation_id) id: uint3) {
+fn Rasterize(@builtin(global_invocation_id) id: vec3u) {
     // Viewport resolution (in pixels)
-    let screen_size = int2(textureDimensions(screen));
-    let screen_size_f = float2(screen_size);
+    let screen_size = vec2i(textureDimensions(screen));
+    let screen_size_f = vec2f(screen_size);
     
-    let ang = float2(mouse.pos.xy)*float2(-TWO_PI, PI)/screen_size_f + 1e-4;
+    let ang = vec2f(mouse.pos.xy)*vec2f(-TWO_PI, PI)/screen_size_f + 1e-4;
     
     SetCamera(ang, FOV);
 
     //RNG state
-    state = uint4(id.x, id.y, id.z, 0u);
+    state = vec4u(id.x, id.y, id.z, 0u);
     
     let rng = rand4();
     bokehRad = pow(rng.x, custom.BlurExponentA);
@@ -339,7 +339,7 @@ fn Rasterize(@builtin(global_invocation_id) id: uint3) {
         state.w = time.frame;
     }
 
-    var pix = int2(id.xy);
+    var pix = vec2i(id.xy);
 
     if(pix.x > PARTICLE_COUNT || pix.y > PARTICLE_COUNT) 
     {   
@@ -350,53 +350,53 @@ fn Rasterize(@builtin(global_invocation_id) id: uint3) {
 
     var pos = p.position.ywz;
     let vel = abs(p.velocity.ywz);
-    var col = clamp(8.5*abs(vel)*dot(vel,vel)+0.1, float3(0.0), float3(5.0));
+    var col = clamp(8.5*abs(vel)*dot(vel,vel)+0.1, vec3f(0.0), vec3f(5.0));
     col /= (0.1+bokehRad);
     let impSample = (col.x + col.y + col.z)*bokehRad;
-    let sampleCount = clamp(int(impSample*custom.Samples*MaxSamples + 1.0), 1, 1024);
-    let normalCount = int(custom.Samples*MaxSamples + 1.0);
+    let sampleCount = clamp(i32(impSample*custom.Samples*MaxSamples + 1.0), 1, 1024);
+    let normalCount = i32(custom.Samples*MaxSamples + 1.0);
 
-    col *= float(normalCount)/float(sampleCount);
+    col *= f32(normalCount)/f32(sampleCount);
 
     for(var i = 0; i < sampleCount; i++)
     {
         let R = 2.0*custom.BlurRadius*bokehRad;
         let rng = rand4();
-        let dpos = R*normalize(nrand4(1.0, float4(0.0)).xyz)*pow(rng.x, custom.BlurExponentB);
+        let dpos = R*normalize(nrand4(1.0, vec4f(0.0)).xyz)*pow(rng.x, custom.BlurExponentB);
         RasterizePoint(pos + dpos, col);
     }
 }
 
-fn Sample(pos: int2) -> float3
+fn Sample(pos: vec2i) -> vec3f
 {
-    let screen_size = int2(textureDimensions(screen));
+    let screen_size = vec2i(textureDimensions(screen));
     let idx = pos.x + screen_size.x * pos.y;
 
-    var color: float3;
-        let x = float(atomicLoad(&atomic_storage[idx*4+0]))/(256.0);
-        let y = float(atomicLoad(&atomic_storage[idx*4+1]))/(256.0);
-        let z = float(atomicLoad(&atomic_storage[idx*4+2]))/(256.0);
+    var color: vec3f;
+        let x = f32(atomicLoad(&atomic_storage[idx*4+0]))/(256.0);
+        let y = f32(atomicLoad(&atomic_storage[idx*4+1]))/(256.0);
+        let z = f32(atomicLoad(&atomic_storage[idx*4+2]))/(256.0);
         
-        color = tanh(custom.Exposure*0.03*float(screen_size.x)*float3(x,y,z)/(custom.Samples*MaxSamples + 1.0));
+        color = tanh(custom.Exposure*0.03*f32(screen_size.x)*vec3f(x,y,z)/(custom.Samples*MaxSamples + 1.0));
 
     return abs(color);
 }
 
 @compute @workgroup_size(16, 16)
-fn main_image(@builtin(global_invocation_id) id: uint3) 
+fn main_image(@builtin(global_invocation_id) id: vec3u) 
 {
-    let screen_size = uint2(textureDimensions(screen));
+    let screen_size = vec2u(textureDimensions(screen));
 
     // Prevent overdraw for workgroups on the edge of the viewport
     if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
 
     // Pixel coordinates (centre of pixel, origin at bottom left)
-    let fragCoord = float2(float(id.x) + .5, float(id.y) + .5);
+    let fragCoord = vec2f(f32(id.x) + .5, f32(id.y) + .5);
 
   
-    var color = float4(Sample(int2(id.xy)),1.0);
+    var color = vec4f(Sample(vec2i(id.xy)),1.0);
 
-    let oldColor = textureLoad(pass_in, int2(id.xy), 2, 0);
+    let oldColor = textureLoad(pass_in, vec2i(id.xy), 2, 0);
 
     if(mouse.click == 1 && custom.AnimatedNoise > 0.5)
     {
@@ -404,9 +404,9 @@ fn main_image(@builtin(global_invocation_id) id: uint3)
     }
 
     // Output to buffer
-    textureStore(pass_out, int2(id.xy), 2, color);
+    textureStore(pass_out, vec2i(id.xy), 2, color);
 
-    textureStore(screen, int2(id.xy), float4(color.xyz/color.w, 1.));
+    textureStore(screen, vec2i(id.xy), vec4f(color.xyz/color.w, 1.));
 }
           `;
 

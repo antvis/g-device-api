@@ -307,15 +307,15 @@ fn sdPolygon(p: vec2f, v: ptr<function, array<vec2f, 5>>) -> f32 {
   var s: f32 = 1.;
   for (var i: i32 = 0; i < N; i = i + 1) {
     let j = (i + 1) % N;
-    let e = c[i] - c[j];
-    let w = p - c[j];
-    let b = w - e * clamp(dot(w, e) / dot(e, e), 0., 1.);
-    d = min(d, dot(b, b));
-    let c1 = p.y >= c[j].y;
-    let c2 = p.y < c[i].y;
-    let c3 = e.x * w.y > e.y * w.x;
-    let c = vec3<bool>(c1, c2, c3);
-    if (all(c) || all(!c)) { s = -s; };
+    // let e = c[i] - c[j];
+    // let w = p - c[j];
+    // let b = w - e * clamp(dot(w, e) / dot(e, e), 0., 1.);
+  //   d = min(d, dot(b, b));
+  //   let c1 = p.y >= c[j].y;
+  //   let c2 = p.y < c[i].y;
+  //   let c3 = e.x * w.y > e.y * w.x;
+  //   let c = vec3<bool>(c1, c2, c3);
+  //   if (all(c) || all(!c)) { s = -s; };
   }
   return s * sqrt(d);
 }
@@ -449,7 +449,7 @@ fn sdBlobbyCross(pos: vec2f, he: f32) -> f32 {
 }
 
 @compute @workgroup_size(16, 16)
-fn main_image(@builtin(global_invocation_id) id: uint3) {
+fn main_image(@builtin(global_invocation_id) id: vec3<u32>) {
   let screen_size = textureDimensions(screen);
   if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
   let fragCoord = vec2f(f32(id.x) + .5, f32(screen_size.y - id.y) - .5);

@@ -16,6 +16,10 @@ export class WGSLComposer {
   constructor();
 /**
 * @param {string} source
+*/
+  load_composable(source: string): void;
+/**
+* @param {string} source
 * @returns {string}
 */
   wgsl_compile(source: string): string;
@@ -27,11 +31,12 @@ export interface InitOutput {
   readonly memory: WebAssembly.Memory;
   readonly __wbg_wgslcomposer_free: (a: number) => void;
   readonly wgslcomposer_new: () => number;
+  readonly wgslcomposer_load_composable: (a: number, b: number, c: number) => void;
   readonly wgslcomposer_wgsl_compile: (a: number, b: number, c: number, d: number) => void;
   readonly glsl_compile: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
-  readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_malloc: (a: number, b: number) => number;
   readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+  readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
   readonly __wbindgen_free: (a: number, b: number, c: number) => void;
 }
 
