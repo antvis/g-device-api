@@ -27,20 +27,34 @@ impl WGSLComposer {
         }
     }
 
-    pub fn wgsl_compile(&mut self, source: &str) -> String {
-        self.composer.add_composable_module(
+    pub fn load_composable(&mut self, source: &str) {
+        match self.composer.add_composable_module(
             ComposableModuleDescriptor {
                 source: &source,
                 ..Default::default()
             }
-        );
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                show_error(&"add_composable_module", e);
+                panic!();
+            }
+        };
+    }
 
-        let module = self.composer.make_naga_module(
+    pub fn wgsl_compile(&mut self, source: &str) -> String {
+        let module = match self.composer.make_naga_module(
             NagaModuleDescriptor {
                 source: &source,
                 ..Default::default()
             },
-        ).unwrap();
+        ) {
+            Ok(v) => v,
+            Err(e) => {
+                show_error(&"make_naga_module", e);
+                panic!();
+            }
+        };
 
         let info = match naga::valid::Validator::new(naga::valid::ValidationFlags::all(), naga::valid::Capabilities::all())
             .validate(&module)

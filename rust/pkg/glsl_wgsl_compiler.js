@@ -195,6 +195,18 @@ export class WGSLComposer {
   }
   /**
    * @param {string} source
+   */
+  load_composable(source) {
+    const ptr0 = passStringToWasm0(
+      source,
+      wasm.__wbindgen_malloc,
+      wasm.__wbindgen_realloc,
+    );
+    const len0 = WASM_VECTOR_LEN;
+    wasm.wgslcomposer_load_composable(this.__wbg_ptr, ptr0, len0);
+  }
+  /**
+   * @param {string} source
    * @returns {string}
    */
   wgsl_compile(source) {

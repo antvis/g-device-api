@@ -46,12 +46,12 @@ export async function render(
       wgsl: /* wgsl */ `
 #import prelude::{screen, time}
 
-fn sphereMap(p: float3) -> float
+fn sphereMap(p: vec3<f32>) -> f32
 {
     return length(p) - 1.; // distance to a sphere of radius 1
 }
 
-fn rayMarchSphere(ro: float3, rd: float3, tmin: float, tmax: float) -> float
+fn rayMarchSphere(ro: vec3<f32>, rd: vec3<f32>, tmin: f32, tmax: f32) -> f32
 {
     var t = tmin; 
     for(var i=0; i<400; i++ )
@@ -66,27 +66,27 @@ fn rayMarchSphere(ro: float3, rd: float3, tmin: float, tmax: float) -> float
 }
 
 @compute @workgroup_size(16, 16)
-fn main_image(@builtin(global_invocation_id) id: uint3) {
-  let screen_size = uint2(textureDimensions(screen));
-    if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
-    let fragCoord = float2(id.xy) + .5;
-    let resolution = float2(screen_size);
+fn main_image(@builtin(global_invocation_id) id: vec3<u32>) {
+  let screen_size = vec2<u32>(textureDimensions(screen));
+  if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
+  let fragCoord = vec2<f32>(id.xy) + .5;
+  let resolution = vec2<f32>(screen_size);
 
-    var ignore = time.elapsed / time.elapsed; // to avoid rewriting run without the time bindings.
-    var uv = (fragCoord * 2. - resolution.xy) / resolution.y * ignore;
-    // var uv = (fragCoord * 2. - resolution.xy) / resolution.y;
+  var ignore = time.elapsed / time.elapsed; // to avoid rewriting run without the time bindings.
+  var uv = (fragCoord * 2. - resolution.xy) / resolution.y * ignore;
+  // var uv = (fragCoord * 2. - resolution.xy) / resolution.y;
 
-    // camera
-    let ro = vec3(0.0, 0, -3.0);
-    let rd = normalize(vec3(uv, 1.));
+  // camera
+  let ro = vec3(0.0, 0, -3.0);
+  let rd = normalize(vec3(uv, 1.));
 
-    //----------------------------------
-    // raycast terrain and tree envelope
-    //----------------------------------
-    let tmax = 2000.0;
-    let t = rayMarchSphere(ro, rd, 0, tmax);
-    let col = vec3(t * .2);
-    textureStore(screen, int2(id.xy), float4(col, 1.));
+  //----------------------------------
+  // raycast terrain and tree envelope
+  //----------------------------------
+  let tmax = 2000.0;
+  let t = rayMarchSphere(ro, rd, 0.0, tmax);
+  let col = vec3(t * .2);
+  textureStore(screen, vec2<i32>(id.xy), vec4<f32>(col, 1.));
 }
 `,
     },

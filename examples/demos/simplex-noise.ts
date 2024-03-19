@@ -52,13 +52,13 @@ export async function render(
 
 // Simplex Noise 2D: https://www.shadertoy.com/view/Msf3WH
 
-fn hash(p: float2) -> float2 // replace this by something better
+fn hash(p: vec2f) -> vec2f // replace this by something better
 {
-    let p2 = float2( dot(p,float2(127.1,311.7)), dot(p,float2(269.5,183.3)) );
+    let p2 = vec2f( dot(p,vec2f(127.1,311.7)), dot(p,vec2f(269.5,183.3)) );
     return -1.0 + 2.0*fract(sin(p2)*43758.5453123);
 }
 
-fn simplex2d(p: float2) -> float
+fn simplex2d(p: vec2f) -> f32
 {
     let K1 = 0.366025404; // (sqrt(3)-1)/2;
     let K2 = 0.211324865; // (3-sqrt(3))/6;
@@ -67,19 +67,19 @@ fn simplex2d(p: float2) -> float
     let o = step(a.yx,a.xy);
     let b = a - o + K2;
     let c = a - 1.0 + 2.0*K2;
-    let h = max( 0.5-float3(dot(a,a), dot(b,b), dot(c,c) ), float3(0.) );
-    let n = h*h*h*h*float3( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
-    return dot( n, float3(70.0) );
+    let h = max( 0.5-vec3f(dot(a,a), dot(b,b), dot(c,c) ), vec3f(0.) );
+    let n = h*h*h*h*vec3f( dot(a,hash(i+0.0)), dot(b,hash(i+o)), dot(c,hash(i+1.0)));
+    return dot( n, vec3f(70.0) );
 }
 
 
 // Simplex Noise 3D: https://www.shadertoy.com/view/XsX3zB
 
 /* discontinuous pseudorandom uniformly distributed in [-0.5, +0.5]^3 */
-fn random3(c: float3) -> float3
+fn random3(c: vec3f) -> vec3f
 {
     var j = 4096.0*sin(dot(c,vec3(17.0, 59.4, 15.0)));
-    var r = float3(0.);
+    var r = vec3f(0.);
     r.z = fract(512.0*j);
     j *= .125;
     r.x = fract(512.0*j);
@@ -93,7 +93,7 @@ const F3 = 0.3333333;
 const G3 = 0.1666667;
 
 /* 3d simplex noise */
-fn simplex3d(p: float3) -> float
+fn simplex3d(p: vec3f) -> f32
 {
     /* 1. find current tetrahedron T and it's four vertices */
     /* s, s+i1, s+i2, s+1.0 - absolute skewed (integer) coordinates of T vertices */
@@ -114,8 +114,8 @@ fn simplex3d(p: float3) -> float
     let x3 = x - 1.0 + 3.0*G3;
 
     /* 2. find four surflets and store them in d */
-    var w = float4(0.);
-    var d = float4(0.);
+    var w = vec4f(0.);
+    var d = vec4f(0.);
 
     /* calculate surflet weights */
     w.x = dot(x, x);
@@ -124,7 +124,7 @@ fn simplex3d(p: float3) -> float
     w.w = dot(x3, x3);
 
     /* w fades from 0.6 at the center of the surflet to 0.0 at the margin */
-    w = max(0.6 - w, float4(0.0));
+    w = max(0.6 - w, vec4f(0.0));
 
     /* calculate surflet components */
     d.x = dot(random3(s), x);
@@ -147,7 +147,7 @@ const rot2 = mat3x3<f32>(-0.55,-0.39, 0.74, 0.33,-0.91,-0.24,0.77, 0.12,0.63);
 const rot3 = mat3x3<f32>(-0.71, 0.52,-0.47,-0.08,-0.72,-0.68,-0.7,-0.45,0.56);
 
 /* directional artifacts can be reduced by rotating each octave */
-fn simplex3d_fractal(m: float3) -> float
+fn simplex3d_fractal(m: vec3f) -> f32
 {
     return   0.5333333*simplex3d(m*rot1)
             +0.2666667*simplex3d(2.0*m*rot2)
@@ -156,15 +156,15 @@ fn simplex3d_fractal(m: float3) -> float
 }
       
 @compute @workgroup_size(16, 16)
-fn main_image(@builtin(global_invocation_id) id: uint3) {
-    let screen_size = uint2(textureDimensions(screen));
+fn main_image(@builtin(global_invocation_id) id: vec3u) {
+    let screen_size = vec2u(textureDimensions(screen));
     if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
-    let fragCoord = float2(id.xy) + .5;
-    let resolution = float2(screen_size);
+    let fragCoord = vec2f(id.xy) + .5;
+    let resolution = vec2f(screen_size);
     let p = fragCoord / resolution.x;
-    let p3 = float3(p, time.elapsed*0.025);
+    let p3 = vec3f(p, time.elapsed*0.025);
 
-    var uv = p * float2(resolution.x / resolution.y, 1.) + time.elapsed * .25;
+    var uv = p * vec2f(resolution.x / resolution.y, 1.) + time.elapsed * .25;
     var f = 0.;
     if (p.x < .6) { // left: value noise
         //f = simplex2d( 16.0*uv );
@@ -182,7 +182,7 @@ fn main_image(@builtin(global_invocation_id) id: uint3) {
     f *= smoothstep( 0.0, 0.005, abs(p.x - 0.6) );
 
     f = pow(f, 2.2); // perceptual gradient to linear colour space
-    textureStore(screen, int2(id.xy), float4(f, f, f, 1.));
+    textureStore(screen, vec2i(id.xy), vec4f(f, f, f, 1.));
 }
 
       `,

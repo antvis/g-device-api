@@ -35,7 +35,7 @@ export async function render(
 
   const screen = device.createTexture({
     // Use F32_RGBA
-    // @see https://www.w3.org/TR/webgpu/#float32-filterable
+    // @see https://www.w3.org/TR/webgpu/#vec3f2-filterable
     // @see https://github.com/compute-toys/wgpu-compute-toy/blob/master/src/bind.rs#L433
     format: Format.F16_RGBA,
     width: $canvas.width,
@@ -90,91 +90,91 @@ export async function render(
 // 2022 David A Roberts <https://davidar.io/>
 
 // https://www.shadertoy.com/view/4djSRW
-fn hash44(p: float4) -> float4 {
-    var p4 = fract(p * float4(.1031, .1030, .0973, .1099));
+fn hash44(p: vec4f) -> vec4f {
+    var p4 = fract(p * vec4f(.1031, .1030, .0973, .1099));
     p4 = p4 + dot(p4, p4.wzxy+33.33);
     return fract((p4.xxyz+p4.yzzw)*p4.zywx);
 }
 
 const dt = 1.;
-const n = float2(0., 1.);
-const e = float2(1., 0.);
-const s = float2(0., -1.);
-const w = float2(-1., 0.);
+const n = vec2f(0., 1.);
+const e = vec2f(1., 0.);
+const s = vec2f(0., -1.);
+const w = vec2f(-1., 0.);
 
-fn A(fragCoord: float2) -> float4 {
-    return passLoad(0, int2(fragCoord), 0);
+fn A(fragCoord: vec2f) -> vec4f {
+    return passLoad(0, vec2i(fragCoord), 0);
 }
 
-fn B(fragCoord: float2) -> float4 {
-    return passSampleLevelBilinearRepeat(1, fragCoord / float2(textureDimensions(screen)), 0.);
+fn B(fragCoord: vec2f) -> vec4f {
+    return passSampleLevelBilinearRepeat(1, fragCoord / vec2f(textureDimensions(screen)), 0.);
 }
 
-fn T(fragCoord: float2) -> float4 {
+fn T(fragCoord: vec2f) -> vec4f {
     return B(fragCoord - dt * B(fragCoord).xy);
 }
 
 @compute @workgroup_size(16, 16)
-fn main_velocity(@builtin(global_invocation_id) id: uint3) {
-    let screen_size = uint2(textureDimensions(screen));
+fn main_velocity(@builtin(global_invocation_id) id: vec3u) {
+    let screen_size = vec2u(textureDimensions(screen));
     if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
-    let u = float2(id.xy) + 0.5;
+    let u = vec2f(id.xy) + 0.5;
     var r = T(u);
     r.x = r.x - dt * 0.25 * (T(u+e).z - T(u+w).z);
     r.y = r.y - dt * 0.25 * (T(u+n).z - T(u+s).z);
 
-    if (u32(time.frame) < 3u) { r = float4(0.); }
-    passStore(0, int2(id.xy), r);
+    if (u32(time.frame) < 3u) { r = vec4f(0.); }
+    passStore(0, vec2i(id.xy), r);
 }
 
 @compute @workgroup_size(16, 16)
-fn main_pressure(@builtin(global_invocation_id) id: uint3) {
-    let screen_size = uint2(textureDimensions(screen));
+fn main_pressure(@builtin(global_invocation_id) id: vec3u) {
+    let screen_size = vec2u(textureDimensions(screen));
     if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
-    let u = float2(id.xy) + 0.5;
+    let u = vec2f(id.xy) + 0.5;
     var r = A(u);
     r.z = r.z - dt * 0.25 * (A(u+e).x - A(u+w).x + A(u+n).y - A(u+s).y);
 
-    let t = float(time.frame) / 120.;
-    let o = float2(screen_size)/2. * (1. + .75 * float2(cos(t/15.), sin(2.7*t/15.)));
-    r = mix(r, float4(0.5 * sin(dt * 2. * t) * sin(dt * t), 0., r.z, 1.), exp(-0.2 * length(u - o)));
-    passStore(1, int2(id.xy), r);
+    let t = f32(time.frame) / 120.;
+    let o = vec2f(screen_size)/2. * (1. + .75 * vec2f(cos(t/15.), sin(2.7*t/15.)));
+    r = mix(r, vec4f(0.5 * sin(dt * 2. * t) * sin(dt * t), 0., r.z, 1.), exp(-0.2 * length(u - o)));
+    passStore(1, vec2i(id.xy), r);
 }
 
 @compute @workgroup_size(16, 16)
-fn main_caustics(@builtin(global_invocation_id) id: uint3) {
-    let screen_size = uint2(textureDimensions(screen));
+fn main_caustics(@builtin(global_invocation_id) id: vec3u) {
+    let screen_size = vec2u(textureDimensions(screen));
     if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
     for (var i = 0; i < 25; i = i+1) {
-        let h = hash44(float4(float2(id.xy), float(time.frame), float(i)));
-        var p = float2(id.xy) + h.xy;
+        let h = hash44(vec4f(vec2f(id.xy), f32(time.frame), f32(i)));
+        var p = vec2f(id.xy) + h.xy;
         let z = mix(.3, 1., h.z);
-        let c = max(cos(z*6.2+float4(1.,2.,3.,4.)),float4(0.));
-        let grad = 0.25 * float2(B(p+e).z - B(p+w).z, B(p+n).z - B(p+s).z);
+        let c = max(cos(z*6.2+vec4f(1.,2.,3.,4.)),vec4f(0.));
+        let grad = 0.25 * vec2f(B(p+e).z - B(p+w).z, B(p+n).z - B(p+s).z);
         p = p + 1e5 * grad * z;
-        p = fract(p / float2(screen_size)) * float2(screen_size);
-        let idx = int(p.x) + int(p.y) * int(screen_size.x);
-        atomicAdd(&atomic_storage[idx*4+0], int(c.x * 256.));
-        atomicAdd(&atomic_storage[idx*4+1], int(c.y * 256.));
-        atomicAdd(&atomic_storage[idx*4+2], int(c.z * 256.));
+        p = fract(p / vec2f(screen_size)) * vec2f(screen_size);
+        let idx = i32(p.x) + i32(p.y) * i32(screen_size.x);
+        atomicAdd(&atomic_storage[idx*4+0], i32(c.x * 256.));
+        atomicAdd(&atomic_storage[idx*4+1], i32(c.y * 256.));
+        atomicAdd(&atomic_storage[idx*4+2], i32(c.z * 256.));
     }
 }
 
 @compute @workgroup_size(16, 16)
-fn main_image(@builtin(global_invocation_id) id: uint3) {
-    let screen_size = uint2(textureDimensions(screen));
+fn main_image(@builtin(global_invocation_id) id: vec3u) {
+    let screen_size = vec2u(textureDimensions(screen));
     if (id.x >= screen_size.x || id.y >= screen_size.y) { return; }
-    let idx = int(id.x) + int(id.y) * int(screen_size.x);
-    let x = float(atomicLoad(&atomic_storage[idx*4+0]));
-    let y = float(atomicLoad(&atomic_storage[idx*4+1]));
-    let z = float(atomicLoad(&atomic_storage[idx*4+2]));
-    var r = float3(x, y, z) / 256.;
+    let idx = i32(id.x) + i32(id.y) * i32(screen_size.x);
+    let x = f32(atomicLoad(&atomic_storage[idx*4+0]));
+    let y = f32(atomicLoad(&atomic_storage[idx*4+1]));
+    let z = f32(atomicLoad(&atomic_storage[idx*4+2]));
+    var r = vec3f(x, y, z) / 256.;
     r = r * sqrt(r) / 5e3;
-    r = r * float3(.5, .75, 1.);
-    textureStore(screen, int2(id.xy), float4(r, 1.));
-    atomicStore(&atomic_storage[idx*4+0], int(x * .9));
-    atomicStore(&atomic_storage[idx*4+1], int(y * .9));
-    atomicStore(&atomic_storage[idx*4+2], int(z * .9));
+    r = r * vec3f(.5, .75, 1.);
+    textureStore(screen, vec2i(id.xy), vec4f(r, 1.));
+    atomicStore(&atomic_storage[idx*4+0], i32(x * .9));
+    atomicStore(&atomic_storage[idx*4+1], i32(y * .9));
+    atomicStore(&atomic_storage[idx*4+2], i32(z * .9));
 }
 
         `;
