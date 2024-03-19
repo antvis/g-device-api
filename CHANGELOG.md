@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.7
+
+### Patch Changes
+
+-   c4f1bb3: Copy rust bundle.
+
 ## 1.6.6
 
 ### Patch Changes
