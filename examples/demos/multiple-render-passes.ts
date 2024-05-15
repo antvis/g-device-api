@@ -306,11 +306,15 @@ void main() {
       cancelAnimationFrame(id);
     }
     program.destroy();
+    program2.destroy();
     vertexBuffer.destroy();
+    vertexBuffer2.destroy();
     uniformBuffer.destroy();
     inputLayout.destroy();
+    inputLayout2.destroy();
     bindings.destroy();
     pipeline.destroy();
+    pipeline2.destroy();
     mainColorRT.destroy();
     mainDepthRT.destroy();
     device.destroy();
