@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.9
+
+### Patch Changes
+
+-   86536cf: Pass through antialias option when creating webgl context.
+
 ## 1.6.8
 
 ### Patch Changes
