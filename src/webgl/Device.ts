@@ -2050,12 +2050,15 @@ export class Device_GL implements SwapChain, Device {
       currentMegaState.stencilWrite = newMegaState.stencilWrite;
     }
 
+    let shouldApplyStencil = false;
     if (
       !stencilFaceStateEquals(
         currentMegaState.stencilFront,
         newMegaState.stencilFront,
       )
     ) {
+      shouldApplyStencil = true;
+
       const { passOp, failOp, depthFailOp, compare } =
         newMegaState.stencilFront;
 
@@ -2083,6 +2086,8 @@ export class Device_GL implements SwapChain, Device {
         newMegaState.stencilBack,
       )
     ) {
+      shouldApplyStencil = true;
+
       const { passOp, failOp, depthFailOp, compare } = newMegaState.stencilBack;
 
       if (
@@ -2107,17 +2112,14 @@ export class Device_GL implements SwapChain, Device {
       currentMegaState.stencilFront.mask !== newMegaState.stencilFront.mask ||
       currentMegaState.stencilBack.mask !== newMegaState.stencilBack.mask
     ) {
+      shouldApplyStencil = true;
       currentMegaState.stencilFront.mask = newMegaState.stencilFront.mask;
       currentMegaState.stencilBack.mask = newMegaState.stencilBack.mask;
-      this.applyStencil();
     }
 
-    // if (
-    //   currentMegaState.stencilCompare !== newMegaState.stencilCompare
-    // ) {
-    //   currentMegaState.stencilCompare = newMegaState.stencilCompare;
-    //   this.setStencilReference(newMegaState.stencilRef);
-    // }
+    if (shouldApplyStencil) {
+      this.applyStencil();
+    }
 
     if (currentMegaState.cullMode !== newMegaState.cullMode) {
       if (currentMegaState.cullMode === CullMode.NONE) {
