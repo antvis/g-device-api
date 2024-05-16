@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.10
+
+### Patch Changes
+
+-   1c7791e: Support stencil union, intersection and mask.
+
 ## 1.6.9
 
 ### Patch Changes
