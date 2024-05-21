@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.11
+
+### Patch Changes
+
+-   533ee21: Support polygonOffsetFactor and units.
+
 ## 1.6.10
 
 ### Patch Changes
