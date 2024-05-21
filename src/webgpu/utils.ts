@@ -424,8 +424,12 @@ export function translateDepthStencilState(
     format: translateTextureFormat(format),
     depthWriteEnabled: !!megaStateDescriptor.depthWrite,
     depthCompare: translateCompareFunction(megaStateDescriptor.depthCompare),
-    depthBias: megaStateDescriptor.polygonOffset ? 1 : 0,
-    depthBiasSlopeScale: megaStateDescriptor.polygonOffset ? 1 : 0,
+    depthBias: megaStateDescriptor.polygonOffset
+      ? megaStateDescriptor.polygonOffsetUnits
+      : 0,
+    depthBiasSlopeScale: megaStateDescriptor.polygonOffset
+      ? megaStateDescriptor.polygonOffsetFactor
+      : 0,
     stencilFront: {
       compare: translateCompareFunction(
         megaStateDescriptor.stencilFront.compare,
