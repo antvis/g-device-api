@@ -521,6 +521,8 @@ interface MegaStateDescriptor {
     cullMode?: CullMode;
     frontFace?: FrontFace;
     polygonOffset?: boolean;
+    polygonOffsetFactor?: number;
+    polygonOffsetUnits?: number;
 }
 ```
 

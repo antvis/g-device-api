@@ -180,7 +180,9 @@ function megaStateDescriptorEquals(
     a.stencilWrite === b.stencilWrite &&
     a.cullMode === b.cullMode &&
     a.frontFace === b.frontFace &&
-    a.polygonOffset === b.polygonOffset
+    a.polygonOffset === b.polygonOffset &&
+    a.polygonOffsetFactor === b.polygonOffsetFactor &&
+    a.polygonOffsetUnits === b.polygonOffsetUnits
   );
 }
 
