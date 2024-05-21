@@ -2145,12 +2145,24 @@ export class Device_GL implements SwapChain, Device {
 
     if (currentMegaState.polygonOffset !== newMegaState.polygonOffset) {
       if (newMegaState.polygonOffset) {
-        gl.polygonOffset(1, 1);
         gl.enable(gl.POLYGON_OFFSET_FILL);
       } else {
         gl.disable(gl.POLYGON_OFFSET_FILL);
       }
       currentMegaState.polygonOffset = newMegaState.polygonOffset;
+    }
+
+    if (
+      currentMegaState.polygonOffsetFactor !==
+        newMegaState.polygonOffsetFactor ||
+      currentMegaState.polygonOffsetUnits !== newMegaState.polygonOffsetUnits
+    ) {
+      gl.polygonOffset(
+        newMegaState.polygonOffsetFactor,
+        newMegaState.polygonOffsetUnits,
+      );
+      currentMegaState.polygonOffsetFactor = newMegaState.polygonOffsetFactor;
+      currentMegaState.polygonOffsetUnits = newMegaState.polygonOffsetUnits;
     }
   }
 

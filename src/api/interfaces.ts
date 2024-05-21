@@ -576,6 +576,8 @@ export interface MegaStateDescriptor {
   cullMode?: CullMode;
   frontFace?: FrontFace;
   polygonOffset?: boolean;
+  polygonOffsetFactor?: number;
+  polygonOffsetUnits?: number;
 }
 
 export interface PipelineDescriptor {

@@ -182,6 +182,14 @@ export function setMegaStateFlags(
   dst.cullMode = fallbackUndefined(src.cullMode, dst.cullMode);
   dst.frontFace = fallbackUndefined(src.frontFace, dst.frontFace);
   dst.polygonOffset = fallbackUndefined(src.polygonOffset, dst.polygonOffset);
+  dst.polygonOffsetFactor = fallbackUndefined(
+    src.polygonOffsetFactor,
+    dst.polygonOffsetFactor,
+  );
+  dst.polygonOffsetUnits = fallbackUndefined(
+    src.polygonOffsetUnits,
+    dst.polygonOffsetUnits,
+  );
 }
 
 export function copyMegaState(src: MegaStateDescriptor): MegaStateDescriptor {
@@ -269,6 +277,8 @@ export const defaultMegaState: MegaStateDescriptor = {
   cullMode: CullMode.NONE,
   frontFace: FrontFace.CCW,
   polygonOffset: false,
+  polygonOffsetFactor: 0,
+  polygonOffsetUnits: 0,
 };
 
 export function makeMegaState(
