@@ -155,6 +155,16 @@ void main() {
     ],
   });
 
+  const bindings2 = device.createBindings({
+    pipeline: pipeline2,
+    uniformBufferBindings: [
+      {
+        binding: 0,
+        buffer: uniformBuffer,
+      },
+    ],
+  });
+
   const mainColorRT = device.createRenderTargetFromTexture(
     device.createTexture({
       format: Format.U8_RGBA_RT,
@@ -249,7 +259,7 @@ void main() {
         null,
       );
       renderPass2.setViewport(0, 0, $canvas.width, $canvas.height);
-      renderPass2.setBindings(bindings);
+      renderPass2.setBindings(bindings2);
       renderPass2.draw(cubeVertexCount);
 
       device.submitPass(renderPass2);
@@ -275,6 +285,8 @@ void main() {
     inputLayout.destroy();
     bindings.destroy();
     pipeline.destroy();
+    bindings2.destroy();
+    pipeline2.destroy();
     mainColorRT.destroy();
     mainDepthRT.destroy();
     device.destroy();
@@ -286,5 +298,5 @@ void main() {
 
 render.params = {
   targets: ['webgl1', 'webgl2', 'webgpu'],
-  default: 'webgpu',
+  default: 'webgl2',
 };
