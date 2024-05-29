@@ -13,6 +13,7 @@ import {
   TransparentBlack,
   CompareFunction,
   ViewportOrigin,
+  Readback,
 } from '../../src';
 import { vec3, mat4 } from 'gl-matrix';
 import {
@@ -43,6 +44,7 @@ layout(std140) uniform Uniforms {
 
 layout(std140) uniform PickingUniforms {
   float u_IsPicking;
+  float u_IsHighLighting;
 };
 
 layout(location = 0) in vec3 a_Position;
@@ -63,13 +65,14 @@ layout(std140) uniform Uniforms {
 
 layout(std140) uniform PickingUniforms {
   float u_IsPicking;
+  float u_IsHighLighting;
 };
 
 in vec4 v_Position;
 out vec4 outputColor;
 
 void main() {
-  outputColor = u_IsPicking == 1.0 ? vec4(1.0, 0.0, 0.0, 1.0) : v_Position;
+  outputColor = u_IsPicking == 1.0 ? vec4(1.0, 0.0, 0.0, 1.0) : (u_IsHighLighting == 1.0 ? vec4(0.0, 1.0, 0.0, 1.0) : v_Position);
 }
 `,
     },
@@ -86,7 +89,7 @@ void main() {
     hint: BufferFrequencyHint.DYNAMIC,
   });
   const pickingUniformBuffer = device.createBuffer({
-    viewOrSize: 4, // mat4
+    viewOrSize: 2 * 4, // 2 floats
     usage: BufferUsage.UNIFORM,
     hint: BufferFrequencyHint.DYNAMIC,
   });
@@ -220,6 +223,7 @@ void main() {
       usage: TextureUsage.RENDER_TARGET,
     }),
   );
+  const readback = device.createReadback();
 
   const frame = () => {
     const aspect = $canvas.width / $canvas.height;
@@ -247,11 +251,13 @@ void main() {
     );
     pickingUniformBuffer.setSubData(
       0,
-      new Uint8Array(new Float32Array([0]).buffer),
+      new Uint8Array(new Float32Array([0, 0]).buffer),
     );
     // WebGL1 need this
     program.setUniformsLegacy({
       u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
+      u_IsPicking: 0,
+      u_IsHighLighting: 0,
     });
 
     /**
@@ -284,85 +290,117 @@ void main() {
     renderPass.draw(cubeVertexCount);
     device.submitPass(renderPass);
     device.endFrame();
-
-    const readback = device.createReadback();
-    $canvas.addEventListener('mousemove', async (e) => {
-      pickingUniformBuffer.setSubData(
-        0,
-        new Uint8Array(new Float32Array([1]).buffer),
-      );
-
-      device.beginFrame();
-      const renderPass2 = device.createRenderPass({
-        colorAttachment: [pickingColorRT],
-        colorResolveTo: [null],
-        colorClearColor: [TransparentWhite],
-        colorStore: [true],
-        depthStencilAttachment: pickingDepthRT,
-        depthClearValue: 1,
-      });
-      renderPass2.setPipeline(pipeline2);
-      renderPass2.setVertexInput(
-        inputLayout,
-        [
-          {
-            buffer: vertexBuffer,
-          },
-        ],
-        null,
-      );
-      renderPass2.setViewport(0, 0, $canvas.width, $canvas.height);
-      renderPass2.setBindings(bindings2);
-      renderPass2.draw(cubeVertexCount);
-      device.submitPass(renderPass2);
-      device.endFrame();
-
-      const dpr = window.devicePixelRatio;
-      const pixel = await readback.readTexture(
-        // mainColorTexture,
-        pickingColorTexture,
-        e.offsetX * dpr,
-        queryVendorInfo.viewportOrigin === ViewportOrigin.LOWER_LEFT
-          ? 1000 - e.offsetY * dpr
-          : e.offsetY * dpr,
-        1,
-        1,
-        new Uint8ClampedArray(1 * 1 * 4),
-      );
-      console.log(pixel);
-
-      pickingUniformBuffer.setSubData(
-        0,
-        new Uint8Array(new Float32Array([0]).buffer),
-      );
-
-      const onscreenTexture = swapChain.getOnscreenTexture();
-      device.beginFrame();
-      const renderPass = device.createRenderPass({
-        colorAttachment: [mainColorRT],
-        colorResolveTo: [onscreenTexture],
-        colorClearColor: [TransparentWhite],
-        depthStencilAttachment: mainDepthRT,
-        depthClearValue: 1,
-      });
-
-      renderPass.setPipeline(pipeline);
-      renderPass.setVertexInput(
-        inputLayout,
-        [
-          {
-            buffer: vertexBuffer,
-          },
-        ],
-        null,
-      );
-      renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
-      renderPass.setBindings(bindings);
-      renderPass.draw(cubeVertexCount);
-      device.submitPass(renderPass);
-      device.endFrame();
-    });
   };
+
+  $canvas.addEventListener('mousemove', async (e) => {
+    pickingUniformBuffer.setSubData(
+      0,
+      new Uint8Array(new Float32Array([1, 0]).buffer),
+    );
+    program.setUniformsLegacy({
+      u_IsPicking: 1,
+      u_IsHighLighting: 0,
+    });
+
+    device.beginFrame();
+    const renderPass2 = device.createRenderPass({
+      colorAttachment: [pickingColorRT],
+      colorResolveTo: [null],
+      colorClearColor: [TransparentWhite],
+      colorStore: [true],
+      depthStencilAttachment: pickingDepthRT,
+      depthClearValue: 1,
+    });
+    renderPass2.setPipeline(pipeline2);
+    renderPass2.setVertexInput(
+      inputLayout,
+      [
+        {
+          buffer: vertexBuffer,
+        },
+      ],
+      null,
+    );
+    renderPass2.setViewport(0, 0, $canvas.width, $canvas.height);
+    renderPass2.setBindings(bindings2);
+    renderPass2.draw(cubeVertexCount);
+    device.submitPass(renderPass2);
+    device.endFrame();
+
+    const dpr = window.devicePixelRatio;
+    // const pixel = readback.readTextureSync(
+    const pixel = (await readback.readTexture(
+      pickingColorTexture,
+      e.offsetX * dpr,
+      queryVendorInfo.platformString === 'WebGPU'
+        ? 1000 - e.offsetY * dpr
+        : e.offsetY * dpr,
+      1,
+      1,
+      new Uint8ClampedArray(1 * 1 * 4),
+    )) as Uint8ClampedArray | Uint8Array;
+
+    // Since we use U8_RGBA_RT format in render target, need to change bgranorm -> rgba here.
+    if (queryVendorInfo.platformString === 'WebGPU') {
+      for (let j = 0; j < pixel.length; j += 4) {
+        // Switch b and r components.
+        const t = pixel[j];
+        pixel[j] = pixel[j + 2];
+        pixel[j + 2] = t;
+      }
+    }
+
+    if (
+      pixel[0] === 255 &&
+      pixel[1] === 0 &&
+      pixel[2] === 0 &&
+      pixel[3] === 255
+    ) {
+      pickingUniformBuffer.setSubData(
+        0,
+        new Uint8Array(new Float32Array([0, 1]).buffer),
+      );
+      program.setUniformsLegacy({
+        u_IsPicking: 0,
+        u_IsHighLighting: 1,
+      });
+    } else {
+      pickingUniformBuffer.setSubData(
+        0,
+        new Uint8Array(new Float32Array([0, 0]).buffer),
+      );
+      program.setUniformsLegacy({
+        u_IsPicking: 0,
+        u_IsHighLighting: 0,
+      });
+    }
+
+    const onscreenTexture = swapChain.getOnscreenTexture();
+    device.beginFrame();
+    const renderPass = device.createRenderPass({
+      colorAttachment: [mainColorRT],
+      colorResolveTo: [onscreenTexture],
+      colorClearColor: [TransparentWhite],
+      depthStencilAttachment: mainDepthRT,
+      depthClearValue: 1,
+    });
+
+    renderPass.setPipeline(pipeline);
+    renderPass.setVertexInput(
+      inputLayout,
+      [
+        {
+          buffer: vertexBuffer,
+        },
+      ],
+      null,
+    );
+    renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
+    renderPass.setBindings(bindings);
+    renderPass.draw(cubeVertexCount);
+    device.submitPass(renderPass);
+    device.endFrame();
+  });
 
   frame();
 
@@ -370,11 +408,17 @@ void main() {
     program.destroy();
     vertexBuffer.destroy();
     uniformBuffer.destroy();
+    pickingUniformBuffer.destroy();
     inputLayout.destroy();
     bindings.destroy();
+    bindings2.destroy();
     pipeline.destroy();
+    pipeline2.destroy();
     mainColorRT.destroy();
     mainDepthRT.destroy();
+    pickingColorRT.destroy();
+    pickingDepthRT.destroy();
+    readback.destroy();
     device.destroy();
 
     // For debug.
@@ -384,5 +428,5 @@ void main() {
 
 render.params = {
   targets: ['webgl1', 'webgl2', 'webgpu'],
-  default: 'webgpu',
+  default: 'webgl2',
 };
