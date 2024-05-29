@@ -18,7 +18,7 @@ export async function initExample(
 
   const deviceContributionWebGL1 = new WebGLDeviceContribution({
     targets: ['webgl1'],
-    antialias: true,
+    // antialias: true,
     xrCompatible: params.xrCompatible,
     shaderDebug: true,
     trackResources: true,
@@ -28,7 +28,7 @@ export async function initExample(
   });
   const deviceContributionWebGL2 = new WebGLDeviceContribution({
     targets: ['webgl2', 'webgl1'],
-    antialias: true,
+    // antialias: true,
     xrCompatible: params.xrCompatible,
     shaderDebug: true,
     trackResources: true,
