@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.12
+
+### Patch Changes
+
+-   2887287: Reset binding framebuffer when skiping blit.
+
 ## 1.6.11
 
 ### Patch Changes
