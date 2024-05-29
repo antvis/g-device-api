@@ -1513,7 +1513,6 @@ export class Device_GL implements SwapChain, Device {
     toScreen = false,
   ): void {
     const gl = this.gl;
-
     if (!toScreen) {
       if (isWebGL2(gl)) {
         gl.bindFramebuffer(GL.DRAW_FRAMEBUFFER, this.renderPassDrawFramebuffer);
@@ -1568,6 +1567,8 @@ export class Device_GL implements SwapChain, Device {
           );
         }
       }
+    } else {
+      gl.bindFramebuffer(GL.FRAMEBUFFER, null);
     }
     this.currentColorAttachments.length = numColorAttachments;
   }
