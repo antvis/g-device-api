@@ -47,3 +47,4 @@ export { render as SetImageData } from './set-image-data';
 export { render as RenderBundle } from './render-bundle';
 export { render as Raymarching } from './raymarching';
 export { render as PolygonOffset } from './polygon-offset';
+// export { render as SDFText } from './sdf-text';
