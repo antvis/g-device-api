@@ -120,8 +120,10 @@ export function translateTextureFormat(format: Format): GPUTextureFormat {
 export function translateTextureDimension(
   dimension: TextureDimension,
 ): GPUTextureDimension {
-  if (dimension === TextureDimension.TEXTURE_2D) return '2d';
+  if (dimension === TextureDimension.TEXTURE_1D) return '1d';
+  else if (dimension === TextureDimension.TEXTURE_2D) return '2d';
   else if (dimension === TextureDimension.TEXTURE_CUBE_MAP) return '2d';
+  else if (dimension === TextureDimension.TEXTURE_CUBE_MAP_ARRAY) return '2d';
   else if (dimension === TextureDimension.TEXTURE_2D_ARRAY) return '2d';
   else if (dimension === TextureDimension.TEXTURE_3D) return '3d';
   else throw new Error('whoops');

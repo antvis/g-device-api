@@ -121,11 +121,17 @@ export class Texture_WebGPU
   /**
    * @see https://toji.dev/webgpu-best-practices/img-textures
    */
-  setImageData(datas: (TexImageSource | BufferSource)[], lod = 0) {
+  setImageData(
+    datas: (TexImageSource | BufferSource)[],
+    lod = 0,
+    origin?: [number, number] | [number, number, number],
+    size?: [number, number] | [number, number, number],
+  ) {
     const { device } = this.device;
     let texture: GPUTexture;
-    let width: number;
-    let height: number;
+    let width = size?.[0] || this.width;
+    let height = size?.[1] || this.height;
+    let depthOrArrayLayers = size?.[2] || 1;
 
     if (this.isImageBitmapOrCanvases(datas)) {
       [texture, width, height] = this.textureFromImageBitmapOrCanvas(
@@ -143,19 +149,27 @@ export class Texture_WebGPU
         this.gpuTextureformat,
       );
       const bytesPerRow =
-        Math.ceil(this.width / blockInformation.width) *
-        blockInformation.length;
+        Math.ceil(width / blockInformation.width) * blockInformation.length;
       // TODO: support ArrayBufferView[]
       datas.forEach((data) => {
         device.queue.writeTexture(
-          { texture: this.gpuTexture },
+          {
+            texture: this.gpuTexture,
+            mipLevel: lod,
+            origin: {
+              x: origin?.[0] || 0,
+              y: origin?.[1] || 0,
+              z: origin?.[2] || 0,
+            },
+          },
           data as BufferSource,
           {
             bytesPerRow,
           },
           {
-            width: this.width,
-            height: this.height,
+            width,
+            height,
+            depthOrArrayLayers,
           },
         );
       });

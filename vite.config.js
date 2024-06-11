@@ -11,4 +11,5 @@ export default defineConfig({
     global: {},
   },
   plugins: [wasm(), topLevelAwait()],
+  assetsInclude: ['**/*.dds'],
 });

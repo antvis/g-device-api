@@ -30,6 +30,12 @@ devDependencies:
   '@commitlint/config-angular':
     specifier: ^9.1.2
     version: 9.1.2
+  '@loaders.gl/core':
+    specifier: ^4.2.2
+    version: 4.2.2
+  '@loaders.gl/textures':
+    specifier: ^4.2.2
+    version: 4.2.2(@loaders.gl/core@4.2.2)
   '@playwright/test':
     specifier: ^1.39.0
     version: 1.39.0
@@ -1414,6 +1420,67 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
+  /@loaders.gl/core@4.2.2:
+    resolution: {integrity: sha512-d3YElSsqL29MaiOwzGB97v994SPotbTvJnooCqoQsYGoYYrECdIetv1/zlfDsh5UB2Wl/NaUMJrzyOqlLmDz5Q==}
+    dependencies:
+      '@loaders.gl/loader-utils': 4.2.2(@loaders.gl/core@4.2.2)
+      '@loaders.gl/schema': 4.2.2(@loaders.gl/core@4.2.2)
+      '@loaders.gl/worker-utils': 4.2.2(@loaders.gl/core@4.2.2)
+      '@probe.gl/log': 4.0.9
+    dev: true
+
+  /@loaders.gl/images@4.2.2(@loaders.gl/core@4.2.2):
+    resolution: {integrity: sha512-R53rkexvVT0i4YXt++r8gLq3reB6kWTLvdJL81J3R4YJbM5+kNSe40jJOA94LFYlsTN+oirF4lkLTe5YXGZPYQ==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.0.0
+    dependencies:
+      '@loaders.gl/core': 4.2.2
+      '@loaders.gl/loader-utils': 4.2.2(@loaders.gl/core@4.2.2)
+    dev: true
+
+  /@loaders.gl/loader-utils@4.2.2(@loaders.gl/core@4.2.2):
+    resolution: {integrity: sha512-5udJQhFx1KNIcRBYkFMi8QZitAsK+m3PkZ9GejM8VpOSsJUHD2Yal3wBHOPTRsOjQ0zXG/nqM7BHOojjeetNTg==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.0.0
+    dependencies:
+      '@loaders.gl/core': 4.2.2
+      '@loaders.gl/schema': 4.2.2(@loaders.gl/core@4.2.2)
+      '@loaders.gl/worker-utils': 4.2.2(@loaders.gl/core@4.2.2)
+      '@probe.gl/stats': 4.0.9
+    dev: true
+
+  /@loaders.gl/schema@4.2.2(@loaders.gl/core@4.2.2):
+    resolution: {integrity: sha512-vrQ6vlGWWptJXDP1DrL5x/j70xmyt2l36QZcGyDYptrohTGvQLc3yrOEHuD5v96fXX5WR619pT3zSYhuf1FnIg==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.0.0
+    dependencies:
+      '@loaders.gl/core': 4.2.2
+      '@types/geojson': 7946.0.14
+    dev: true
+
+  /@loaders.gl/textures@4.2.2(@loaders.gl/core@4.2.2):
+    resolution: {integrity: sha512-UlxCCi7VbCloj4VCzSULASgGVA059jglQYLc3kIHclvGoMcx3MJi0hID0MEQ6IhdO9Zyn4F42doVPrriNDVJFQ==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.0.0
+    dependencies:
+      '@loaders.gl/core': 4.2.2
+      '@loaders.gl/images': 4.2.2(@loaders.gl/core@4.2.2)
+      '@loaders.gl/loader-utils': 4.2.2(@loaders.gl/core@4.2.2)
+      '@loaders.gl/schema': 4.2.2(@loaders.gl/core@4.2.2)
+      '@loaders.gl/worker-utils': 4.2.2(@loaders.gl/core@4.2.2)
+      '@math.gl/types': 4.0.1
+      ktx-parse: 0.0.4
+      texture-compressor: 1.0.2
+    dev: true
+
+  /@loaders.gl/worker-utils@4.2.2(@loaders.gl/core@4.2.2):
+    resolution: {integrity: sha512-7Ad83VS/PmS0T3LXo+LB6cq5oHhAUW3GvYWizm4OfeuBDQRtYK7iRehgC13/BomkNtWIn0y7iAphlQMVrNdvhQ==}
+    peerDependencies:
+      '@loaders.gl/core': ^4.0.0
+    dependencies:
+      '@loaders.gl/core': 4.2.2
+    dev: true
+
   /@manypkg/find-root@1.1.0:
     resolution: {integrity: sha512-mki5uBvhHzO8kYYix/WRy2WX8S3B5wdVSc9D6KcU5lQNglP2yt58/VfLuAK49glRXChosY8ap2oJ1qgma3GUVA==}
     dependencies:
@@ -1440,6 +1507,10 @@ packages:
       graceful-fs: 4.2.11
       mkdirp: 0.5.6
       rimraf: 2.7.1
+    dev: true
+
+  /@math.gl/types@4.0.1:
+    resolution: {integrity: sha512-E9qBKAjVBiZD8Is7TbygiLGtYBP3GSLus6RUJSuzFQegdYXeVagvrs4UkBJxhrRAxw4crfH0Tq7IhTMKuuJNQw==}
     dev: true
 
   /@nodelib/fs.scandir@2.1.5:
@@ -1483,6 +1554,20 @@ packages:
     hasBin: true
     dependencies:
       playwright: 1.39.0
+    dev: true
+
+  /@probe.gl/env@4.0.9:
+    resolution: {integrity: sha512-AOmVMD0/j78mX+k4+qX7ZhE0sY9H+EaJgIO6trik0BwV6VcrwxTGCGFAeuRsIGhETDnye06tkLXccYatYxAYwQ==}
+    dev: true
+
+  /@probe.gl/log@4.0.9:
+    resolution: {integrity: sha512-ebuZaodSRE9aC+3bVC7cKRHT8garXeT1jTbj1R5tQRqQYc9iGeT3iemVOHx5bN9Q6gAs/0j54iPI+1DvWMAW4A==}
+    dependencies:
+      '@probe.gl/env': 4.0.9
+    dev: true
+
+  /@probe.gl/stats@4.0.9:
+    resolution: {integrity: sha512-Q9Xt/sJUQaMsbjRKjOscv2t7wXIymTrOEJ4a3da4FTCn7bkKvcdxdyFAQySCrtPxE+YZ5I5lXpWPgv9BwmpE1g==}
     dev: true
 
   /@rollup/plugin-babel@6.0.3(@babel/core@7.22.17)(rollup@3.29.1):
@@ -1794,6 +1879,10 @@ packages:
 
   /@types/estree@1.0.1:
     resolution: {integrity: sha512-LG4opVs2ANWZ1TJoKc937iMmNstM/d0ae1vNbnBvBhqCSezgVUOzcLCqbI5elV8Vy6WKwKjaqR+zO9VKirBBCA==}
+    dev: true
+
+  /@types/geojson@7946.0.14:
+    resolution: {integrity: sha512-WCfD5Ht3ZesJUsONdhvm84dmzWOiOzOAqOncN0++w0lBw1o8OuDNJF2McvvCef/yBqb/HYRahp1BYtODFQ8bRg==}
     dev: true
 
   /@types/gl@6.0.2:
@@ -4304,6 +4393,12 @@ packages:
     engines: {node: '>= 4'}
     dev: true
 
+  /image-size@0.7.5:
+    resolution: {integrity: sha512-Hiyv+mXHfFEP7LzUL/llg9RwFxxY+o9N3JVLIeG5E7iFIFAalxvRU9UZthBdYDEVnzHMgjnKJPPpay5BWf1g9g==}
+    engines: {node: '>=6.9.0'}
+    hasBin: true
+    dev: true
+
   /import-fresh@2.0.0:
     resolution: {integrity: sha512-eZ5H8rcgYazHbKC3PG4ClHNykCSxtAhxSSEM+2mb+7evD2CKF5V7c0dNum7AdpDh0ZdICwZY9sRSn8f+KH96sg==}
     engines: {node: '>=4'}
@@ -5238,6 +5333,10 @@ packages:
   /kleur@4.1.5:
     resolution: {integrity: sha512-o+NO+8WrRiQEE4/7nwRJhN1HWpVmJm511pBHUxPLtp0BUISzlBplORYSmTclCnJvQq2tKu/sgl3xVpkc7ZWuQQ==}
     engines: {node: '>=6'}
+    dev: true
+
+  /ktx-parse@0.0.4:
+    resolution: {integrity: sha512-LY3nrmfXl+wZZdPxgJ3ZmLvG+wkOZZP3/dr4RbQj1Pk3Qwz44esOOSFFVQJcNWpXAtiNIC66WgXufX/SYgYz6A==}
     dev: true
 
   /lazy-cache@1.0.4:
@@ -7321,6 +7420,14 @@ packages:
 
   /text-table@0.2.0:
     resolution: {integrity: sha512-N+8UisAXDGk8PFXP4HAzVR9nbfmVJ3zYLAWiTIoqC5v5isinhr+r5uaO8+7r3BMfuNIufIsA7RdpVgacC2cSpw==}
+    dev: true
+
+  /texture-compressor@1.0.2:
+    resolution: {integrity: sha512-dStVgoaQ11mA5htJ+RzZ51ZxIZqNOgWKAIvtjLrW1AliQQLCmrDqNzQZ8Jh91YealQ95DXt4MEduLzJmbs6lig==}
+    hasBin: true
+    dependencies:
+      argparse: 1.0.10
+      image-size: 0.7.5
     dev: true
 
   /three@0.156.0:

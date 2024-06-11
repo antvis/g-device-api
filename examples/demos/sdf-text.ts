@@ -4,7 +4,6 @@ import {
   Format,
   TransparentWhite,
   BufferUsage,
-  BufferFrequencyHint,
   BlendMode,
   BlendFactor,
   TextureUsage,
@@ -13,24 +12,24 @@ import {
   TransparentBlack,
   CompareFunction,
 } from '../../src';
-import { vec3, mat4 } from 'gl-matrix';
-import {
-  cubeVertexArray,
-  cubeVertexSize,
-  cubeVertexCount,
-} from '../meshes/cube';
 import { Tuples, makeTuples } from '../utils/tuple';
-
 import {
   Font,
   glyphToSDF,
   rgbaToSDF,
   RustText,
   packStrings,
+  padRectangle,
 } from '@use-gpu/glyph';
 import { makeInlineCursor } from '../utils/cursor';
 import memoizeOne from 'memoize-one';
-import { Atlas, makeAtlas } from '../utils/atlas';
+import {
+  Atlas,
+  TextureSource,
+  makeAtlas,
+  makeAtlasSource,
+  uploadAtlasMapping,
+} from '../utils/atlas';
 import { mixBits53, scrambleBits53 } from '../utils/hash';
 
 type Rectangle = [number, number, number, number];
@@ -70,6 +69,7 @@ type CachedGlyph = {
 type SDFFontContextProps = {
   __debug: {
     atlas: Atlas;
+    source: TextureSource;
   };
 
   getRadius: () => number;
@@ -77,6 +77,8 @@ type SDFFontContextProps = {
   getGlyph: (font: number, id: number, size: number) => CachedGlyph;
   getTexture: () => any;
 };
+
+const NO_MAPPING = [0, 0, 0, 0] as Rectangle;
 
 const FONTS = [
   {
@@ -92,6 +94,13 @@ export async function render(
   $canvas: HTMLCanvasElement,
   useRAF = true,
 ) {
+  // create swap chain and get device
+  const swapChain = await deviceContribution.createSwapChain($canvas);
+
+  // TODO: resize
+  swapChain.configureSwapChain($canvas.width, $canvas.height);
+  const device = swapChain.getDevice();
+
   const rustText = RustText();
 
   const fonts: Font[] = await Promise.all(
@@ -108,12 +117,16 @@ export async function render(
   const family = 'Lato';
   const weight = 900;
   const style = 'normal';
-  const content = 'test';
+  const content = 'ABCdef';
   const size = 48;
   const lineHeight = undefined;
   const align = 'center';
   const wrap = 0;
   const snap = undefined;
+  const subpixel = true;
+  const solidify = true;
+  const preprocess = false;
+  const postprocess = false;
   const NO_LAYOUT: Rectangle = [0, 0, 0, 0];
 
   const useFontFamily = memoizeOne(
@@ -180,6 +193,8 @@ export async function render(
     return v;
   };
 
+  const incrementVersion = (v: number) => ((v + 1) | 0) >>> 0 || 1;
+
   const getNearestScale = (size: number) => roundUp2(Math.max(24, size)) * 1.5;
   const hashGlyph = (font: number, id: number, size: number) =>
     scrambleBits53(mixBits53(mixBits53(font, id), size * 100));
@@ -193,10 +208,13 @@ export async function render(
     pad += Math.ceil(radius * 0.75);
     // subpixel, solidify, preprocess, postprocess
 
-    // const format = 'rgba8unorm' as GPUTextureFormat;
-
+    const format = Format.U8_RGBA_NORM;
     const glyphs = new Map<number, CachedGlyph>();
     const atlas = makeAtlas(width, height);
+    const source = makeAtlasSource(device, atlas, format, 1);
+    const biasedSource = null;
+
+    device.setResourceName(source.texture, 'Font Atlas');
 
     const bounds = makeBoundsTracker();
 
@@ -251,22 +269,21 @@ export async function render(
         // If atlas resized, resize the texture backing it
         const [sw, sh] = source.size;
         if (atlas.width !== sw || atlas.height !== sh) {
-          const newSource = resizeTextureSource(
-            device,
-            source,
-            atlas.width,
-            atlas.height,
-            1,
-            'auto',
-          );
-          biasable.texture = source.texture = newSource.texture;
-          biasable.view = source.view = newSource.view;
-          biasable.size = source.size = newSource.size;
-
-          updateMipTextureChain(device, source, [[0, 0, sw, sh]]);
+          // const newSource = resizeTextureSource(
+          //   device,
+          //   source,
+          //   atlas.width,
+          //   atlas.height,
+          //   1,
+          //   'auto',
+          // );
+          // biasable.texture = source.texture = newSource.texture;
+          // biasable.view = source.view = newSource.view;
+          // biasable.size = source.size = newSource.size;
+          // updateMipTextureChain(device, source, [[0, 0, sw, sh]]);
         }
 
-        uploadAtlasMapping(device, source.texture, format, data, mapping);
+        uploadAtlasMapping(source.texture, data, mapping);
       }
 
       const entry = { glyph, mapping };
@@ -541,12 +558,13 @@ export async function render(
     const scale = context.getScale(size);
 
     return {
-      id,
+      // id,
       indices,
       layouts,
       rectangles,
       uvs,
       sdf: [radius, scale, size, 0] as [number, number, number, number],
+      context,
     };
   };
 
@@ -565,64 +583,57 @@ export async function render(
     wrap,
     snap,
   );
-
-  // create swap chain and get device
-  const swapChain = await deviceContribution.createSwapChain($canvas);
-
-  // TODO: resize
-  swapChain.configureSwapChain($canvas.width, $canvas.height);
-  const device = swapChain.getDevice();
+  const {
+    context: {
+      __debug: { source },
+    },
+  } = data;
 
   const program = device.createProgram({
     vertex: {
       glsl: `
-  layout(std140) uniform Uniforms {
-    mat4 u_ModelViewProjectionMatrix;
-  };
-  
-  layout(location = 0) in vec3 a_Position;
-  
-  out vec4 v_Position;
-  
-  void main() {
-    v_Position = vec4(a_Position, 1.0);
-    gl_Position = u_ModelViewProjectionMatrix * vec4(a_Position, 1.0);
-  } 
+layout(location = 0) in vec2 a_Position;
+
+out vec2 v_TexCoord;
+
+void main() {
+  v_TexCoord = 0.5 * (a_Position + 1.0);
+  gl_Position = vec4(a_Position, 0., 1.);
+
+  v_TexCoord.y = 1.0 - v_TexCoord.y;
+}
   `,
     },
     fragment: {
       glsl: `
-  in vec4 v_Position;
-  out vec4 outputColor;
-  
-  void main() {
-    outputColor = v_Position;
-  }
+uniform sampler2D u_Texture;
+in vec2 v_TexCoord;
+
+out vec4 outputColor;
+
+void main() {
+  outputColor = texture(SAMPLER_2D(u_Texture), v_TexCoord);
+  outputColor.a = 1.0;
+}
   `,
     },
   });
 
   const vertexBuffer = device.createBuffer({
-    viewOrSize: cubeVertexArray,
+    viewOrSize: new Float32Array([1, 3, -3, -1, 1, -1]),
     usage: BufferUsage.VERTEX,
-  });
-
-  const uniformBuffer = device.createBuffer({
-    viewOrSize: 16 * 4, // mat4
-    usage: BufferUsage.UNIFORM,
-    hint: BufferFrequencyHint.DYNAMIC,
   });
 
   const inputLayout = device.createInputLayout({
     vertexBufferDescriptors: [
       {
-        arrayStride: cubeVertexSize,
+        arrayStride: 4 * 2,
         stepMode: VertexStepMode.VERTEX,
         attributes: [
           {
-            shaderLocation: 0,
+            shaderLocation: 0, // a_Position
             offset: 0,
-            format: Format.F32_RGB,
+            format: Format.F32_RG,
           },
         ],
       },
@@ -662,10 +673,10 @@ export async function render(
 
   const bindings = device.createBindings({
     pipeline,
-    uniformBufferBindings: [
+    samplerBindings: [
       {
-        binding: 0,
-        buffer: uniformBuffer,
+        texture: source.texture,
+        sampler: source.sampler,
       },
     ],
   });
@@ -689,34 +700,6 @@ export async function render(
 
   let id: number;
   const frame = () => {
-    const aspect = $canvas.width / $canvas.height;
-    const projectionMatrix = mat4.perspective(
-      mat4.create(),
-      (2 * Math.PI) / 5,
-      aspect,
-      0.1,
-      1000,
-    );
-    const viewMatrix = mat4.identity(mat4.create());
-    const modelViewProjectionMatrix = mat4.create();
-    mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(0, 0, -4));
-    const now = useRAF ? Date.now() / 1000 : 0;
-    mat4.rotate(
-      viewMatrix,
-      viewMatrix,
-      1,
-      vec3.fromValues(Math.sin(now), Math.cos(now), 0),
-    );
-    mat4.multiply(modelViewProjectionMatrix, projectionMatrix, viewMatrix);
-    uniformBuffer.setSubData(
-      0,
-      new Uint8Array((modelViewProjectionMatrix as Float32Array).buffer),
-    );
-    // WebGL1 need this
-    program.setUniformsLegacy({
-      u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
-    });
-
     /**
      * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
      * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
@@ -744,7 +727,7 @@ export async function render(
     );
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
     renderPass.setBindings(bindings);
-    renderPass.draw(cubeVertexCount);
+    renderPass.draw(3);
 
     device.submitPass(renderPass);
     device.endFrame();
@@ -761,12 +744,15 @@ export async function render(
     }
     program.destroy();
     vertexBuffer.destroy();
-    uniformBuffer.destroy();
     inputLayout.destroy();
     bindings.destroy();
     pipeline.destroy();
     mainColorRT.destroy();
     mainDepthRT.destroy();
+
+    source.texture.destroy();
+    source.sampler.destroy();
+
     device.destroy();
 
     // For debug.

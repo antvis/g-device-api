@@ -211,7 +211,6 @@ void main() {
     width: $canvas.width,
     height: $canvas.height,
     usage: TextureUsage.RENDER_TARGET,
-    mipLevelCount: 1,
   });
   const pickingColorRT =
     device.createRenderTargetFromTexture(pickingColorTexture);

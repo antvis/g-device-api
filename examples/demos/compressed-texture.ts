@@ -1,10 +1,11 @@
+import { CompressedTextureLoader } from '@loaders.gl/textures';
+import { load } from '@loaders.gl/core';
 import {
   DeviceContribution,
   VertexStepMode,
   Format,
   TransparentWhite,
   BufferUsage,
-  BufferFrequencyHint,
   BlendMode,
   BlendFactor,
   TextureUsage,
@@ -12,26 +13,28 @@ import {
   ChannelWriteMask,
   TransparentBlack,
   CompareFunction,
-  AddressMode,
-  FilterMode,
-  MipmapFilterMode,
 } from '../../src';
-import { vec3, mat4 } from 'gl-matrix';
-import {
-  cubeVertexArray,
-  cubeVertexSize,
-  cubeVertexCount,
-  cubePositionOffset,
-  cubeUVOffset,
-} from '../meshes/cube';
-import { generateColorRamp } from '../utils/gradient';
+// @ts-ignore
+import dds from '../public/images/shannon-dxt1.dds';
 
+/**
+ * Use compressed textures.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/WebGL_API/Compressed_texture_formats
+ * @see https://toji.github.io/texture-tester/
+ *
+ * Use @loaders.gl
+ * @see https://loaders.gl/docs/modules/textures/api-reference/compressed-texture-loader
+ * @see https://loaders.gl/examples/textures
+ * @see https://github.com/visgl/loaders.gl/blob/master/examples/website/textures/components/compressed-texture.tsx
+ */
 export async function render(
   deviceContribution: DeviceContribution,
   $canvas: HTMLCanvasElement,
   useRAF = true,
-  image?: HTMLImageElement,
 ) {
+  const mipLevels = await load(dds, CompressedTextureLoader);
+  const { width, height } = mipLevels[0];
+
   // create swap chain and get device
   const swapChain = await deviceContribution.createSwapChain($canvas);
 
@@ -39,93 +42,64 @@ export async function render(
   swapChain.configureSwapChain($canvas.width, $canvas.height);
   const device = swapChain.getDevice();
 
-  const ramp = generateColorRamp({
-    colors: [
-      '#FF4818',
-      '#F7B74A',
-      '#FFF598',
-      '#91EABC',
-      '#2EA9A1',
-      '#206C7C',
-    ].reverse(),
-    positions: [0, 0.2, 0.4, 0.6, 0.8, 1.0],
+  // Recurse into arrays (array of miplevels)
+  const texture = device.createTexture({
+    format: Format.BC1,
+    width,
+    height,
+    usage: TextureUsage.RENDER_TARGET,
+    mipmaps: false,
   });
-  const gradientTexture = device.createTexture({
-    format: Format.U8_RGBA_NORM,
-    width: ramp.width,
-    height: ramp.height,
-    usage: TextureUsage.SAMPLED,
+
+  [mipLevels[0]].forEach((image, i) => {
+    // console.log(image);
+    texture.setImageData([image.data], i);
   });
-  device.setResourceName(gradientTexture, 'Gradient Texture');
-  gradientTexture.setImageData([ramp.data]);
 
   const program = device.createProgram({
     vertex: {
       glsl: `
-  layout(std140) uniform Uniforms {
-    mat4 u_ModelViewProjectionMatrix;
-    float u_Test;
-  };
+  layout(location = 0) in vec2 a_Position;
   
-  layout(location = 0) in vec4 a_Position;
-  layout(location = 1) in vec2 a_Uv;
-  
-  out vec2 v_Uv;
+  out vec2 v_TexCoord;
   
   void main() {
-    v_Uv = a_Uv;
-    gl_Position = u_ModelViewProjectionMatrix * a_Position;
-  } 
-  `,
+    v_TexCoord = 0.5 * (a_Position + 1.0);
+    gl_Position = vec4(a_Position, 0., 1.);
+  
+    v_TexCoord.y = 1.0 - v_TexCoord.y;
+  }
+    `,
     },
     fragment: {
       glsl: `
   uniform sampler2D u_Texture;
-  in vec2 v_Uv;
+  in vec2 v_TexCoord;
+  
   out vec4 outputColor;
   
   void main() {
-    outputColor = texture(SAMPLER_2D(u_Texture), v_Uv);
+    outputColor = texture(SAMPLER_2D(u_Texture), v_TexCoord);
+    outputColor.a = 1.0;
   }
-  `,
+    `,
     },
   });
 
   const vertexBuffer = device.createBuffer({
-    viewOrSize: cubeVertexArray,
+    viewOrSize: new Float32Array([1, 3, -3, -1, 1, -1]),
     usage: BufferUsage.VERTEX,
-  });
-
-  const uniformBuffer = device.createBuffer({
-    viewOrSize: 16 * 4 + 4 * 4, // mat4
-    usage: BufferUsage.UNIFORM,
-    hint: BufferFrequencyHint.DYNAMIC,
-  });
-
-  const sampler = device.createSampler({
-    addressModeU: AddressMode.CLAMP_TO_EDGE,
-    addressModeV: AddressMode.CLAMP_TO_EDGE,
-    minFilter: FilterMode.POINT,
-    magFilter: FilterMode.BILINEAR,
-    mipmapFilter: MipmapFilterMode.LINEAR,
-    lodMinClamp: 0,
-    lodMaxClamp: 0,
   });
 
   const inputLayout = device.createInputLayout({
     vertexBufferDescriptors: [
       {
-        arrayStride: cubeVertexSize,
+        arrayStride: 4 * 2,
         stepMode: VertexStepMode.VERTEX,
         attributes: [
           {
-            shaderLocation: 0,
-            offset: cubePositionOffset,
-            format: Format.F32_RGBA,
-          },
-          {
-            shaderLocation: 1,
-            offset: cubeUVOffset,
+            shaderLocation: 0, // a_Position
+            offset: 0,
             format: Format.F32_RG,
           },
         ],
@@ -166,16 +140,10 @@ export async function render(
 
   const bindings = device.createBindings({
     pipeline,
-    uniformBufferBindings: [
-      {
-        binding: 0,
-        buffer: uniformBuffer,
-      },
-    ],
     samplerBindings: [
       {
-        texture: gradientTexture,
-        sampler,
+        texture,
+        sampler: null,
       },
     ],
   });
@@ -199,35 +167,6 @@ export async function render(
 
   let id: number;
   const frame = () => {
-    const aspect = $canvas.width / $canvas.height;
-    const projectionMatrix = mat4.perspective(
-      mat4.create(),
-      (2 * Math.PI) / 5,
-      aspect,
-      0.1,
-      1000,
-    );
-    const viewMatrix = mat4.identity(mat4.create());
-    const modelViewProjectionMatrix = mat4.create();
-    mat4.translate(viewMatrix, viewMatrix, vec3.fromValues(0, 0, -4));
-    const now = useRAF ? Date.now() / 1000 : 0;
-    mat4.rotate(
-      viewMatrix,
-      viewMatrix,
-      1,
-      vec3.fromValues(Math.sin(now), Math.cos(now), 0),
-    );
-    mat4.multiply(modelViewProjectionMatrix, projectionMatrix, viewMatrix);
-    uniformBuffer.setSubData(
-      0,
-      new Uint8Array((modelViewProjectionMatrix as Float32Array).buffer),
-    );
-    // WebGL1 need this
-    program.setUniformsLegacy({
-      u_ModelViewProjectionMatrix: modelViewProjectionMatrix,
-      u_Texture: gradientTexture,
-    });
-
     /**
      * An application should call getCurrentTexture() in the same task that renders to the canvas texture.
      * Otherwise, the texture could get destroyed by these steps before the application is finished rendering to it.
@@ -255,7 +194,7 @@ export async function render(
     );
     renderPass.setViewport(0, 0, $canvas.width, $canvas.height);
     renderPass.setBindings(bindings);
-    renderPass.draw(cubeVertexCount);
+    renderPass.draw(3);
 
     device.submitPass(renderPass);
     device.endFrame();
@@ -272,14 +211,14 @@ export async function render(
     }
     program.destroy();
     vertexBuffer.destroy();
-    uniformBuffer.destroy();
     inputLayout.destroy();
     bindings.destroy();
     pipeline.destroy();
     mainColorRT.destroy();
     mainDepthRT.destroy();
-    gradientTexture.destroy();
-    sampler.destroy();
+
+    texture.destroy();
+
     device.destroy();
 
     // For debug.

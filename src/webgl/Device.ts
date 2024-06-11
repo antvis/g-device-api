@@ -689,6 +689,12 @@ export class Device_GL implements SwapChain, Device {
           : GL.UNSIGNED_BYTE;
       case FormatTypeFlags.D32FS8:
         return GL.FLOAT_32_UNSIGNED_INT_24_8_REV;
+      case FormatTypeFlags.BC1:
+        return GL.COMPRESSED_RGB_S3TC_DXT1_EXT;
+      case FormatTypeFlags.BC3:
+        return GL.COMPRESSED_RGBA_S3TC_DXT3_EXT;
+      case FormatTypeFlags.BC5_SNORM:
+        return GL.COMPRESSED_RGBA_S3TC_DXT5_EXT;
       default:
         throw new Error('whoops');
     }

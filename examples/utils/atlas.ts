@@ -1,4 +1,15 @@
 import uniq from 'lodash/uniq';
+import {
+  AddressMode,
+  Device,
+  FilterMode,
+  Format,
+  MipmapFilterMode,
+  Sampler,
+  Texture,
+  TextureUsage,
+} from '../../src';
+import { TypedArray } from './tuple';
 
 export const lerp = (a: number, b: number, t: number) => a * (1 - t) + b * t;
 export const clamp = (x: number, a: number, b: number) =>
@@ -15,6 +26,15 @@ export type Atlas = {
 type Rectangle = [number, number, number, number];
 type XY = [number, number];
 
+export type VectorLike = TypedArray | number[];
+export type ColorSpace =
+  | 'linear'
+  | 'srgb'
+  | 'p3'
+  | 'native'
+  | 'picking'
+  | 'auto';
+
 type Slot = [
   number,
   number,
@@ -30,6 +50,62 @@ type Bin = Set<Slot>;
 type Bins = Map<number, Set<Slot>>;
 
 const EMPTY: any[] = [];
+
+export type TextureSource = {
+  texture: Texture;
+  sampler: Sampler;
+  layout: string;
+  format: Format;
+  size: VectorLike;
+  version: number;
+  mips?: number;
+  variant?: string;
+  absolute?: boolean;
+  comparison?: boolean;
+  volatile?: number;
+  colorSpace?: ColorSpace;
+  // aspect?: GPUTextureAspect,
+};
+
+export const makeAtlasSource = (
+  device: Device,
+  atlas: Atlas,
+  format: Format,
+  volatile?: number,
+): TextureSource => {
+  const { width, height } = atlas;
+  const mips = Math.floor(Math.log2(Math.min(width, height))) + 1;
+  const texture = device.createTexture({
+    format,
+    width,
+    height,
+    // depthOrArrayLayers: 1,
+    usage: TextureUsage.RENDER_TARGET,
+  });
+
+  console.log(texture);
+  const sampler = device.createSampler({
+    addressModeU: AddressMode.CLAMP_TO_EDGE,
+    addressModeV: AddressMode.CLAMP_TO_EDGE,
+    minFilter: FilterMode.BILINEAR,
+    magFilter: FilterMode.BILINEAR,
+    mipmapFilter: MipmapFilterMode.LINEAR,
+    maxAnisotropy: 16,
+  });
+
+  return {
+    texture,
+    sampler,
+    layout: 'texture_2d<f32>',
+    mips,
+    absolute: true,
+    volatile,
+    format,
+    colorSpace: 'srgb',
+    size: [atlas.width, atlas.height],
+    version: 1,
+  };
+};
 
 /**
  * Tight 2D packing texture atlas.
@@ -482,3 +558,71 @@ const subtractSlot = (a: Slot, b: RectLike): Slot[] => {
 
   return out;
 };
+
+export const uploadAtlasMapping = (
+  texture: Texture,
+  data: Uint8Array,
+  rect: Rectangle,
+): void => {
+  const [l, t, r, b] = rect;
+
+  const offset = [l, t] as XY;
+  const size = [r - l, b - t] as XY;
+
+  texture.setImageData([data], 0, offset, size);
+};
+
+// export const resizeTextureSource = (
+//   device: Device,
+//   source: TextureSource,
+//   width: number,
+//   height: number,
+//   depth: number = 1,
+//   mips: "auto" | number = 1,
+//   mipLevel = 0,
+//   aspect = "all",
+//   dimension = "2d"
+// ) => {
+//   const { format } = source;
+
+//   const ms =
+//     mips === "auto" ? Math.floor(Math.log2(Math.min(width, height))) + 1 : mips;
+//   const newTexture = makeDynamicTexture(
+//     device,
+//     width,
+//     height,
+//     depth,
+//     format as any,
+//     1,
+//     ms,
+//     dimension
+//   );
+
+//   const src = {
+//     texture: source.texture,
+//     origin: [0, 0, 0],
+//     mipLevel,
+//     aspect,
+//   };
+//   const dst = {
+//     texture: newTexture,
+//     origin: [0, 0, 0],
+//     mipLevel,
+//     aspect,
+//   };
+
+//   device.copySubTexture2D();
+
+//   const [w, h, d] = source.size;
+//   const commandEncoder = device.createCommandEncoder();
+//   commandEncoder.copyTextureToTexture(src, dst, [w, h, d || 1]);
+//   device.queue.submit([commandEncoder.finish()]);
+
+//   return {
+//     ...source,
+//     texture: newTexture,
+//     view: newTexture.createView({ mipLevelCount: ms }),
+//     size: [width, height, depth] as [number, number, number],
+//     version: 1,
+//   };
+// };

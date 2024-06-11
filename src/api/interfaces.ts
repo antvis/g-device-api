@@ -1,6 +1,7 @@
 import type { EventEmitter } from 'eventemitter3';
 import { GL } from './constants';
 import type { Format } from './format';
+import { TypedArray } from './utils';
 
 export interface DeviceContribution {
   createSwapChain: ($canvas: HTMLCanvasElement) => Promise<SwapChain>;
@@ -43,6 +44,8 @@ export interface Texture extends ResourceBase {
   setImageData: (
     data: (TexImageSource | ArrayBufferView)[],
     lod?: number,
+    origin?: [number, number] | [number, number, number],
+    size?: [number, number] | [number, number, number],
   ) => void;
 }
 export interface RenderTarget extends ResourceBase {
@@ -298,10 +301,12 @@ export enum TextureEvent {
 }
 
 export enum TextureDimension {
+  TEXTURE_1D,
   TEXTURE_2D,
   TEXTURE_2D_ARRAY,
   TEXTURE_3D,
   TEXTURE_CUBE_MAP,
+  TEXTURE_CUBE_MAP_ARRAY,
 }
 
 export enum TextureUsage {
@@ -379,14 +384,106 @@ export interface InputLayoutBufferDescriptor {
   attributes: VertexAttributeDescriptor[];
 }
 
-export interface TextureDescriptor {
-  dimension?: TextureDimension;
-  format: Format;
+/**
+ * One mip level
+ * Basic data structure is similar to `ImageData`
+ * additional optional fields can describe compressed texture data.
+ */
+export type TextureLevelData = {
+  data: TypedArray;
   width: number;
   height: number;
+};
+
+/**
+ * Built-in data types that can be used to initialize textures
+ * @note WebGL supports OffscreenCanvas but seems WebGPU does not?
+ */
+export type ExternalImage =
+  | ImageData
+  | ImageBitmap
+  | HTMLImageElement
+  | HTMLVideoElement
+  | HTMLCanvasElement;
+
+export type TextureLevelSource = TextureLevelData | ExternalImage;
+export type TextureCubeFace = '+X' | '-X' | '+Y' | '-Y' | '+Z' | '-Z';
+
+/** Texture data can be one or more mip levels */
+export type TextureData =
+  | TextureLevelData
+  | ExternalImage
+  | (TextureLevelData | ExternalImage)[];
+
+/** @todo - define what data type is supported for 1D textures */
+export type Texture1DData = TypedArray | TextureLevelData;
+
+export type Texture2DData =
+  | TypedArray
+  | TextureLevelData
+  | ExternalImage
+  | (TextureLevelData | ExternalImage)[];
+
+/** Array of textures */
+export type Texture3DData = TypedArray | TextureData[];
+
+/** 6 face textures */
+export type TextureCubeData = Record<TextureCubeFace, Texture2DData>;
+
+/** Array of textures */
+export type TextureArrayData = TextureData[];
+
+/** Array of 6 face textures */
+export type TextureCubeArrayData = Record<TextureCubeFace, TextureData>[];
+
+type TextureDataProps =
+  | Texture1DProps
+  | Texture2DProps
+  | Texture3DProps
+  | TextureArrayProps
+  | TextureCubeProps
+  | TextureCubeArrayProps;
+
+type Texture1DProps = {
+  dimension: TextureDimension.TEXTURE_1D;
+  data?: Texture1DData | null;
+};
+type Texture2DProps = {
+  dimension?: TextureDimension.TEXTURE_2D;
+  data?: Texture2DData | null;
+};
+type Texture3DProps = {
+  dimension: TextureDimension.TEXTURE_3D;
+  data?: Texture3DData | null;
+};
+type TextureArrayProps = {
+  dimension: TextureDimension.TEXTURE_2D_ARRAY;
+  data?: TextureArrayData | null;
+};
+type TextureCubeProps = {
+  dimension: TextureDimension.TEXTURE_CUBE_MAP;
+  data?: TextureCubeData | null;
+};
+type TextureCubeArrayProps = {
+  dimension: TextureDimension.TEXTURE_CUBE_MAP_ARRAY;
+  data?: TextureCubeArrayData | null;
+};
+
+export type TextureDescriptor = TextureDataProps & {
+  format: Format;
+  /**
+   * When data is passed in, width/height can be omitted and inferred from it.
+   */
+  width?: number;
+  height?: number;
   depthOrArrayLayers?: number;
-  mipLevelCount?: number;
+  mipLevelCount?: number | 'pyramid';
   usage: TextureUsage;
+  /**
+   * Enable mipmaps.
+   * @@see https://github.com/antvis/g-device-api/issues/200
+   */
+  mipmaps?: boolean;
   /**
    * @see https://developer.mozilla.org/zh-CN/docs/Web/API/WebGLRenderingContext/pixelStorei
    */
@@ -395,7 +492,7 @@ export interface TextureDescriptor {
     unpackAlignment: number;
     unpackFlipY: boolean;
   }>;
-}
+};
 
 export function makeTextureDescriptor2D(
   format: Format,
