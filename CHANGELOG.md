@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.13
+
+### Patch Changes
+
+-   b903dc8: iswebgl2 cache
+
 ## 1.6.12
 
 ### Patch Changes
