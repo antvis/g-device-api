@@ -220,7 +220,7 @@ export class RenderPass_WebGPU implements RenderPass {
   }
 
   private flipY(y: number, h: number) {
-    const height = this.device['swapChainHeight'];
+    const height = this.gfxColorAttachment[0].height;
     return height - y - h;
   }
 
