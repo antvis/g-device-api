@@ -6,6 +6,7 @@ import {
   getBlockInformationFromFormat,
   translateTextureViewDimension,
 } from './utils';
+import { Device_WebGPU } from './Device';
 
 export class Texture_WebGPU
   extends ResourceBase_WebGPU
@@ -86,6 +87,7 @@ export class Texture_WebGPU
         GPUTextureUsage.TEXTURE_BINDING |
         GPUTextureUsage.COPY_DST |
         GPUTextureUsage.RENDER_ATTACHMENT,
+      mipLevelCount: this.mipLevelCount,
     };
     const texture = device.createTexture(textureDescriptor);
 
@@ -95,6 +97,10 @@ export class Texture_WebGPU
         { texture, origin: [0, 0, i] },
         [width, height],
       );
+    }
+
+    if(this.mipLevelCount > 1) {
+      (this.device as Device_WebGPU).getMipmapGenerator().generateMipmap(texture);
     }
 
     return [texture, width, height];
