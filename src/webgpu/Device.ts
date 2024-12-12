@@ -84,6 +84,7 @@ import {
 } from './utils';
 import { preprocessShader_GLSL } from '../shader';
 import { RenderBundle_WebGPU } from './RenderBundle';
+import { MipmapGenerator } from './MipmapGenerator';
 
 export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
   private swapChainWidth = 0;
@@ -123,6 +124,7 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
   private canvasContext: GPUCanvasContext;
   private glsl_compile: typeof glsl_compile_;
   private WGSLComposer: WGSLComposer;
+  private mipmapGenerator: MipmapGenerator;
 
   constructor(
     adapter: GPUAdapter,
@@ -137,6 +139,7 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
     this.canvasContext = canvasContext;
     this.glsl_compile = glsl_compile;
     this.WGSLComposer = wGSLComposer;
+    this.mipmapGenerator = new MipmapGenerator(device);
 
     this.fallbackTexture2D = this.createFallbackTexture(
       TextureDimension.TEXTURE_2D,
@@ -264,6 +267,10 @@ export class Device_WebGPU implements SwapChain, IDevice_WebGPU {
 
   getDevice(): Device {
     return this;
+  }
+
+  getMipmapGenerator(): MipmapGenerator {
+    return this.mipmapGenerator;
   }
 
   getCanvas(): HTMLCanvasElement | OffscreenCanvas {
