@@ -80,6 +80,7 @@ export function bindingsDescriptorEquals(
   b.storageBufferBindings = b.storageBufferBindings || [];
   b.storageTextureBindings = b.storageTextureBindings || [];
 
+  if (a.pipeline !== b.pipeline) return false;
   if (a.samplerBindings.length !== b.samplerBindings.length) return false;
   if (!arrayEqual(a.samplerBindings, b.samplerBindings, samplerBindingEquals))
     return false;
