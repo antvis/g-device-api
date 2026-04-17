@@ -35,6 +35,7 @@ export class RenderPass_WebGPU implements RenderPass {
   private gfxColorResolveToLevel: number[] = [];
   private gfxDepthStencilAttachment: TextureShared_WebGPU | null = null;
   private gfxDepthStencilResolveTo: TextureShared_WebGPU | null = null;
+  private _viewportFlipHeight: number | undefined;
 
   constructor(private device: Device_WebGPU) {
     this.gpuColorAttachments = [];
@@ -205,6 +206,23 @@ export class RenderPass_WebGPU implements RenderPass {
     )
       ? getPlatformQuerySet(descriptor.occlusionQueryPool)
       : undefined;
+
+    // Viewport/scissor Y flip must use the active render target height. Using swapChainHeight
+    // for offscreen passes places the viewport outside the attachment (nothing draws).
+    const firstColor =
+      this.gfxColorAttachment.length > 0 ? this.gfxColorAttachment[0] : null;
+    const level0 =
+      this.gfxColorAttachmentLevel.length > 0
+        ? this.gfxColorAttachmentLevel[0] || 0
+        : 0;
+    if (firstColor !== null && firstColor !== undefined) {
+      this._viewportFlipHeight = Math.max(1, firstColor.height >>> level0);
+    } else if (descriptor.depthStencilAttachment) {
+      const ds = descriptor.depthStencilAttachment as unknown as Attachment_WebGPU;
+      this._viewportFlipHeight = Math.max(1, ds.height >>> 0);
+    } else {
+      this._viewportFlipHeight = this.device['swapChainHeight'];
+    }
   }
 
   beginRenderPass(
@@ -220,7 +238,8 @@ export class RenderPass_WebGPU implements RenderPass {
   }
 
   private flipY(y: number, h: number) {
-    const height = this.gfxColorAttachment[0].height;
+    const height =
+      this._viewportFlipHeight ?? this.device['swapChainHeight'];
     return height - y - h;
   }
 
