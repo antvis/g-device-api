@@ -1,6 +1,6 @@
 {
   "name": "@antv/g-device-api",
-  "version": "1.6.13",
+  "version": "1.6.14",
   "description": "A Device API references WebGPU implementations",
   "keywords": [
     "antv",

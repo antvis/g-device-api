@@ -1,5 +1,11 @@
 # @antv/g-device-api
 
+## 1.6.14
+
+### Patch Changes
+
+-   6d118ff: Flip Y in renderpass in webgpu renderer.
+
 ## 1.6.13
 
 ### Patch Changes
